@@ -1,0 +1,7 @@
+{
+  "name": "NutriBrasil Zero-Friction",
+  "description": "PWA de nutrição brasileira com entrada por voz e zero digitação, focada na Tabela TACO.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
