@@ -1,5 +1,5 @@
 
-import { Category, FoodItem, MeasureUnit } from './types.ts';
+import { Category, FoodItem, MeasureUnit } from './types';
 
 export const MEASURE_GRAMS: Record<MeasureUnit, number> = {
   'Grama': 1,

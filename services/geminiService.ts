@@ -1,8 +1,8 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { FOOD_DATABASE } from "../constants.tsx";
+import { FOOD_DATABASE } from "../constants";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY || '' });
 
 export const detectFoodFromText = async (transcript: string) => {
   const model = 'gemini-3-flash-preview';
