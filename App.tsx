@@ -1,14 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { Category, FoodItem, PlateItem, MeasureUnit, MealSlot, UserProfile, DayOfWeek } from './types';
-import { FOOD_DATABASE } from './constants';
-import { detectFoodFromText } from './services/geminiService';
-import PantryScreen from './components/PantryScreen';
-import PlateScreen from './components/PlateScreen';
-import BrainScreen from './components/BrainScreen';
-import ScheduleScreen from './components/ScheduleScreen';
-import SetupScreen from './components/SetupScreen';
-import { Layout } from './components/Layout';
+import { Category, FoodItem, PlateItem, MeasureUnit, MealSlot, UserProfile, DayOfWeek } from './types.ts';
+import { FOOD_DATABASE } from './constants.tsx';
+import { detectFoodFromText } from './services/geminiService.ts';
+import PantryScreen from './components/PantryScreen.tsx';
+import PlateScreen from './components/PlateScreen.tsx';
+import BrainScreen from './components/BrainScreen.tsx';
+import ScheduleScreen from './components/ScheduleScreen.tsx';
+import SetupScreen from './components/SetupScreen.tsx';
+import { Layout } from './components/Layout.tsx';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'pantry' | 'plate' | 'schedule' | 'brain'>('pantry');
