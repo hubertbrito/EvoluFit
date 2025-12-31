@@ -1,15 +1,7 @@
-
 import React from 'react';
 import { LayoutGrid, ChefHat, BrainCircuit, CalendarClock } from 'lucide-react';
 
-interface LayoutProps {
-  children: React.ReactNode;
-  activeTab: 'pantry' | 'plate' | 'schedule' | 'brain';
-  onTabChange: (tab: any) => void;
-  plateCount?: number;
-}
-
-export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, plateCount = 0 }) => {
+export const Layout = ({ children, activeTab, onTabChange, plateCount = 0 }) => {
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-white shadow-2xl relative overflow-hidden">
       <header className="bg-emerald-600 text-white p-4 pt-8 text-center font-bold text-xl shadow-md z-10">
@@ -36,7 +28,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
   );
 };
 
-const NavButton = ({ active, onClick, icon, label, badge }: any) => (
+const NavButton = ({ active, onClick, icon, label, badge }) => (
   <button onClick={onClick} className={`flex flex-col items-center transition-all relative ${active ? 'text-emerald-600 scale-110' : 'text-gray-300 hover:text-gray-400'}`}>
     {icon}
     {badge !== undefined && (
