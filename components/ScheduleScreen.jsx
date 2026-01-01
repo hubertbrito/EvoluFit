@@ -2,6 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { Clock, AlertCircle, Zap, Wheat, Droplets, CalendarDays, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser } from 'lucide-react';
 import { UNIT_WEIGHTS, getFoodUnitWeight } from '../constants';
 
+// Função auxiliar para formatar a quantidade e medida do alimento
+const formatFoodQuantity = (quantity, measure, foodName) => {
+  const qty = parseFloat(quantity);
+  const meas = measure || 'unidade(s)';
+  // Tenta calcular total se a medida começar com número (ex: "2 fatias")
+  const match = meas.match(/^(\d+)\s+(.+)/);
+  if (match && !isNaN(qty)) {
+    const total = qty * parseInt(match[1], 10);
+    return `${total} ${match[2]} de ${foodName}`;
+  }
+  return `${qty} ${meas} de ${foodName}`;
+};
+
 const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS }) => {
   const [now, setNow] = useState(new Date());
   const [activeDay, setActiveDay] = useState(() => {
@@ -186,7 +199,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
                                     className="bg-white border border-gray-100 px-3 py-1.5 rounded-xl text-[11px] font-black text-gray-600 shadow-sm hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200 transition-colors flex items-center gap-1 group"
                                     title="Clique para remover item"
                                 >
-                                    {food?.name}
+                                    {food ? formatFoodQuantity(p.quantity, p.unit, food.name) : 'Item desconhecido'}
                                     <Trash2 size={10} className="text-gray-300 group-hover:text-rose-500 transition-colors" />
                                 </button>
                             );

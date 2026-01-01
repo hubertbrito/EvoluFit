@@ -2,6 +2,19 @@ import React, { useState } from 'react';
 import { Search, Mic, Plus, Trash2, Utensils, Info, Filter } from 'lucide-react';
 import { DIET_TYPES } from '../constants';
 
+// Função auxiliar para formatar a quantidade e medida do alimento
+const formatFoodQuantity = (quantity, measure, foodName) => {
+  const qty = parseFloat(quantity);
+  const meas = measure || 'unidade(s)';
+  // Tenta calcular total se a medida começar com número (ex: "2 fatias")
+  const match = meas.match(/^(\d+)\s+(.+)/);
+  if (match && !isNaN(qty)) {
+    const total = qty * parseInt(match[1], 10);
+    return `${total} ${match[2]} de ${foodName}`;
+  }
+  return `${qty} ${meas} de ${foodName}`;
+};
+
 const PantryScreen = ({ 
   allFoods, 
   userPantry, 
@@ -46,6 +59,18 @@ const PantryScreen = ({
     return activeDiet === 'Todas' ? allFoods : allFoods.filter(f => f.diets && f.diets.includes(activeDiet));
   })();
 
+  const resultCountText = (() => {
+    const count = displayedFoods.length;
+    const suffix = count === 1 ? 'item encontrado' : 'itens encontrados';
+    
+    if (searchTerm) return `${count} ${suffix}`;
+    if (viewMode === 'categories') {
+      if (activeCategory === 'Dispensa') return `${count} ${suffix} na Sua Dispensa`;
+      return `${count} ${suffix} na categoria ${activeCategory}`;
+    }
+    return activeDiet === 'Todas' ? `${count} ${suffix} no geral` : `${count} ${suffix} para a dieta ${activeDiet}`;
+  })();
+
   const handleManualAdd = () => {
     if (searchTerm) {
       onAddManual(searchTerm);
@@ -55,6 +80,15 @@ const PantryScreen = ({
 
   return (
     <div className="p-4 space-y-4 pb-24">
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(5px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out forwards;
+        }
+      `}</style>
       <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-start gap-2">
         <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
         <p className="text-xs text-blue-700"><strong>Dispensa:</strong> Busque ou use a voz para <strong>adicionar novos itens</strong> que você tem em casa. Depois, toque em um alimento para <strong>selecioná-lo</strong> (borda verde) e montar seu Prato.</p>
@@ -79,36 +113,50 @@ const PantryScreen = ({
 
       {/* Menu Horizontal (Categorias ou Dietas) */}
       <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-        {(viewMode === 'categories' ? categories : diets).map(item => (
-          <button
-            key={item}
-            onClick={() => viewMode === 'categories' ? setActiveCategory(item) : setActiveDiet(item)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors 
-                ${(viewMode === 'categories' ? activeCategory : activeDiet) === item ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-gray-500 border border-gray-200'}`}
-          >
-            {item}
-          </button>
-        ))}
+        {(viewMode === 'categories' ? categories : diets).map(item => {
+          const isDispensa = item === 'Dispensa' && viewMode === 'categories';
+          const isActive = (viewMode === 'categories' ? activeCategory : activeDiet) === item;
+          return (
+            <button
+              key={item}
+              onClick={() => viewMode === 'categories' ? setActiveCategory(item) : setActiveDiet(item)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors 
+                  ${isActive 
+                    ? (isDispensa ? 'bg-blue-600 text-white shadow-md' : 'bg-emerald-500 text-white shadow-md') 
+                    : (isDispensa ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'bg-white text-gray-500 border border-gray-200')}`}
+            >
+              {isDispensa ? 'Sua Dispensa' : item}
+            </button>
+          );
+        })}
       </div>
 
       {/* Header / Search */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input 
-            type="text" 
-            placeholder="Digite o nome do alimento..." 
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-100 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-gray-600 block ml-1">
+          Busque um alimento ou digite para cadastrar um novo:
+        </label>
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input 
+              type="text" 
+              placeholder="Digite o nome do alimento..." 
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-100 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <button 
+            onClick={onVoiceClick}
+            className={`p-3 rounded-xl transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'}`}
+          >
+            <Mic className="w-5 h-5" />
+          </button>
         </div>
-        <button 
-          onClick={onVoiceClick}
-          className={`p-3 rounded-xl transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'}`}
-        >
-          <Mic className="w-5 h-5" />
-        </button>
+        <div key={resultCountText} className="text-sm font-bold text-emerald-700 ml-1 animate-fade-in">
+          {resultCountText}
+        </div>
       </div>
 
       {/* Add Manual Button if search doesn't match */}
@@ -123,10 +171,11 @@ const PantryScreen = ({
       )}
 
       {/* List */}
-      <div className="space-y-3">
+      <div key={`${viewMode}-${viewMode === 'categories' ? activeCategory : activeDiet}`} className="space-y-3 animate-fade-in">
         {displayedFoods.map(food => {
           const isInPantry = userPantry.includes(food.id);
-          const isSelected = currentPlate.some(p => p.foodId === food.id);
+          const plateItem = currentPlate.find(p => p.foodId === food.id);
+          const isSelected = !!plateItem;
           return (
             <div 
               key={food.id} 
@@ -137,6 +186,11 @@ const PantryScreen = ({
                 <span className="text-2xl">{food.emoji || '🍽️'}</span>
                 <div>
                   <h3 className="font-bold text-gray-800">{food.name}</h3>
+                  {isSelected && plateItem.quantity && (
+                    <p className="text-xs text-emerald-700 font-medium mt-0.5">
+                      {formatFoodQuantity(plateItem.quantity, plateItem.measure, food.name)}
+                    </p>
+                  )}
                 </div>
               </div>
               
