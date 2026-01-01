@@ -271,16 +271,19 @@ const App = () => {
     recognition.start();
   };
 
-  const handleAddMeal = (day) => {
-    const newMeal = {
-        id: `m-${Date.now()}`,
-        name: 'Nova Refeição',
-        time: '14:00',
-        plate: [],
-        isDone: false,
-        dayOfWeek: day === 'Todos' ? 'Todos' : day,
-    };
-    setMealSchedule(prev => [...prev, newMeal]);
+  const handleAddMeal = (daysInput) => {
+    const days = Array.isArray(daysInput) ? daysInput : [daysInput];
+    
+    const newMeals = days.map((day, index) => ({
+      id: `m-${Date.now()}-${index}`,
+      name: 'Nova Refeição',
+      time: '14:00',
+      plate: [],
+      isDone: false,
+      dayOfWeek: day,
+    }));
+
+    setMealSchedule(prev => [...prev, ...newMeals]);
   };
 
   const handleDeleteMeal = (mealId) => {

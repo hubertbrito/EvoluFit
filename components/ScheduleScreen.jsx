@@ -17,9 +17,9 @@ const formatFoodQuantity = (quantity, measure, foodName) => {
 
 const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS }) => {
   const [now, setNow] = useState(new Date());
-  const [activeDay, setActiveDay] = useState(() => {
+  const [activeDays, setActiveDays] = useState(() => {
     const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
-    return daysMap[new Date().getDay()];
+    return [daysMap[new Date().getDay()]];
   });
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -43,6 +43,22 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
 
   const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo', 'Todos', 'Avulso'];
   const currentTimeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  const toggleDay = (day) => {
+    if (day === 'Todos') {
+      setActiveDays(['Todos']);
+      return;
+    }
+    setActiveDays(prev => {
+      let newDays = prev.filter(d => d !== 'Todos');
+      if (newDays.includes(day)) {
+        newDays = newDays.filter(d => d !== day);
+      } else {
+        newDays.push(day);
+      }
+      return newDays.length ? newDays : ['Todos'];
+    });
+  };
 
   const fixedMealNames = [
     'Café da Manhã', 
@@ -79,14 +95,21 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
   };
 
   const filteredMeals = meals.filter(m => {
-    if (activeDay === 'Todos') return m.dayOfWeek === 'Todos';
+    // Se 'Todos' estiver selecionado, mostra apenas templates de 'Todos'
+    if (activeDays.includes('Todos')) return m.dayOfWeek === 'Todos';
     
-    // Se for o dia ativo, mostra sempre
-    if (m.dayOfWeek === activeDay) return true;
+    // Se for um dos dias ativos, mostra
+    if (activeDays.includes(m.dayOfWeek)) return true;
     
-    // Se for 'Todos', mostra APENAS SE NÃO houver um card específico com o mesmo nome neste dia
-    // Isso evita cards duplicados (um vazio de 'Todos' e um preenchido de 'Segunda')
-    return m.dayOfWeek === 'Todos' && !meals.some(om => om.dayOfWeek === activeDay && om.name === m.name);
+    // Se for 'Todos' (template), mostra APENAS SE for relevante para algum dos dias ativos
+    // e NÃO houver override (card específico) naquele dia
+    if (m.dayOfWeek === 'Todos') {
+      return activeDays.some(day => {
+        const hasOverride = meals.some(om => om.dayOfWeek === day && om.name === m.name);
+        return !hasOverride;
+      });
+    }
+    return false;
   });
 
   return (
@@ -106,16 +129,18 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
         </div>
       )}
 
-      <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar -mx-4 px-4">
-        {days.map(d => (
-          <button 
-            key={d}
-            onClick={() => setActiveDay(d)}
-            className={`flex-shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase transition-all ${activeDay === d ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' : 'bg-white text-indigo-400 border border-indigo-100 hover:bg-indigo-50'}`}
-          >
-            {d}
-          </button>
-        ))}
+      <div className="sticky top-0 z-10 bg-gray-50/95 backdrop-blur-sm -mx-4 px-4 py-2 shadow-sm border-b border-gray-100">
+        <div className="flex flex-wrap gap-2 justify-center">
+          {days.map(d => (
+            <button 
+              key={d}
+              onClick={() => toggleDay(d)}
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all transform hover:scale-105 ${activeDays.includes(d) ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 ring-2 ring-indigo-100' : 'bg-white text-indigo-400 border border-indigo-100 hover:bg-indigo-50'}`}
+            >
+              {d}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="bg-blue-100 p-3 rounded-xl border border-blue-200 flex items-start gap-2 shadow-sm">
@@ -127,7 +152,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
 
       <div className="flex justify-between items-center">
         <div>
-            <h2 className="text-2xl font-black text-gray-800 tracking-tighter">Agenda {activeDay}</h2>
+            <h2 className="text-2xl font-black text-gray-800 tracking-tighter">Agenda</h2>
             <p className="text-emerald-600 font-bold text-[10px] uppercase flex items-center mt-1">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping mr-2"></span>
               Agora: {currentTimeStr}
@@ -139,7 +164,8 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
         {filteredMeals.map((meal, index) => {
           const [mealHour] = meal.time.split(':');
           const [currentHour] = currentTimeStr.split(':');
-          const isCurrent = mealHour === currentHour && (activeDay === 'Todos' || activeDay === days[new Date().getDay()]);
+          const todayName = days[new Date().getDay()];
+          const isCurrent = mealHour === currentHour && (meal.dayOfWeek === 'Todos' || meal.dayOfWeek === todayName);
           const isFixed = fixedMealNames.includes(meal.name);
           const nutrients = calculateMealNutrients(meal.plate);
 
@@ -202,8 +228,9 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
                                     onClick={() => {
                                         if (window.confirm(`Deseja remover "${food?.name}" desta refeição?`)) {
                                             const newPlate = meal.plate.filter((_, idx) => idx !== i);
-                                            if (meal.dayOfWeek === 'Todos' && activeDay !== 'Todos') {
-                                                const newMeal = { ...meal, id: `m-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, dayOfWeek: activeDay, plate: newPlate, isDone: false };
+                                            if (meal.dayOfWeek === 'Todos' && !activeDays.includes('Todos')) {
+                                                // Se editando um 'Todos' em uma view de dia específico, cria override para o primeiro dia ativo
+                                                const newMeal = { ...meal, id: `m-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, dayOfWeek: activeDays[0], plate: newPlate, isDone: false };
                                                 onUpdateMeals([...meals, newMeal]);
                                             } else {
                                                 updateMeal(meal.id, { plate: newPlate });
@@ -241,32 +268,32 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
                     <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-2">
                         <span className={`w-2 h-2 rounded-full ${meal.dayOfWeek === 'Todos' ? 'bg-blue-400' : 'bg-orange-500'}`}></span>
-                        <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">{meal.dayOfWeek || 'Todos'}</span>
+                        <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">{meal.dayOfWeek}</span>
                       </div>
                     </div>
                 </div>
               ) : (
                 <div className="flex items-center justify-center space-x-2 text-xs font-bold text-indigo-300 uppercase italic py-3 bg-indigo-50/50 rounded-2xl border border-dashed border-indigo-100">
                   <AlertCircle size={14}/>
-                  <span>Vazio para {activeDay}</span>
+                  <span>Vazio ({meal.dayOfWeek})</span>
                 </div>
               )}
 
               <div className="flex justify-end items-center gap-2 mt-4 pt-3 border-t border-indigo-50">
                   <span className="text-[10px] font-bold text-indigo-200 uppercase mr-auto">Ações</span>
                   
-                  <button onClick={() => onReorderMeal(meal.id, 'up', activeDay)} disabled={index === 0} className="p-2 bg-indigo-50 rounded-xl text-indigo-400 disabled:opacity-30 hover:bg-emerald-100 hover:text-emerald-600 transition-colors" title="Mover para cima">
+                  <button onClick={() => onReorderMeal(meal.id, 'up', activeDays[0])} disabled={index === 0} className="p-2 bg-indigo-50 rounded-xl text-indigo-400 disabled:opacity-30 hover:bg-emerald-100 hover:text-emerald-600 transition-colors" title="Mover para cima">
                     <ArrowUp size={16} />
                   </button>
-                  <button onClick={() => onReorderMeal(meal.id, 'down', activeDay)} disabled={index === filteredMeals.length - 1} className="p-2 bg-indigo-50 rounded-xl text-indigo-400 disabled:opacity-30 hover:bg-emerald-100 hover:text-emerald-600 transition-colors" title="Mover para baixo">
+                  <button onClick={() => onReorderMeal(meal.id, 'down', activeDays[0])} disabled={index === filteredMeals.length - 1} className="p-2 bg-indigo-50 rounded-xl text-indigo-400 disabled:opacity-30 hover:bg-emerald-100 hover:text-emerald-600 transition-colors" title="Mover para baixo">
                     <ArrowDown size={16} />
                   </button>
                   
                   <button 
                     onClick={() => {
                         if (window.confirm('Deseja limpar todos os alimentos desta refeiçao?')) {
-                            if (meal.dayOfWeek === 'Todos' && activeDay !== 'Todos') {
-                                const newMeal = { ...meal, id: `m-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, dayOfWeek: activeDay, plate: [], isDone: false };
+                            if (meal.dayOfWeek === 'Todos' && !activeDays.includes('Todos')) {
+                                const newMeal = { ...meal, id: `m-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, dayOfWeek: activeDays[0], plate: [], isDone: false };
                                 onUpdateMeals([...meals, newMeal]);
                             } else {
                                 updateMeal(meal.id, { plate: [] });
@@ -304,11 +331,14 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
       </div>
 
       <button
-        onClick={() => onAddMeal(activeDay)}
+        onClick={() => onAddMeal(activeDays)}
         className="w-full mt-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-700 transition-colors"
       >
-        <Plus className="w-4 h-4" /> Adicionar Refeição para {activeDay}
+        <Plus className="w-4 h-4" /> Adicionar Refeição ({activeDays.join(', ')})
       </button>
+      <p className="text-[10px] text-center text-gray-400 px-4">
+        Dica: Selecione os dias no menu acima para criar refeições simultâneas. Para repetir todos os dias, selecione 'Todos'.
+      </p>
 
       {showScrollTop && (
         <button
