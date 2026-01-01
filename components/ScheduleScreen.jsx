@@ -132,10 +132,10 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
           return (
             <div 
                 key={meal.id} 
-                className={`p-4 rounded-[2rem] border-2 transition-all relative ${isCurrent ? 'bg-orange-50 border-orange-400 shadow-xl ring-4 ring-orange-400/10' : 'bg-white border-gray-100 shadow-sm hover:border-orange-200'}`}
+                className={`p-4 rounded-[2rem] border-2 transition-all relative overflow-hidden ${isCurrent ? 'bg-orange-50 border-orange-400 shadow-xl ring-4 ring-orange-400/10' : 'bg-white border-gray-100 shadow-sm hover:border-orange-200'}`}
             >
-              <div className="flex justify-between items-start mb-5">
-                <label className="flex items-center space-x-3 cursor-pointer group">
+              <div className="flex justify-between items-start mb-5 gap-3">
+                <label className="flex items-center space-x-3 cursor-pointer group shrink-0">
                     <div className={`p-2.5 rounded-2xl transition-colors ${isCurrent ? 'bg-orange-500 text-white shadow-lg shadow-orange-200' : 'bg-gray-50 text-gray-300 group-hover:bg-orange-100 group-hover:text-orange-500'}`}>
                         <Clock size={18} />
                     </div>
@@ -145,13 +145,13 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
                           type="time" 
                           value={meal.time}
                           onChange={(e) => updateMeal(meal.id, { time: e.target.value })}
-                          className="font-black text-2xl bg-transparent border-none outline-none focus:ring-0 p-0 text-gray-800 leading-none cursor-pointer appearance-none block"
+                          className="font-black text-sm bg-transparent border-none outline-none focus:ring-0 p-0 text-gray-800 leading-none cursor-pointer appearance-none block"
                       />
                     </div>
                 </label>
                 
-                <div className="flex flex-col items-end">
-                  <label className="text-[10px] font-black text-gray-400 uppercase mr-1 w-full text-right">Nome da Refeição</label>
+                <div className="flex flex-col items-end min-w-0 flex-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase mr-1 w-full text-right truncate">Nome da Refeição</label>
                   <input
                     type="text"
                     value={meal.name}
@@ -168,7 +168,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
                         updateMeal(meal.id, { name: val });
                     }}
                     placeholder="Ex: Chá das três"
-                    className="text-right font-black text-gray-700 text-sm uppercase tracking-tight bg-transparent border-none outline-none focus:ring-0 p-0 w-full min-w-[100px] max-w-[160px] placeholder:text-gray-300 placeholder:italic placeholder:font-normal placeholder:text-xs"
+                    className="text-right font-black text-gray-700 text-xs uppercase tracking-tight bg-transparent border-none outline-none focus:ring-0 p-0 w-full min-w-[50px] max-w-full placeholder:text-gray-300 placeholder:italic placeholder:font-normal placeholder:text-xs"
                   />
                   {nutrients.calories > 0 && (
                     <span className="text-orange-600 font-black text-xl tracking-tighter mt-1">{Math.round(nutrients.calories)} kcal</span>
