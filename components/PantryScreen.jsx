@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Mic, Plus, Trash2, Utensils, Info, Filter } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Mic, Plus, Trash2, Utensils, Info, Filter, ArrowUp } from 'lucide-react';
 import { DIET_TYPES } from '../constants';
 
 // Função auxiliar para formatar a quantidade e medida do alimento
@@ -30,6 +30,7 @@ const PantryScreen = ({
   const [activeCategory, setActiveCategory] = useState('Dispensa');
   const [viewMode, setViewMode] = useState('categories'); // 'categories' | 'diets'
   const [activeDiet, setActiveDiet] = useState('Todas');
+  const [showScrollTop, setShowScrollTop] = useState(false);
   
   const categories = ['Dispensa', 'Frutas', 'Vegetais', 'Carboidratos', 'Proteínas', 'Leguminosas', 'Laticínios', 'Gorduras', 'Bebidas', 'Doces', 'Industrializados'];
   const diets = ['Todas', ...DIET_TYPES];
@@ -78,6 +79,22 @@ const PantryScreen = ({
     }
   };
 
+  const scrollToTop = () => {
+    const main = document.querySelector('main');
+    if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    const main = document.querySelector('main');
+    if (!main) return;
+
+    const handleScroll = () => {
+      setShowScrollTop(main.scrollTop > 300);
+    };
+    main.addEventListener('scroll', handleScroll);
+    return () => main.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div className="p-4 space-y-4 pb-24">
       <style>{`
@@ -94,41 +111,48 @@ const PantryScreen = ({
         <p className="text-xs text-blue-700"><strong>Dispensa:</strong> Busque ou use a voz para <strong>adicionar novos itens</strong> que você tem em casa. Depois, toque em um alimento para <strong>selecioná-lo</strong> (borda verde) e montar seu Prato.</p>
       </div>
 
-      {/* Toggle View Mode */}
-      <div className="flex bg-gray-100 p-1 rounded-xl">
-        <button 
-            onClick={() => setViewMode('categories')}
-            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'categories' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400'}`}
-        >
-            Por Categorias
-        </button>
-        <button 
-            onClick={() => setViewMode('diets')}
-            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${viewMode === 'diets' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400'}`}
-        >
-            <Filter className="w-3 h-3" />
-            Por Dietas
-        </button>
-      </div>
+      {/* Sticky Menu Container */}
+      <div className="sticky top-0 z-20 bg-gray-50 -mx-4 px-4 py-2 space-y-3 shadow-sm">
+        {/* Toggle View Mode */}
+        <div className="flex bg-gray-100 p-1 rounded-xl">
+          <button 
+              onClick={() => setViewMode('categories')}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'categories' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400'}`}
+          >
+              Por Categorias
+          </button>
+          <button 
+              onClick={() => setViewMode('diets')}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${viewMode === 'diets' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400'}`}
+          >
+              <Filter className="w-3 h-3" />
+              Por Dietas
+          </button>
+        </div>
 
-      {/* Menu Horizontal (Categorias ou Dietas) */}
-      <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-        {(viewMode === 'categories' ? categories : diets).map(item => {
-          const isDispensa = item === 'Dispensa' && viewMode === 'categories';
-          const isActive = (viewMode === 'categories' ? activeCategory : activeDiet) === item;
-          return (
-            <button
-              key={item}
-              onClick={() => viewMode === 'categories' ? setActiveCategory(item) : setActiveDiet(item)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors 
-                  ${isActive 
-                    ? (isDispensa ? 'bg-blue-600 text-white shadow-md' : 'bg-emerald-500 text-white shadow-md') 
-                    : (isDispensa ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'bg-white text-gray-500 border border-gray-200')}`}
-            >
-              {isDispensa ? 'Sua Dispensa' : item}
-            </button>
-          );
-        })}
+        {/* Menu Horizontal (Categorias ou Dietas) */}
+        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+          {(viewMode === 'categories' ? categories : diets).map(item => {
+            const isDispensa = item === 'Dispensa' && viewMode === 'categories';
+            const isActive = (viewMode === 'categories' ? activeCategory : activeDiet) === item;
+            return (
+              <button
+                key={item}
+                onClick={() => {
+                  if (viewMode === 'categories') setActiveCategory(item);
+                  else setActiveDiet(item);
+                  scrollToTop();
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors 
+                    ${isActive 
+                      ? (isDispensa ? 'bg-blue-600 text-white shadow-md' : 'bg-emerald-500 text-white shadow-md') 
+                      : (isDispensa ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'bg-white text-gray-500 border border-gray-200')}`}
+              >
+                {isDispensa ? 'Sua Dispensa' : item}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Header / Search */}
@@ -239,6 +263,17 @@ const PantryScreen = ({
           </div>
         )}
       </div>
+
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-24 right-4 p-3 bg-emerald-600 text-white rounded-full shadow-lg hover:bg-emerald-700 transition-all z-30 animate-bounce"
+          title="Voltar ao Topo"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 };

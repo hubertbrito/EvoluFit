@@ -21,10 +21,24 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
     const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
     return daysMap[new Date().getDay()];
   });
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(timer);
+  }, []);
+
+  const scrollToTop = () => {
+    const main = document.querySelector('main');
+    if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    const main = document.querySelector('main');
+    if (!main) return;
+    const handleScroll = () => setShowScrollTop(main.scrollTop > 300);
+    main.addEventListener('scroll', handleScroll);
+    return () => main.removeEventListener('scroll', handleScroll);
   }, []);
 
   const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo', 'Todos', 'Avulso'];
@@ -78,15 +92,15 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
   return (
     <div className="p-4 space-y-6 pb-28">
       {scheduleWarnings && scheduleWarnings.length > 0 && (
-        <div className="bg-amber-50 p-4 rounded-2xl border-2 border-dashed border-amber-300 flex flex-col gap-3">
+        <div className="bg-amber-100 p-4 rounded-2xl border-2 border-dashed border-amber-400 flex flex-col gap-3">
             <div className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
-                <h3 className="font-bold text-amber-800">Ajuste de Metas Necessário</h3>
+                <AlertCircle className="w-5 h-5 text-amber-700 shrink-0" />
+                <h3 className="font-bold text-amber-900">Ajuste de Metas Necessário</h3>
             </div>
-            <p className="text-xs text-amber-700">
+            <p className="text-xs text-amber-800">
                 Seu perfil foi atualizado! O planejamento para <strong>{scheduleWarnings.join(', ')}</strong> não corresponde mais às suas novas metas calóricas.
             </p>
-            <button onClick={onClearWarnings} className="text-xs font-bold text-amber-600 self-start bg-amber-100 px-3 py-1 rounded-md">
+            <button onClick={onClearWarnings} className="text-xs font-bold text-amber-700 self-start bg-white border border-amber-200 px-3 py-1 rounded-md shadow-sm">
                 Entendi
             </button>
         </div>
@@ -97,16 +111,16 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
           <button 
             key={d}
             onClick={() => setActiveDay(d)}
-            className={`flex-shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase transition-all ${activeDay === d ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white text-gray-400 border border-gray-100'}`}
+            className={`flex-shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase transition-all ${activeDay === d ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' : 'bg-white text-indigo-400 border border-indigo-100 hover:bg-indigo-50'}`}
           >
             {d}
           </button>
         ))}
       </div>
 
-      <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-start gap-2">
-        <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-        <p className="text-xs text-blue-700">
+      <div className="bg-blue-100 p-3 rounded-xl border border-blue-200 flex items-start gap-2 shadow-sm">
+        <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+        <p className="text-xs text-blue-800">
           <strong>Dica:</strong> Renomeie, reordene ou exclua refeições. Clique em "+ Adicionar" para criar novos horários no dia selecionado.
         </p>
       </div>
@@ -132,26 +146,26 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
           return (
             <div 
                 key={meal.id} 
-                className={`p-4 rounded-[2rem] border-2 transition-all relative overflow-hidden ${isCurrent ? 'bg-orange-50 border-orange-400 shadow-xl ring-4 ring-orange-400/10' : 'bg-white border-gray-100 shadow-sm hover:border-orange-200'}`}
+                className={`p-4 rounded-[2rem] border-2 transition-all relative overflow-hidden ${isCurrent ? 'bg-orange-50 border-orange-400 shadow-xl ring-4 ring-orange-400/10' : 'bg-white border-indigo-50 shadow-sm hover:border-orange-300'}`}
             >
               <div className="flex justify-between items-start mb-5 gap-3">
-                <label className="flex items-center space-x-3 cursor-pointer group shrink-0">
-                    <div className={`p-2.5 rounded-2xl transition-colors ${isCurrent ? 'bg-orange-500 text-white shadow-lg shadow-orange-200' : 'bg-gray-50 text-gray-300 group-hover:bg-orange-100 group-hover:text-orange-500'}`}>
-                        <Clock size={18} />
+                <label className="flex items-center space-x-2 cursor-pointer group shrink-0 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 p-1.5 rounded-xl transition-colors shadow-sm">
+                    <div className={`p-1.5 rounded-lg transition-colors ${isCurrent ? 'bg-orange-600 text-white shadow-md' : 'bg-white text-indigo-600 shadow-sm'}`}>
+                        <Clock size={14} />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-gray-400 uppercase ml-1">Relógio</span>
+                      <span className="text-[8px] font-black text-indigo-700 uppercase leading-none mb-0.5">Mudar Hora</span>
                       <input 
                           type="time" 
                           value={meal.time}
                           onChange={(e) => updateMeal(meal.id, { time: e.target.value })}
-                          className="font-black text-sm bg-transparent border-none outline-none focus:ring-0 p-0 text-gray-800 leading-none cursor-pointer appearance-none block"
+                          className="font-black text-sm bg-transparent border-none outline-none focus:ring-0 p-0 text-indigo-900 leading-none cursor-pointer appearance-none block"
                       />
                     </div>
                 </label>
                 
                 <div className="flex flex-col items-end min-w-0 flex-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase mr-1 w-full text-right truncate">Nome da Refeição</label>
+                  <label className="text-[10px] font-black text-indigo-300 uppercase mr-1 w-full text-right truncate">Nome da Refeição</label>
                   <input
                     type="text"
                     value={meal.name}
@@ -168,10 +182,10 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
                         updateMeal(meal.id, { name: val });
                     }}
                     placeholder="Ex: Chá das três"
-                    className="text-right font-black text-gray-700 text-xs uppercase tracking-tight bg-transparent border-none outline-none focus:ring-0 p-0 w-full min-w-[50px] max-w-full placeholder:text-gray-300 placeholder:italic placeholder:font-normal placeholder:text-xs"
+                    className="text-right font-black text-indigo-900 text-xs uppercase tracking-tight bg-transparent border-none outline-none focus:ring-0 p-0 w-full min-w-[50px] max-w-full placeholder:text-indigo-200 placeholder:italic placeholder:font-normal placeholder:text-xs"
                   />
                   {nutrients.calories > 0 && (
-                    <span className="text-orange-600 font-black text-xl tracking-tighter mt-1">{Math.round(nutrients.calories)} kcal</span>
+                    <span className="text-orange-700 font-black text-xs tracking-tighter mt-1">{Math.round(nutrients.calories)} kcal</span>
                   )}
                 </div>
               </div>
@@ -196,55 +210,55 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
                                             }
                                         }
                                     }}
-                                    className="bg-white border border-gray-100 px-3 py-1.5 rounded-xl text-[11px] font-black text-gray-600 shadow-sm hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200 transition-colors flex items-center gap-1 group"
+                                    className="bg-white border border-indigo-100 px-3 py-1.5 rounded-xl text-[11px] font-black text-indigo-600 shadow-sm hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-colors flex items-center gap-1 group"
                                     title="Clique para remover item"
                                 >
                                     {food ? formatFoodQuantity(p.quantity, p.unit, food.name) : 'Item desconhecido'}
-                                    <Trash2 size={10} className="text-gray-300 group-hover:text-rose-500 transition-colors" />
+                                    <Trash2 size={10} className="text-indigo-200 group-hover:text-rose-500 transition-colors" />
                                 </button>
                             );
                         })}
                     </div>
                     
-                    <div className="bg-orange-50/50 rounded-3xl p-3 flex justify-around items-center border border-orange-100">
+                    <div className="bg-orange-50 rounded-3xl p-3 flex justify-around items-center border border-orange-100 shadow-inner">
                       <div className="flex flex-col items-center">
-                        <Zap size={10} className="text-emerald-500 mb-0.5" />
-                        <span className="text-[10px] font-black text-gray-400 uppercase">Prot</span>
-                        <span className="text-[11px] font-black text-emerald-600">{Math.round(nutrients.protein)}g</span>
+                        <Zap size={10} className="text-emerald-600 mb-0.5" />
+                        <span className="text-[10px] font-black text-indigo-300 uppercase">Prot</span>
+                        <span className="text-[11px] font-black text-emerald-700">{Math.round(nutrients.protein)}g</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <Wheat size={10} className="text-amber-500 mb-0.5" />
-                        <span className="text-[10px] font-black text-gray-400 uppercase">Carb</span>
-                        <span className="text-[11px] font-black text-amber-600">{Math.round(nutrients.carbs)}g</span>
+                        <Wheat size={10} className="text-amber-600 mb-0.5" />
+                        <span className="text-[10px] font-black text-indigo-300 uppercase">Carb</span>
+                        <span className="text-[11px] font-black text-amber-700">{Math.round(nutrients.carbs)}g</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <Droplets size={10} className="text-blue-500 mb-0.5" />
-                        <span className="text-[10px] font-black text-gray-400 uppercase">Gord</span>
-                        <span className="text-[11px] font-black text-blue-600">{Math.round(nutrients.fat)}g</span>
+                        <Droplets size={10} className="text-blue-600 mb-0.5" />
+                        <span className="text-[10px] font-black text-indigo-300 uppercase">Gord</span>
+                        <span className="text-[11px] font-black text-blue-700">{Math.round(nutrients.fat)}g</span>
                       </div>
                     </div>
 
                     <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-2">
                         <span className={`w-2 h-2 rounded-full ${meal.dayOfWeek === 'Todos' ? 'bg-blue-400' : 'bg-orange-500'}`}></span>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{meal.dayOfWeek || 'Todos'}</span>
+                        <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">{meal.dayOfWeek || 'Todos'}</span>
                       </div>
                     </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center space-x-2 text-xs font-bold text-gray-300 uppercase italic py-3 bg-gray-50/50 rounded-2xl border border-dashed border-gray-100">
+                <div className="flex items-center justify-center space-x-2 text-xs font-bold text-indigo-300 uppercase italic py-3 bg-indigo-50/50 rounded-2xl border border-dashed border-indigo-100">
                   <AlertCircle size={14}/>
                   <span>Vazio para {activeDay}</span>
                 </div>
               )}
 
-              <div className="flex justify-end items-center gap-2 mt-4 pt-3 border-t border-gray-50">
-                  <span className="text-[10px] font-bold text-gray-300 uppercase mr-auto">Ações</span>
+              <div className="flex justify-end items-center gap-2 mt-4 pt-3 border-t border-indigo-50">
+                  <span className="text-[10px] font-bold text-indigo-200 uppercase mr-auto">Ações</span>
                   
-                  <button onClick={() => onReorderMeal(meal.id, 'up', activeDay)} disabled={index === 0} className="p-2 bg-gray-100 rounded-xl text-gray-400 disabled:opacity-30 hover:bg-emerald-100 hover:text-emerald-600 transition-colors" title="Mover para cima">
+                  <button onClick={() => onReorderMeal(meal.id, 'up', activeDay)} disabled={index === 0} className="p-2 bg-indigo-50 rounded-xl text-indigo-400 disabled:opacity-30 hover:bg-emerald-100 hover:text-emerald-600 transition-colors" title="Mover para cima">
                     <ArrowUp size={16} />
                   </button>
-                  <button onClick={() => onReorderMeal(meal.id, 'down', activeDay)} disabled={index === filteredMeals.length - 1} className="p-2 bg-gray-100 rounded-xl text-gray-400 disabled:opacity-30 hover:bg-emerald-100 hover:text-emerald-600 transition-colors" title="Mover para baixo">
+                  <button onClick={() => onReorderMeal(meal.id, 'down', activeDay)} disabled={index === filteredMeals.length - 1} className="p-2 bg-indigo-50 rounded-xl text-indigo-400 disabled:opacity-30 hover:bg-emerald-100 hover:text-emerald-600 transition-colors" title="Mover para baixo">
                     <ArrowDown size={16} />
                   </button>
                   
@@ -295,6 +309,16 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
       >
         <Plus className="w-4 h-4" /> Adicionar Refeição para {activeDay}
       </button>
+
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-24 right-4 p-3 bg-emerald-600 text-white rounded-full shadow-lg hover:bg-emerald-700 transition-all z-30 animate-bounce"
+          title="Voltar ao Topo"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 };
