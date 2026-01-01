@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Search, Mic, Plus, Trash2, Utensils, Info } from 'lucide-react';
+import { Search, Mic, Plus, Trash2, Utensils, Info, Filter } from 'lucide-react';
+import { DIET_TYPES } from '../constants';
 
 const PantryScreen = ({ 
   allFoods, 
@@ -13,11 +14,37 @@ const PantryScreen = ({
   onAddManual 
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeCategory, setActiveCategory] = useState('Dispensa');
+  const [viewMode, setViewMode] = useState('categories'); // 'categories' | 'diets'
+  const [activeDiet, setActiveDiet] = useState('Todas');
+  
+  const categories = ['Dispensa', 'Frutas', 'Vegetais', 'Carboidratos', 'Proteínas', 'Leguminosas', 'Laticínios', 'Gorduras', 'Bebidas', 'Doces', 'Industrializados'];
+  const diets = ['Todas', ...DIET_TYPES];
 
-  // Se tiver busca, procura em todos os alimentos. Se não, mostra só a dispensa.
-  const displayedFoods = searchTerm 
-    ? allFoods.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()))
-    : allFoods.filter(f => userPantry.includes(f.id));
+  // Lógica de Filtro: Busca > Categoria > Dispensa
+  const displayedFoods = (() => {
+    if (searchTerm) {
+      const normalize = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const term = normalize(searchTerm);
+      
+      return allFoods
+        .filter(f => normalize(f.name).includes(term))
+        .sort((a, b) => {
+          const nameA = normalize(a.name);
+          const nameB = normalize(b.name);
+          const startsA = nameA.startsWith(term);
+          const startsB = nameB.startsWith(term);
+          if (startsA && !startsB) return -1;
+          if (!startsA && startsB) return 1;
+          return a.name.localeCompare(b.name);
+        });
+    }
+    if (viewMode === 'categories') {
+        if (activeCategory === 'Dispensa') return allFoods.filter(f => userPantry.includes(f.id));
+        return allFoods.filter(f => f.category === activeCategory);
+    }
+    return activeDiet === 'Todas' ? allFoods : allFoods.filter(f => f.diets && f.diets.includes(activeDiet));
+  })();
 
   const handleManualAdd = () => {
     if (searchTerm) {
@@ -33,13 +60,44 @@ const PantryScreen = ({
         <p className="text-xs text-blue-700"><strong>Dispensa:</strong> Busque ou use a voz para <strong>adicionar novos itens</strong> que você tem em casa. Depois, toque em um alimento para <strong>selecioná-lo</strong> (borda verde) e montar seu Prato.</p>
       </div>
 
+      {/* Toggle View Mode */}
+      <div className="flex bg-gray-100 p-1 rounded-xl">
+        <button 
+            onClick={() => setViewMode('categories')}
+            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'categories' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400'}`}
+        >
+            Por Categorias
+        </button>
+        <button 
+            onClick={() => setViewMode('diets')}
+            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${viewMode === 'diets' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400'}`}
+        >
+            <Filter className="w-3 h-3" />
+            Por Dietas
+        </button>
+      </div>
+
+      {/* Menu Horizontal (Categorias ou Dietas) */}
+      <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+        {(viewMode === 'categories' ? categories : diets).map(item => (
+          <button
+            key={item}
+            onClick={() => viewMode === 'categories' ? setActiveCategory(item) : setActiveDiet(item)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors 
+                ${(viewMode === 'categories' ? activeCategory : activeDiet) === item ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-gray-500 border border-gray-200'}`}
+          >
+            {item}
+          </button>
+        ))}
+      </div>
+
       {/* Header / Search */}
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input 
             type="text" 
-            placeholder="O que você tem em casa?" 
+            placeholder="Digite o nome do alimento..." 
             className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-100 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -79,7 +137,6 @@ const PantryScreen = ({
                 <span className="text-2xl">{food.emoji || '🍽️'}</span>
                 <div>
                   <h3 className="font-bold text-gray-800">{food.name}</h3>
-                  <p className="text-xs text-gray-400">{food.calories} kcal • {food.category}</p>
                 </div>
               </div>
               
@@ -115,10 +172,16 @@ const PantryScreen = ({
           );
         })}
 
-        {displayedFoods.length === 0 && !searchTerm && (
+        {displayedFoods.length === 0 && !searchTerm && viewMode === 'categories' && activeCategory === 'Dispensa' && (
           <div className="text-center py-10 text-gray-400">
             <p>Sua dispensa está vazia.</p>
-            <p className="text-sm">Adicione alimentos para começar.</p>
+            <p className="text-sm">Navegue pelas categorias acima para adicionar alimentos.</p>
+          </div>
+        )}
+
+        {displayedFoods.length === 0 && !searchTerm && (viewMode === 'diets' || activeCategory !== 'Dispensa') && (
+          <div className="text-center py-10 text-gray-400">
+            <p>Nenhum item encontrado nesta categoria.</p>
           </div>
         )}
       </div>

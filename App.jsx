@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FOOD_DATABASE, UNIT_WEIGHTS } from './constants';
+import { FOOD_DATABASE, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures } from './constants';
 import PantryScreen from './components/PantryScreen';
 import PlateScreen from './components/PlateScreen';
 import BrainScreen from './components/BrainScreen';
@@ -101,7 +101,7 @@ const App = () => {
         meal.plate.forEach(item => {
           const food = allFoods.find(f => f.id === item.foodId);
           if (food) {
-            const weight = (UNIT_WEIGHTS[item.unit] || 1) * item.quantity;
+            const weight = getFoodUnitWeight(food, item.unit) * item.quantity;
             total += (food.calories / 100) * weight;
           }
         });
@@ -232,9 +232,11 @@ const App = () => {
 
   const addCustomFood = (name) => {
     const newId = `custom-${Date.now()}`;
+    const measures = inferFoodMeasures(name); // Infere medidas automaticamente pelo nome
     const newFood = {
       id: newId, name, emoji: '', category: Category.INDUSTRIALIZADOS,
-      calories: 120, protein: 4, carbs: 20, fat: 3, fiber: 1
+      calories: 120, protein: 4, carbs: 20, fat: 3, fiber: 1,
+      measures // Anexa as medidas ao novo alimento
     };
     setCustomFoods(prev => [...prev, newFood]);
     setPantryItems(prev => Array.from(new Set([...prev, newId])));
@@ -344,7 +346,7 @@ const App = () => {
           meal.plate.forEach(item => {
             const food = allFoods.find(f => f.id === item.foodId);
             if (food) {
-              const weight = (UNIT_WEIGHTS[item.unit] || 1) * (item.quantity || 0);
+              const weight = getFoodUnitWeight(food, item.unit) * (item.quantity || 0);
               dayCalories += (food.calories / 100) * weight;
             }
           });

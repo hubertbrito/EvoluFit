@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Trash2, Plus, ChefHat, Calendar, Info, Clock, ChevronUp, ChevronDown } from 'lucide-react';
-import { MEASURE_UNITS, UNIT_WEIGHTS } from '../constants';
+import { MEASURE_UNITS, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures } from '../constants';
 
 const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddMore, meals }) => {
   const [selectedDays, setSelectedDays] = useState(['Todos']);
@@ -21,7 +21,7 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
       const food = allFoods.find(f => f.id === item.foodId);
       if (!food) return acc;
       // Cálculo: (CaloriasBase / 100) * (PesoDaUnidade * Quantidade)
-      const weight = (UNIT_WEIGHTS[item.unit] || 1) * item.quantity;
+      const weight = getFoodUnitWeight(food, item.unit) * item.quantity;
       return acc + ((food.calories / 100) * weight);
     }, 0);
   };
@@ -75,8 +75,23 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
             const food = allFoods.find(f => f.id === item.foodId);
             if (!food) return null;
             
-            const itemWeight = (UNIT_WEIGHTS[item.unit] || 1) * item.quantity;
+            const itemWeight = getFoodUnitWeight(food, item.unit) * item.quantity;
             const itemCalories = (food.calories / 100) * itemWeight;
+
+            // Define as unidades disponíveis de forma limpa e contextual
+            let availableUnits = ['Gramas (g)', 'Mililitros (ml)'];
+            
+            if (food.measures) {
+              availableUnits = [...availableUnits, ...Object.keys(food.measures)];
+            } else {
+              const inferred = inferFoodMeasures(food.name);
+              if (inferred) {
+                availableUnits = [...availableUnits, ...Object.keys(inferred)];
+              } else {
+                // Fallback minimalista para não mostrar opções sem sentido
+                availableUnits = [...availableUnits, 'Unidade', 'Colher de Sopa', 'Xícara'];
+              }
+            }
 
             return (
               <div key={`${item.foodId}-${index}`} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
@@ -124,7 +139,7 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                     onChange={(e) => onUpdate(item.foodId, { unit: e.target.value })}
                     className="flex-1 p-2 border rounded-lg bg-white"
                   >
-                    {MEASURE_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                    {availableUnits.map(u => <option key={u} value={u}>{u}</option>)}
                   </select>
                 </div>
               </div>
@@ -157,32 +172,8 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
               </div>
             </div>
 
-            {/* Seção para Refeições Criadas na Agenda (Nova Refeição) */}
-            {customMeals.length > 0 && (
-              <div className="mb-6">
-                <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100 mb-3">
-                  <p className="text-xs text-emerald-800 font-medium flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    Existe uma <strong>Nova Refeição</strong> criada na sua agenda. Gostaria de inserir este prato nela?
-                  </p>
-                </div>
-                <div className="space-y-2 mb-4">
-                  {customMeals.map(meal => (
-                    <button
-                      key={meal.id}
-                      onClick={() => onAssignMeal(null, null, meal.id)}
-                      className="w-full p-3 bg-emerald-100 text-emerald-800 rounded-xl font-bold text-sm hover:bg-emerald-200 transition-colors border border-emerald-200 text-left flex justify-between items-center"
-                    >
-                      <span>Inserir em "{meal.name}" ({meal.dayOfWeek})</span>
-                      <span className="text-xs bg-white px-2 py-1 rounded text-emerald-600">{meal.time}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <h3 className="text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider">Ou classificar como:</h3>
-            <div className="grid grid-cols-2 gap-2">
+            <h3 className="text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider">Classificar como:</h3>
+            <div className="grid grid-cols-2 gap-2 mb-6">
               {mealTypes.map(mealName => (
                 <button
                   key={mealName}
@@ -193,6 +184,32 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                 </button>
               ))}
             </div>
+
+            {/* Seção para Refeições Criadas na Agenda (Nova Refeição) - Movida para baixo */}
+            {customMeals.length > 0 && (
+              <div className="mb-6 pt-4 border-t border-gray-100">
+                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 mb-3">
+                  <p className="text-xs text-blue-800 font-medium flex flex-col gap-1">
+                    <span className="flex items-center gap-2 font-bold">
+                        <Clock className="w-4 h-4" /> Refeições criadas por você
+                    </span>
+                    <span>Deseja inserir esse prato em alguma delas? Basta clicar em uma das opções abaixo para inserir.</span>
+                  </p>
+                </div>
+                <div className="space-y-2 mb-4">
+                  {customMeals.map(meal => (
+                    <button
+                      key={meal.id}
+                      onClick={() => onAssignMeal(null, null, meal.id)}
+                      className="w-full p-3 bg-blue-100 text-blue-800 rounded-xl font-bold text-sm hover:bg-blue-200 transition-colors border border-blue-200 text-left flex justify-between items-center"
+                    >
+                      <span>Inserir em "{meal.name}" ({meal.dayOfWeek})</span>
+                      <span className="text-xs bg-white px-2 py-1 rounded text-blue-600">{meal.time}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
