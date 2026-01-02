@@ -164,13 +164,7 @@ const PantryScreen = ({
         <label className="text-xs font-medium text-gray-600 block ml-1">
           Busque um alimento ou digite para cadastrar um novo:
         </label>
-        <div className="flex gap-2 relative">
-          {showTour && tourStep === 1 && (
-            <div className="absolute bottom-full mb-2 left-10 bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-xl z-[110] animate-bounce whitespace-nowrap">
-              👇 Digite ou fale aqui para buscar!
-              <div className="absolute top-full left-4 border-8 border-transparent border-t-emerald-500"></div>
-            </div>
-          )}
+        <div className="flex gap-2" data-tour-id="pantry-search">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Trash2, Copy, AlertTriangle } from 'lucide-react';
 import { FOOD_DATABASE, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures } from './constants';
 import PantryScreen from './components/PantryScreen';
 import PlateScreen from './components/PlateScreen';
@@ -11,14 +11,29 @@ import { Layout } from './components/Layout';
 // Definindo localmente para não depender de arquivo de tipos externo
 const Category = { INDUSTRIALIZADOS: 'Industrializados' };
 
-const TourOverlay = ({ step, onNext, onSkip }) => {
+const DEFAULT_MEAL_SCHEDULE = [
+  { id: 'm1', name: 'Café da Manhã', time: '08:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
+  { id: 'm2', name: 'Lanche das 10h', time: '10:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
+  { id: 'm3', name: 'Almoço', time: '12:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
+  { id: 'm4', name: 'Chá das Três', time: '15:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
+  { id: 'm5', name: 'Lanche das 17h', time: '17:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
+  { id: 'm6', name: 'Jantar das 20h', time: '20:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
+  { id: 'm7', name: 'Lanche das 22h', time: '22:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
+  { id: 'm8', name: 'Ceia da Meia-noite', time: '00:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
+];
+
+const TourOverlay = ({ step, onNext, onBack, onSkip, highlightedRect }) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isBouncing, setIsBouncing] = useState(true);
 
-  // Reseta a posição (drag) quando o passo muda para garantir que ele vá para o local "seguro" definido
+  // Reseta a posição (drag) e ativa o bounce quando o passo muda
   useEffect(() => {
     setPosition({ x: 0, y: 0 });
+    setIsBouncing(true);
+    const timer = setTimeout(() => setIsBouncing(false), 400); // Duração da animação
+    return () => clearTimeout(timer);
   }, [step]);
 
   const steps = [
@@ -26,49 +41,42 @@ const TourOverlay = ({ step, onNext, onSkip }) => {
       title: "Bem-vindo ao NutriBrasil!",
       content: "Seu perfil foi configurado com sucesso! Vamos fazer um tour rápido para você dominar o aplicativo e atingir suas metas?",
       action: "Começar Tour",
-      arrow: null,
       positionClass: "bottom-24 right-4"
     },
     {
       title: "1. Sua Dispensa",
       content: "Aqui você encontra todos os alimentos. Use a busca ou o microfone para encontrar o que vai comer. Clique no '+' ou no alimento para adicioná-lo ao seu Prato.",
       action: "Próximo",
-      arrow: 'top',
       positionClass: "bottom-24 right-4"
     },
     {
       title: "2. Montando o Prato",
-      content: "Na aba 'Prato', você define a quantidade exata (ex: 2 colheres) de cada alimento selecionado. O app calcula as calorias em tempo real.",
+      content: "Aqui na aba 'Prato', você definirá a quantidade exata (ex: 2 colheres) de cada alimento selecionado. O app calcula as calorias em tempo real.",
       action: "Entendi",
-      arrow: 'top',
       positionClass: "bottom-24 right-4"
     },
     {
       title: "3. Agendando",
       content: "Depois de montar o prato, use os botões abaixo para escolher os dias e a refeição (ex: Almoço) onde esse prato será servido.",
       action: "Próximo",
-      arrow: 'bottom',
       positionClass: "top-24 right-4"
     },
     {
       title: "4. Sua Agenda",
       content: "Aqui fica seu planejamento completo. Você visualiza todas as refeições do dia e seus horários.",
       action: "Próximo",
-      arrow: 'top',
       positionClass: "bottom-24 right-4"
     },
     {
       title: "5. Criando Refeições",
       content: "Para criar uma nova refeição (ex: Lanche Extra), a regra é: PRIMEIRO selecione os dias no menu superior, e SÓ DEPOIS clique em 'Adicionar Refeição'.",
       action: "Importante!",
-      arrow: 'bottom',
       positionClass: "top-24 right-4"
     },
     {
       title: "6. Fluxo Inverso",
       content: "Você também pode criar uma refeição vazia na Agenda primeiro, e depois ir ao Prato e escolher 'Inserir em...' para preenchê-la.",
       action: "Finalizar",
-      arrow: null,
       positionClass: "bottom-24 right-4"
     }
   ];
@@ -102,12 +110,14 @@ const TourOverlay = ({ step, onNext, onSkip }) => {
 
   const current = steps[step];
 
-  return (
-    <div className="fixed inset-0 z-[100] bg-transparent pointer-events-none">
-      <style>{`@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }`}</style>
+  // The modal window JSX
+  const Modal = (
+    <div 
+      className={`absolute pointer-events-auto transition-all duration-500 ease-in-out ${!highlightedRect ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : current.positionClass}`}
+      style={highlightedRect ? { transform: `translate(${position.x}px, ${position.y}px)` } : {}}
+    >
       <div 
-        className={`bg-white rounded-2xl p-4 max-w-xs w-full shadow-xl border-2 border-emerald-500 absolute pointer-events-auto cursor-move transition-all duration-500 ease-in-out ${current.positionClass}`}
-        style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
+        className={`bg-white rounded-2xl p-4 max-w-xs w-full shadow-xl border-2 border-emerald-500 cursor-move ${isBouncing ? 'animate-scale-bounce' : ''}`}
         onMouseDown={handleMouseDown}
       >
         <button 
@@ -123,10 +133,331 @@ const TourOverlay = ({ step, onNext, onSkip }) => {
             <p className="text-gray-600 text-xs leading-relaxed">{current.content}</p>
         </div>
         <div className="flex gap-2 mt-2">
-            {step > 0 && <button onClick={onSkip} className="flex-1 py-1.5 rounded-lg font-bold text-xs text-gray-400 hover:bg-gray-100 transition-colors">Pular</button>}
+            {step > 0 && <button onClick={onBack} className="flex-1 py-1.5 rounded-lg font-bold text-xs text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors">Voltar</button>}
             <button onClick={onNext} className="flex-2 w-full py-1.5 bg-emerald-600 text-white rounded-lg font-bold text-xs shadow-md hover:bg-emerald-700 transition-transform transform active:scale-95">{current.action}</button>
         </div>
         <div className="flex justify-center gap-1 mt-2">{steps.map((_, i) => <div key={i} className={`w-1.5 h-1.5 rounded-full transition-colors ${i === step ? 'bg-emerald-500' : 'bg-gray-200'}`} />)}</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="fixed inset-0 z-[100] pointer-events-none animate-fade-in">
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } 
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes scale-bounce {
+          0% { transform: scale(0.95); }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); }
+        }
+        .animate-scale-bounce { animation: scale-bounce 0.4s ease-out; }
+      `}</style>
+      {/* Spotlight effect */}
+      {highlightedRect ? (
+        <>
+          <div className="fixed bg-black/70" style={{ top: 0, left: 0, width: '100%', height: highlightedRect.top }} />
+          <div className="fixed bg-black/70" style={{ top: highlightedRect.bottom, left: 0, width: '100%', bottom: 0 }} />
+          <div className="fixed bg-black/70" style={{ top: highlightedRect.top, left: 0, width: highlightedRect.left, height: highlightedRect.height }} />
+          <div className="fixed bg-black/70" style={{ top: highlightedRect.top, left: highlightedRect.right, right: 0, height: highlightedRect.height }} />
+        </>
+      ) : (
+        // Fallback dark background if no element is highlighted
+        <div className="fixed inset-0 bg-black/70" />
+      )}
+      
+      {/* The modal itself */}
+      {Modal}
+    </div>
+  );
+};
+
+const ManualScreen = ({ onClose, onReset }) => (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+    <style>{`
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } 
+      .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+      @keyframes scale-bounce {
+        0% { transform: scale(0.95); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+      .animate-scale-bounce { animation: scale-bounce 0.4s ease-out; }
+    `}</style>
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden animate-scale-bounce">
+      <div className="p-4 border-b flex justify-between items-center bg-emerald-50">
+        <h2 className="text-lg font-bold text-emerald-800 flex items-center gap-2">
+          📖 Manual de Uso
+        </h2>
+        <button onClick={onClose} className="p-1 hover:bg-emerald-100 rounded-full transition-colors text-emerald-600">
+          <X size={20} />
+        </button>
+      </div>
+      
+      <div className="p-6 overflow-y-auto space-y-6 text-sm text-gray-600 leading-relaxed">
+        <div className="space-y-2">
+          <h3 className="font-bold text-emerald-700 text-base">1. Dispensa & Busca</h3>
+          <p>
+            Use a barra de busca ou o botão de microfone 🎤 para encontrar alimentos. 
+            Clique no alimento ou no botão <strong>+</strong> para colocá-lo no seu "Prato".
+            Se não encontrar, o app sugere criar um alimento personalizado.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="font-bold text-emerald-700 text-base">2. Montando o Prato</h3>
+          <p>
+            Na aba <strong>Prato</strong>, ajuste as quantidades (ex: 2 colheres). 
+            O app calcula as calorias automaticamente. Quando terminar, clique nos botões 
+            de refeição (ex: "Almoço") para agendar esse prato para os dias que desejar.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="font-bold text-emerald-700 text-base">3. Agenda Inteligente</h3>
+          <p>
+            Visualize seu dia a dia. Você pode criar refeições extras (ex: "Lanche da Tarde") 
+            selecionando os dias no topo e clicando em <strong>+ Adicionar Refeição</strong>.
+            Arraste ou use as setas para reordenar.
+          </p>
+        </div>
+      </div>
+
+      <div className="p-4 border-t bg-gray-50 flex justify-between items-center">
+        <button onClick={onReset} className="text-rose-500 text-xs font-bold hover:text-rose-700 underline">
+          Resetar Agenda
+        </button>
+        <button onClick={onClose} className="px-6 py-2 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 transition-transform active:scale-95 shadow-md">
+          Fechar Manual
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const AddMealModal = ({ onClose, onConfirm, title, buttonLabel, mealToEdit }) => {
+  const [selectedDays, setSelectedDays] = useState([]);
+  const [time, setTime] = useState(mealToEdit ? mealToEdit.time : '14:00');
+  const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+
+  const toggleDay = (day) => {
+    setSelectedDays(prev => 
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
+  };
+
+  const handleConfirm = () => {
+    if (selectedDays.length === 0) return alert('Selecione pelo menos um dia.');
+    onConfirm(selectedDays, time);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } 
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes scale-bounce {
+          0% { transform: scale(0.95); }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); }
+        }
+        .animate-scale-bounce { animation: scale-bounce 0.4s ease-out; }
+      `}</style>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-bounce">
+        <div className="p-4 border-b bg-emerald-50 flex justify-between items-center">
+          <h3 className="font-bold text-emerald-800">{title || "Adicionar Nova Refeição"}</h3>
+          <button onClick={onClose}><X size={20} className="text-emerald-600" /></button>
+        </div>
+        <div className="p-6">
+          {mealToEdit && (
+            <div className="mb-4">
+              <label className="block text-sm font-bold text-gray-700 mb-1">Horário da Refeição</label>
+              <input 
+                  type="time" 
+                  value={time} 
+                  onChange={(e) => setTime(e.target.value)}
+                  className="w-full p-2 border rounded-lg bg-white"
+              />
+            </div>
+          )}
+          <p className="text-sm text-gray-600 mb-4">Selecione os dias para esta refeição:</p>
+          <div className="flex gap-2 mb-4">
+            <button onClick={() => setSelectedDays(days)} className="flex-1 p-2 rounded-lg text-xs font-bold border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100">Todos os Dias</button>
+            <button onClick={() => setSelectedDays([])} className="flex-1 p-2 rounded-lg text-xs font-bold border border-gray-200 text-gray-500 hover:bg-gray-50">Limpar</button>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {days.map(day => (
+              <button key={day} onClick={() => toggleDay(day)} className={`p-2 rounded-lg text-xs font-bold transition-colors ${selectedDays.includes(day) ? 'bg-emerald-600 text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                {day.slice(0, 3)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
+          <button onClick={onClose} className="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button>
+          <button onClick={handleConfirm} className="px-6 py-2 bg-emerald-600 text-white rounded-lg font-bold text-sm shadow-md hover:bg-emerald-700">{buttonLabel || "Criar"}</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const DeleteMealModal = ({ onClose, onConfirm, onDuplicate, meal, contextDay }) => {
+  const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+  const isTodos = meal.dayOfWeek === 'Todos';
+  
+  const [selectedDays, setSelectedDays] = useState(
+    isTodos 
+      ? (contextDay && days.includes(contextDay) ? [contextDay] : days)
+      : [meal.dayOfWeek]
+  );
+
+  const toggleDay = (day) => {
+    if (!isTodos) return;
+    setSelectedDays(prev => 
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
+  };
+
+  const handleConfirm = () => {
+    if (selectedDays.length === 0) return alert('Selecione pelo menos um dia para excluir.');
+    onConfirm(selectedDays);
+    onClose();
+  };
+
+  return (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+    <style>{`
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } 
+      .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+      @keyframes scale-bounce {
+        0% { transform: scale(0.95); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+      .animate-scale-bounce { animation: scale-bounce 0.4s ease-out; }
+    `}</style>
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-bounce">
+      <div className="p-4 border-b bg-rose-50 flex justify-between items-center">
+        <h3 className="font-bold text-rose-800">Excluir Refeição</h3>
+        <button onClick={onClose}><X size={20} className="text-rose-600" /></button>
+      </div>
+      <div className="p-6">
+        <p className="text-gray-600 mb-4 text-sm">
+          Selecione os dias para excluir a refeição <strong>"{meal.name}"</strong>:
+        </p>
+        
+        {isTodos && (
+          <div className="flex gap-2 mb-4">
+            <button onClick={() => setSelectedDays(days)} className="flex-1 p-2 rounded-lg text-xs font-bold border border-rose-200 text-rose-700 bg-rose-50 hover:bg-rose-100">Todos os Dias</button>
+            <button onClick={() => setSelectedDays([])} className="flex-1 p-2 rounded-lg text-xs font-bold border border-gray-200 text-gray-500 hover:bg-gray-50">Limpar</button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-4 gap-2">
+          {days.map(day => (
+            <button 
+              key={day} 
+              onClick={() => toggleDay(day)} 
+              disabled={!isTodos && day !== meal.dayOfWeek}
+              className={`p-2 rounded-lg text-xs font-bold transition-colors 
+                ${selectedDays.includes(day) 
+                  ? 'bg-rose-600 text-white shadow-md' 
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}
+                ${(!isTodos && day !== meal.dayOfWeek) ? 'opacity-30 cursor-not-allowed' : ''}
+              `}
+            >
+              {day.slice(0, 3)}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
+        <button 
+          onClick={onDuplicate} 
+          className="mr-auto px-4 py-2 bg-blue-50 text-blue-600 rounded-lg font-bold text-sm hover:bg-blue-100 flex items-center gap-2"
+        >
+          <Copy size={16} /> Duplicar
+        </button>
+        <button onClick={onClose} className="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button>
+        <button onClick={handleConfirm} className="px-6 py-2 bg-rose-600 text-white rounded-lg font-bold text-sm shadow-md hover:bg-rose-700">Excluir</button>
+      </div>
+    </div>
+  </div>
+  );
+};
+
+const Confetti = () => {
+  const confettiCount = 100;
+  const colors = ['#fde047', '#f87171', '#4ade80', '#60a5fa', '#a78bfa'];
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
+      <style>{`
+        @keyframes fall {
+          0% { transform: translateY(-10vh) rotateZ(0deg); opacity: 1; }
+          100% { transform: translateY(110vh) rotateZ(720deg); opacity: 0; }
+        }
+        .confetti-piece {
+          position: absolute;
+          width: 8px;
+          height: 16px;
+          animation: fall 3s linear forwards;
+        }
+      `}</style>
+      {Array.from({ length: confettiCount }).map((_, i) => {
+        const style = {
+          left: `${Math.random() * 100}vw`,
+          backgroundColor: colors[Math.floor(Math.random() * colors.length)],
+          animationDelay: `${Math.random() * 2}s`,
+          transform: `rotate(${Math.random() * 360}deg)`
+        };
+        return <div key={i} className="confetti-piece" style={style}></div>;
+      })}
+    </div>
+  );
+};
+
+const ResetScheduleModal = ({ onClose, onConfirm }) => {
+  const [inputValue, setInputValue] = useState('');
+  const isMatch = inputValue === 'RESETAR';
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-bounce">
+        <div className="p-4 border-b bg-rose-50 flex justify-between items-center">
+          <h3 className="font-bold text-rose-800 flex items-center gap-2">
+            <AlertTriangle size={20} /> Zona de Perigo
+          </h3>
+          <button onClick={onClose}><X size={20} className="text-rose-600" /></button>
+        </div>
+        <div className="p-6">
+          <p className="text-gray-600 mb-4 text-sm font-bold">
+            Você está prestes a apagar TODAS as refeições criadas e limpar o conteúdo das refeições padrão.
+          </p>
+          <p className="text-gray-500 text-xs mb-4">
+            Esta ação não pode ser desfeita. Para confirmar, digite <strong>RESETAR</strong> no campo abaixo:
+          </p>
+          
+          <input 
+            type="text" 
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value.toUpperCase())}
+            placeholder="Digite RESETAR"
+            className="w-full p-3 border-2 border-rose-200 rounded-xl focus:border-rose-500 focus:outline-none font-bold text-rose-600 placeholder:text-rose-200 uppercase"
+          />
+        </div>
+        <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
+          <button onClick={onClose} className="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button>
+          <button 
+            onClick={onConfirm} 
+            disabled={!isMatch}
+            className={`px-6 py-2 rounded-lg font-bold text-sm shadow-md transition-all ${isMatch ? 'bg-rose-600 text-white hover:bg-rose-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+          >
+            Confirmar Reset
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -167,23 +498,21 @@ const App = () => {
   const [mealSchedule, setMealSchedule] = useState(() => {
     const saved = localStorage.getItem('mealSchedule');
     if (saved) return JSON.parse(saved);
-    // Inicializamos com slots genéricos que podem ser preenchidos
-    return [
-      { id: 'm1', name: 'Café da Manhã', time: '08:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-      { id: 'm2', name: 'Lanche das 10h', time: '10:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-      { id: 'm3', name: 'Almoço', time: '12:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-      { id: 'm4', name: 'Chá das Três', time: '15:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-      { id: 'm5', name: 'Lanche das 17h', time: '17:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-      { id: 'm6', name: 'Jantar das 20h', time: '20:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-      { id: 'm7', name: 'Lanche das 22h', time: '22:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-      { id: 'm8', name: 'Ceia da Meia-noite', time: '00:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-    ];
+    return DEFAULT_MEAL_SCHEDULE;
   });
 
   const [isListening, setIsListening] = useState(false);
   const [scheduleWarnings, setScheduleWarnings] = useState([]);
   const [showTour, setShowTour] = useState(false);
   const [tourStep, setTourStep] = useState(0);
+  const [showManual, setShowManual] = useState(false);
+  const [highlightedRect, setHighlightedRect] = useState(null);
+  const [showAddMealModal, setShowAddMealModal] = useState(false);
+  const [mealToDelete, setMealToDelete] = useState(null);
+  const [deleteContextDay, setDeleteContextDay] = useState(null);
+  const [mealToDuplicate, setMealToDuplicate] = useState(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('userProfile', JSON.stringify(userProfile));
@@ -207,13 +536,52 @@ const App = () => {
     }
   }, [tourStep, showTour]);
 
-  const handleTourNext = () => tourStep < 6 ? setTourStep(p => p + 1) : (setShowTour(false), localStorage.setItem('hasSeenTour', 'true'));
-  const handleTourSkip = () => (setShowTour(false), localStorage.setItem('hasSeenTour', 'true'));
+  const handleTourNext = () => tourStep < 6 ? setTourStep(p => p + 1) : (setShowTour(false), localStorage.setItem('hasSeenTour', 'true'), setActiveTab('pantry'));
+  const handleTourBack = () => tourStep > 0 && setTourStep(p => p - 1);
+  const handleTourSkip = () => (setShowTour(false), localStorage.setItem('hasSeenTour', 'true'), setActiveTab('pantry'));
+
+  // Spotlight effect logic
+  useEffect(() => {
+    if (!showTour) {
+      setHighlightedRect(null);
+      return;
+    }
+
+    const tourSelectors = {
+      1: '[data-tour-id="pantry-search"]',
+      2: '[data-tour-id="plate-item-example"]',
+      3: '[data-tour-id="plate-scheduling"]',
+      5: '[data-tour-id="schedule-add-meal"]',
+    };
+
+    const selector = tourSelectors[tourStep];
+    if (!selector) {
+      setHighlightedRect(null);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const element = document.querySelector(selector);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Rola até o elemento
+        setHighlightedRect(element.getBoundingClientRect());
+      } else {
+        setHighlightedRect(null);
+      }
+    }, 150); // Delay to allow tab transitions
+
+    return () => clearTimeout(timer);
+  }, [tourStep, showTour, activeTab]);
 
   const handleRestartTour = () => {
     setTourStep(0);
     setShowTour(true);
     localStorage.removeItem('hasSeenTour');
+  };
+
+  const triggerConfetti = () => {
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 3000);
   };
 
   // Cálculo da Meta Diária (Duplicado do BrainScreen para uso nos alertas globais)
@@ -283,8 +651,9 @@ const App = () => {
       
       setMealSchedule(prev => prev.map(meal => {
         const isToday = meal.dayOfWeek === today || meal.dayOfWeek === 'Todos';
-        if (isToday && meal.time === currentHMT && !meal.alertTriggered) {
-          triggerAlert(meal.name);
+        // Apenas dispara o alerta se a refeição tiver itens no prato
+        if (isToday && meal.time === currentHMT && !meal.alertTriggered && meal.plate.length > 0) {
+          triggerAlert(meal.name, meal.plate);
           return { ...meal, alertTriggered: true };
         }
         if (meal.time !== currentHMT) return { ...meal, alertTriggered: false };
@@ -346,32 +715,44 @@ const App = () => {
     }
   };
 
-  const triggerAlert = (mealName) => {
+  const triggerAlert = (mealName, plate) => {
     // 1. Tocar som personalizado
     playMealSound(mealName);
 
-    // 2. Falar (Speech API)
-    if ('speechSynthesis' in window) {
-      const msg = new SpeechSynthesisUtterance(`Atenção. Hora do ${mealName}.`);
-      msg.lang = 'pt-BR';
-      window.speechSynthesis.speak(msg);
+    // 2. Vibrar (se suportado) para feedback tátil
+    if ('vibrate' in navigator) {
+      navigator.vibrate([200, 100, 200]);
     }
 
     // 3. Notificação Visual e WhatsApp
     setTimeout(() => {
+      const MOVIE_QUOTES = [
+        "Faça ou não faça. A tentativa não existe. – Yoda (Star Wars)",
+        "Não é o quanto você bate, mas o quanto aguenta apanhar e continuar. – Rocky Balboa",
+        "Ao infinito e além! – Toy Story",
+        "Por que caímos? Para aprendermos a nos levantar. – Batman",
+        "Continue a nadar. – Procurando Nemo",
+        "Carpe Diem. Aproveitem o dia. Façam suas vidas serem extraordinárias. – Sociedade dos Poetas Mortos",
+        "Grandes poderes trazem grandes responsabilidades. – Homem-Aranha",
+        "Que a Força esteja com você. – Star Wars",
+        "O passado pode doer. Mas você pode fugir dele ou aprender com ele. – O Rei Leão",
+        "A flor que desabrocha na adversidade é a mais rara e bonita de todas. – Mulan",
+        "Você é mais corajoso do que acredita e mais forte do que parece. – Ursinho Pooh",
+        "O que fazemos em vida ecoa na eternidade. – Gladiador",
+        "A vida é como uma caixa de chocolates. – Forrest Gump"
+      ];
+      const randomQuote = MOVIE_QUOTES[Math.floor(Math.random() * MOVIE_QUOTES.length)];
+
       if (userProfile.phone) {
         const cleanPhone = userProfile.phone.replace(/\D/g, '');
-        // Texto da mensagem
-        const text = `⏰ Lembrete NutriBrasil: Hora do ${mealName}! Já estou me preparando para comer. 🥗`;
+        const text = `⏰ Lembrete NutriBrasil: Hora do ${mealName}!\n\n🎬 "${randomQuote}"`;
         const link = `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(text)}`;
         
-        // Usamos confirm para permitir que o usuário decida abrir o WhatsApp
-        const shouldOpen = window.confirm(`NUTRI BRASIL\n\nHora do ${mealName}!\nDeseja enviar o lembrete para o WhatsApp?`);
-        if (shouldOpen) {
-          window.open(link, '_blank');
-        }
+        // Abre o WhatsApp diretamente. Navegadores podem bloquear isso se não for uma ação direta do usuário.
+        window.open(link, '_blank');
       } else {
-        alert(`NUTRI BRASIL: Hora do ${mealName}!`);
+        // Para usuários sem telefone, mostra um alerta simples como mensagem de texto.
+        alert(`NUTRI BRASIL: Hora do ${mealName}!\n\n"${randomQuote}"`);
       }
     }, 500); // Pequeno delay para o som começar antes do alerta pausar a tela
   };
@@ -419,13 +800,13 @@ const App = () => {
     recognition.start();
   };
 
-  const handleAddMeal = (daysInput) => {
+  const handleAddMeal = (daysInput, time) => {
     const days = Array.isArray(daysInput) ? daysInput : [daysInput];
     
     const newMeals = days.map((day, index) => ({
       id: `m-${Date.now()}-${index}`,
       name: 'Nova Refeição',
-      time: '14:00',
+      time: time || '14:00',
       plate: [],
       isDone: false,
       dayOfWeek: day,
@@ -434,8 +815,67 @@ const App = () => {
     setMealSchedule(prev => [...prev, ...newMeals]);
   };
 
-  const handleDeleteMeal = (mealId) => {
-    setMealSchedule(prev => prev.filter(m => m.id !== mealId));
+  const handleEditMeal = (meal) => {
+    if (currentPlate.length > 0) {
+      if (!window.confirm('Seu "Prato" atual contém itens. Deseja substituí-los pelos itens desta refeição para editá-los?')) {
+        return;
+      }
+    }
+    setCurrentPlate(meal.plate);
+    setMealSchedule(prev => prev.map(m => m.id === meal.id ? { ...m, plate: [], isDone: false } : m));
+    setActiveTab('plate');
+  };
+
+  const handleDeleteMeal = (meal, contextDay) => {
+    setMealToDelete(meal);
+    setDeleteContextDay(contextDay);
+  };
+
+  const confirmDelete = (daysToDelete) => {
+    if (mealToDelete.dayOfWeek === 'Todos') {
+      const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+      const remainingDays = days.filter(d => !daysToDelete.includes(d));
+      
+      // Remove o original 'Todos'
+      const filteredSchedule = mealSchedule.filter(m => m.id !== mealToDelete.id);
+
+      // Cria novos cards para os dias que sobraram
+      const newMeals = remainingDays.map((d, i) => ({
+        ...mealToDelete,
+        id: `m-${Date.now()}-${i}`,
+        dayOfWeek: d
+      }));
+      
+      setMealSchedule([...filteredSchedule, ...newMeals]);
+    } else {
+      // Refeição específica, apenas remove
+      setMealSchedule(prev => prev.filter(m => m.id !== mealToDelete.id));
+    }
+    setMealToDelete(null);
+  };
+
+  const handleDuplicateConfirm = (days, newTime) => {
+    const newMeals = days.map((day, index) => ({
+      ...mealToDuplicate,
+      id: `m-${Date.now()}-${index}-dup`,
+      dayOfWeek: day,
+      time: newTime,
+      isDone: false
+    }));
+    setMealSchedule(prev => [...prev, ...newMeals]);
+    setMealToDuplicate(null);
+    triggerConfetti();
+  };
+
+  const handleResetSchedule = () => {
+    setShowResetModal(true);
+  };
+
+  const confirmReset = () => {
+    // Usa JSON.parse/stringify para garantir uma cópia profunda e limpa, forçando a atualização do estado
+    setMealSchedule(JSON.parse(JSON.stringify(DEFAULT_MEAL_SCHEDULE)));
+    setShowResetModal(false);
+    alert("Sua agenda foi resetada com sucesso!");
   };
 
   const handleReorderMeal = (mealId, direction, activeDay) => {
@@ -528,7 +968,13 @@ const App = () => {
 
   return (
     <>
-      <Layout activeTab={activeTab} onTabChange={setActiveTab} plateCount={currentPlate.length}>
+      <Layout 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+        plateCount={currentPlate.length}
+        onRestartTour={handleRestartTour}
+        onToggleManual={() => setShowManual(p => !p)}
+      >
       {activeTab === 'pantry' && (
         <PantryScreen 
           allFoods={allAvailableFoods} 
@@ -551,6 +997,7 @@ const App = () => {
       )}
       {activeTab === 'plate' && (
         <PlateScreen 
+          key={mealSchedule.map(m => m.id).join('-')}
           plate={currentPlate} 
           onRemove={id => setCurrentPlate(p => p.filter(x => x.foodId !== id))} 
           onUpdate={(id, up) => setCurrentPlate(p => p.map(x => x.foodId === id ? {...x, ...up} : x))} 
@@ -571,6 +1018,11 @@ const App = () => {
             };
             const time = defaultTimes[mealName] || '12:00';
 
+            const fixedMealNames = [
+              'Café da Manhã', 'Lanche das 10h', 'Almoço', 'Chá das Três', 
+              'Lanche das 17h', 'Jantar das 20h', 'Lanche das 22h', 'Ceia da Meia-noite'
+            ];
+
             if (targetId) {
               const targetMeal = mealSchedule.find(m => m.id === targetId);
               if (targetMeal) {
@@ -585,6 +1037,17 @@ const App = () => {
                   ? { ...m, plate: [...m.plate, ...currentPlate], isDone: true } 
                   : m
                 );
+              }
+
+              // Se for uma refeição fixa (pré-renderizada), atualiza a existente (Todos) e impede duplicatas
+              if (fixedMealNames.includes(mealName)) {
+                const existingFixed = prev.find(m => m.name === mealName && m.dayOfWeek === 'Todos');
+                if (existingFixed) {
+                  return prev.map(m => m.id === existingFixed.id 
+                    ? { ...m, plate: [...m.plate, ...currentPlate], isDone: true }
+                    : m
+                  );
+                }
               }
 
               // Normaliza a entrada para garantir que seja um array de dias
@@ -633,7 +1096,8 @@ const App = () => {
           unitWeights={UNIT_WEIGHTS}
           scheduleWarnings={scheduleWarnings}
           onClearWarnings={() => setScheduleWarnings([])}
-          onAddMeal={handleAddMeal}
+          onAddMeal={() => setShowAddMealModal(true)}
+          onEditMeal={handleEditMeal}
           onDeleteMeal={handleDeleteMeal}
           onReorderMeal={handleReorderMeal}
           showTour={showTour}
@@ -647,10 +1111,33 @@ const App = () => {
           profile={userProfile}
           onRestartTour={handleRestartTour}
           onEditProfile={() => setUserProfile(prev => ({ ...prev, isSetupDone: false }))}
+          onResetSchedule={handleResetSchedule}
         />
       )}
       </Layout>
-      {showTour && <TourOverlay step={tourStep} onNext={handleTourNext} onSkip={handleTourSkip} />}
+      {showTour && <TourOverlay step={tourStep} onNext={handleTourNext} onBack={handleTourBack} onSkip={handleTourSkip} highlightedRect={highlightedRect} />}
+      {showManual && <ManualScreen onClose={() => setShowManual(false)} onReset={handleResetSchedule} />}
+      {showAddMealModal && <AddMealModal onClose={() => setShowAddMealModal(false)} onConfirm={handleAddMeal} />}
+      {mealToDelete && (
+        <DeleteMealModal 
+          onClose={() => setMealToDelete(null)} 
+          onConfirm={confirmDelete} 
+          onDuplicate={() => {
+            setMealToDuplicate(mealToDelete);
+            setMealToDelete(null);
+          }}
+          meal={mealToDelete} 
+          contextDay={deleteContextDay} 
+        />
+      )}
+      {mealToDuplicate && <AddMealModal 
+        title={`Duplicar "${mealToDuplicate.name}"`}
+        buttonLabel="Confirmar Cópia"
+        onClose={() => setMealToDuplicate(null)} 
+        onConfirm={handleDuplicateConfirm} 
+      />}
+      {showConfetti && <Confetti />}
+      {showResetModal && <ResetScheduleModal onClose={() => setShowResetModal(false)} onConfirm={confirmReset} />}
     </>
   );
 };

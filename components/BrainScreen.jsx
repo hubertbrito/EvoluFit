@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Brain, Activity, Target, Zap, Calendar, AlertTriangle, Edit, CheckCircle, FileText, ArrowRight, RefreshCw } from 'lucide-react';
 
-const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour }) => {
+const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour, onResetSchedule }) => {
   const [filterDay, setFilterDay] = useState('Hoje');
   const days = ['Hoje', 'Semana Toda', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
@@ -248,6 +248,14 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
             >
               <RefreshCw size={14} />
               Reiniciar Tour do Aplicativo
+            </button>
+
+            <button 
+              onClick={onResetSchedule}
+              className="w-full mt-2 py-2.5 bg-white border border-slate-200 text-rose-500 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-rose-50 hover:text-rose-700 transition-colors"
+            >
+              <AlertTriangle size={14} />
+              Resetar Agenda Completa
             </button>
           </div>
         </div>

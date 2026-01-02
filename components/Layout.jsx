@@ -1,11 +1,19 @@
 import React from 'react';
-import { LayoutGrid, ChefHat, BrainCircuit, CalendarClock } from 'lucide-react';
+import { LayoutGrid, ChefHat, BrainCircuit, CalendarClock, RefreshCw, BookOpen } from 'lucide-react';
 
-export const Layout = ({ children, activeTab, onTabChange, plateCount = 0 }) => {
+export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRestartTour, onToggleManual }) => {
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-white shadow-2xl relative overflow-hidden">
-      <header className="bg-emerald-600 text-white p-4 pt-8 text-center font-bold text-xl shadow-md z-10">
-        <span className="tracking-tighter">NUTRI BRASIL</span>
+      <header className="bg-emerald-600 text-white p-4 pt-8 flex items-center justify-between shadow-md z-10">
+        <span className="font-bold text-xl tracking-tighter">NUTRI BRASIL</span>
+        <div className="flex items-center gap-2">
+          <button onClick={onRestartTour} className="p-2 rounded-full hover:bg-emerald-700 transition-colors" title="Reiniciar Tour">
+            <RefreshCw size={18} />
+          </button>
+          <button onClick={onToggleManual} className="p-2 rounded-full hover:bg-emerald-700 transition-colors" title="Manual de Uso">
+            <BookOpen size={18} />
+          </button>
+        </div>
       </header>
 
       <main className="flex-1 overflow-y-auto pb-28 scroll-smooth bg-gray-50/30">

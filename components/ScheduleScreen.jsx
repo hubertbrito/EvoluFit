@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Clock, AlertCircle, Zap, Wheat, Droplets, CalendarDays, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser } from 'lucide-react';
+import { Clock, AlertCircle, Zap, Wheat, Droplets, CalendarDays, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser, Edit } from 'lucide-react';
 import { UNIT_WEIGHTS, getFoodUnitWeight } from '../constants';
 
 // Função auxiliar para formatar a quantidade e medida do alimento
@@ -15,7 +15,7 @@ const formatFoodQuantity = (quantity, measure, foodName) => {
   return `${qty} ${meas} de ${foodName}`;
 };
 
-const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep }) => {
+const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep }) => {
   const [now, setNow] = useState(new Date());
   const [activeDays, setActiveDays] = useState(() => {
     const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
@@ -45,19 +45,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
   const currentTimeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   const toggleDay = (day) => {
-    if (day === 'Todos') {
-      setActiveDays(['Todos']);
-      return;
-    }
-    setActiveDays(prev => {
-      let newDays = prev.filter(d => d !== 'Todos');
-      if (newDays.includes(day)) {
-        newDays = newDays.filter(d => d !== day);
-      } else {
-        newDays.push(day);
-      }
-      return newDays;
-    });
+    setActiveDays([day]);
   };
 
   const fixedMealNames = [
@@ -152,7 +140,11 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
 
       <div className="flex justify-between items-center">
         <div>
-            <h2 className="text-2xl font-black text-gray-800 tracking-tighter">Agenda</h2>
+            <h2 className="text-2xl font-black text-gray-800 tracking-tighter">
+              {activeDays.length === 1 && !['Todos', 'Avulso'].includes(activeDays[0]) 
+                ? `Agenda de ${activeDays[0]}` 
+                : activeDays[0] === 'Todos' ? 'Agenda Geral' : 'Agenda'}
+            </h2>
             <p className="text-emerald-600 font-bold text-[10px] uppercase flex items-center mt-1">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping mr-2"></span>
               Agora: {currentTimeStr}
@@ -176,7 +168,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
 
           return (
             <div 
-                key={meal.id} 
+                key={`${meal.id}-${activeDays[0]}`} 
                 className={`p-4 rounded-[2rem] border-2 transition-all relative overflow-hidden ${isCurrent ? 'bg-orange-50 border-orange-400 shadow-xl ring-4 ring-orange-400/10' : 'bg-white border-indigo-50 shadow-sm hover:border-orange-300'}`}
             >
               <div className="flex justify-between items-start mb-5 gap-3">
@@ -295,6 +287,16 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
                   </button>
                   
                   <button 
+                    onClick={() => onEditMeal(meal)}
+                    disabled={meal.plate.length === 0}
+                    className="px-3 py-2 bg-blue-50 rounded-xl text-blue-600 disabled:opacity-30 hover:bg-blue-100 transition-colors flex items-center gap-1" 
+                    title="Editar Prato (Move para montagem)"
+                  >
+                    <Edit size={16} />
+                    <span className="text-[10px] font-bold">Editar</span>
+                  </button>
+
+                  <button 
                     onClick={() => {
                         if (window.confirm('Deseja limpar todos os alimentos desta refeiçao?')) {
                             if (meal.dayOfWeek === 'Todos' && !activeDays.includes('Todos')) {
@@ -318,9 +320,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
                       <div className="w-px h-6 bg-gray-100 mx-1"></div>
                       <button 
                         onClick={() => {
-                          if (window.confirm('Tem certeza que deseja excluir esta refeição?')) {
-                            onDeleteMeal(meal.id);
-                          }
+                          onDeleteMeal(meal, activeDays[0]);
                         }} 
                         className="p-2 bg-rose-50 rounded-xl text-rose-500 hover:bg-rose-100 transition-colors" 
                         title="Excluir Refeição"
@@ -335,27 +335,12 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
         })}
       </div>
 
-      <div className="relative">
-        {showTour && tourStep === 5 && (
-          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-xl z-[110] animate-bounce whitespace-nowrap">
-            👇 Clique aqui após selecionar os dias!
-            <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-emerald-500"></div>
-          </div>
-        )}
+      <div data-tour-id="schedule-add-meal">
         <button
-          onClick={() => {
-            if (activeDays.length === 0) {
-              alert("⚠️ ATENÇÃO: Primeiro selecione o dia (ou dias) no menu superior onde você deseja criar a refeição.");
-              return;
-            }
-            
-            if (window.confirm(`Você vai criar uma refeição para: ${activeDays.join(', ')}.\n\nEstá correto? Se não, clique em Cancelar e mude o dia no menu.`)) {
-              onAddMeal(activeDays);
-            }
-          }}
+          onClick={onAddMeal}
           className="w-full mt-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-700 transition-colors"
         >
-          <Plus className="w-4 h-4" /> Adicionar Refeição ({activeDays.length > 0 ? activeDays.join(', ') : 'Nenhum dia selecionado'})
+          <Plus className="w-4 h-4" /> Adicionar Nova Refeição
         </button>
       </div>
       
@@ -365,14 +350,14 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
         <div>
             <p className="text-xs font-bold text-indigo-600 mb-1">PASSO 1</p>
             <p className="text-sm leading-snug">
-                Primeiro, <strong>escolha no menu superior</strong> o dia, os dias simultâneos ou "Todos" onde você quer que o card da refeição apareça.
+                Clique no botão acima para abrir o menu de criação.
             </p>
         </div>
         
         <div>
             <p className="text-xs font-bold text-indigo-600 mb-1">PASSO 2</p>
             <p className="text-sm leading-snug">
-                Somente <strong>após selecionar os dias</strong>, clique no botão verde "Adicionar Refeição" acima. O sistema não permitirá criar sem escolher os dias antes.
+                Selecione os dias desejados (ex: Segunda, Quarta e Sexta) e confirme para criar o card.
             </p>
         </div>
       </div>

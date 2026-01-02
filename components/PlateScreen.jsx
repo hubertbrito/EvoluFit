@@ -55,11 +55,11 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-black text-gray-800">Seu Prato</h2>
         <div className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-bold">
-          {Math.round(calculateTotal())} kcal
+          {plate.length === 0 && showTour ? 128 : Math.round(calculateTotal())} kcal
         </div>
       </div>
 
-      {plate.length === 0 ? (
+      {plate.length === 0 && !showTour ? (
         <div className="text-center py-10 space-y-4">
           <div className="w-20 h-20 bg-gray-100 rounded-full mx-auto flex items-center justify-center">
             <ChefHat className="w-10 h-10 text-gray-300" />
@@ -71,6 +71,35 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
         </div>
       ) : (
         <div className="space-y-4">
+          {/* Item de Exemplo para o Tour (Apenas visualização) */}
+          {plate.length === 0 && showTour && (
+            <div className="bg-white p-4 rounded-2xl shadow-sm border-2 border-dashed border-emerald-300 relative opacity-90" data-tour-id="plate-item-example">
+              <div className="absolute -top-2.5 left-4 bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-200">
+                Exemplo de Item
+              </div>
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="font-bold text-gray-800">Arroz Integral</h3>
+                  <p className="text-xs text-emerald-600 font-bold">128 kcal <span className="text-gray-400 font-normal">(100g)</span></p>
+                </div>
+                <button className="text-rose-300 p-1 cursor-not-allowed">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <div className="flex gap-2 items-center">
+                <div className="flex items-center border rounded-lg bg-gray-50">
+                  <button className="p-2 text-gray-400 border-r cursor-not-allowed"><ChevronDown className="w-4 h-4" /></button>
+                  <input type="number" value="4" readOnly className="w-12 py-2 text-center font-bold border-none outline-none bg-transparent text-gray-600" />
+                  <button className="p-2 text-gray-400 border-l cursor-not-allowed"><ChevronUp className="w-4 h-4" /></button>
+                </div>
+                <div className="flex-1 p-2 border rounded-lg bg-gray-50 text-gray-500">
+                  Colher de Sopa
+                </div>
+              </div>
+            </div>
+          )}
+
           {plate.map((item, index) => {
             const food = allFoods.find(f => f.id === item.foodId);
             if (!food) return null;
@@ -153,14 +182,8 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
             <Plus className="w-4 h-4" /> Adicionar mais itens
           </button>
 
-          <div className="pt-4">
-            <div className="bg-emerald-50 p-4 rounded-xl mb-4 border border-emerald-100 relative">
-              {showTour && tourStep === 3 && (
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-xl z-[110] animate-bounce whitespace-nowrap">
-                  👇 1. Escolha os dias aqui
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-emerald-500"></div>
-                </div>
-              )}
+          <div className="pt-4" data-tour-id="plate-scheduling">
+            <div className="bg-emerald-50 p-4 rounded-xl mb-4 border border-emerald-100">
               <div className="flex items-center gap-2 mb-2 text-emerald-800 font-bold text-sm">
                 <Calendar className="w-4 h-4" />
                 Agendar para (selecione vários):
@@ -179,13 +202,7 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
             </div>
 
             <h3 className="text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider">Classificar como:</h3>
-            <div className="grid grid-cols-2 gap-2 mb-6 relative">
-              {showTour && tourStep === 3 && (
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-xl z-[110] animate-bounce whitespace-nowrap">
-                  👇 2. Depois clique na refeição!
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-emerald-500"></div>
-                </div>
-              )}
+            <div className="grid grid-cols-2 gap-2 mb-6">
               {mealTypes.map(mealName => (
                 <button
                   key={mealName}
