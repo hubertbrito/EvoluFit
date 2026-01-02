@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Trash2, Plus, ChefHat, Calendar, Info, Clock, ChevronUp, ChevronDown } from 'lucide-react';
 import { MEASURE_UNITS, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures } from '../constants';
 
-const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddMore, meals }) => {
+const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddMore, meals, showTour, tourStep }) => {
   const [selectedDays, setSelectedDays] = useState(['Todos']);
   const days = ['Todos', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
   const mealTypes = [
@@ -154,7 +154,13 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
           </button>
 
           <div className="pt-4">
-            <div className="bg-emerald-50 p-4 rounded-xl mb-4 border border-emerald-100">
+            <div className="bg-emerald-50 p-4 rounded-xl mb-4 border border-emerald-100 relative">
+              {showTour && tourStep === 3 && (
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-xl z-[110] animate-bounce whitespace-nowrap">
+                  👇 1. Escolha os dias aqui
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-emerald-500"></div>
+                </div>
+              )}
               <div className="flex items-center gap-2 mb-2 text-emerald-800 font-bold text-sm">
                 <Calendar className="w-4 h-4" />
                 Agendar para (selecione vários):
@@ -173,7 +179,13 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
             </div>
 
             <h3 className="text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider">Classificar como:</h3>
-            <div className="grid grid-cols-2 gap-2 mb-6">
+            <div className="grid grid-cols-2 gap-2 mb-6 relative">
+              {showTour && tourStep === 3 && (
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-xl z-[110] animate-bounce whitespace-nowrap">
+                  👇 2. Depois clique na refeição!
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-emerald-500"></div>
+                </div>
+              )}
               {mealTypes.map(mealName => (
                 <button
                   key={mealName}

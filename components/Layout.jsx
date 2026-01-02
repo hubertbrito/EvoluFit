@@ -29,7 +29,7 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0 }) => 
 };
 
 const NavButton = ({ active, onClick, icon, label, badge }) => (
-  <button onClick={onClick} className={`flex flex-col items-center transition-all relative ${active ? 'text-emerald-600 scale-110' : 'text-gray-300 hover:text-gray-400'}`}>
+  <button onClick={onClick} className={`flex flex-col items-center transition-all relative ${active ? 'text-emerald-600 scale-110' : 'text-gray-500 hover:text-emerald-600'}`}>
     {icon}
     {badge !== undefined && (
       <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md animate-bounce">

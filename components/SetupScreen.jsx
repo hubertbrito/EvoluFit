@@ -4,18 +4,50 @@ import { ArrowRight, User, Activity, Info } from 'lucide-react';
 const SetupScreen = ({ userProfile, onComplete }) => {
   const [step, setStep] = useState(1);
   const [data, setData] = useState(userProfile);
+  const [errors, setErrors] = useState({});
 
   const handleChange = (field, value) => {
     setData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: false }));
+  };
+
+  const validateStep = () => {
+    const newErrors = {};
+    if (step === 1) {
+      if (!data.name || !data.name.trim()) newErrors.name = true;
+      if (!data.age) newErrors.age = true;
+    }
+    if (step === 2) {
+      if (!data.weight) newErrors.weight = true;
+      if (!data.height) newErrors.height = true;
+      if (!data.targetWeight) newErrors.targetWeight = true;
+    }
+    if (step === 3) {
+      if (data.activityDays === '' || data.activityDays === null || data.activityDays === undefined) newErrors.activityDays = true;
+      if (!data.weeks) newErrors.weeks = true;
+    }
+    return newErrors;
   };
 
   const handleNext = () => {
+    const currentErrors = validateStep();
+    if (Object.keys(currentErrors).length > 0) {
+      setErrors(currentErrors);
+      return;
+    }
     if (step < 3) setStep(step + 1);
     else onComplete({ ...data, isSetupDone: true });
   };
 
   const handleBack = () => {
     if (step > 1) setStep(step - 1);
+  };
+
+  // Helper para gerar opções de datalist
+  const renderOptions = (start, end, step = 1) => {
+    const options = [];
+    for (let i = start; i <= end; i += step) options.push(<option key={i} value={i}>{i}</option>);
+    return options;
   };
 
   return (
@@ -43,7 +75,7 @@ const SetupScreen = ({ userProfile, onComplete }) => {
                   type="text" 
                   value={data.name}
                   onChange={(e) => handleChange('name', e.target.value)}
-                  className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none ${errors.name ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                   placeholder="Ex: Maria"
                 />
               </div>
@@ -60,14 +92,14 @@ const SetupScreen = ({ userProfile, onComplete }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Idade</label>
-                  <input 
-                    type="number" 
-                    min="0"
+                  <select 
                     value={data.age || ''}
-                    onFocus={(e) => e.target.select()}
                     onChange={(e) => handleChange('age', e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
-                    className="w-full p-3 border rounded-xl"
-                  />
+                    className={`w-full p-3 border rounded-xl bg-white ${errors.age ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                  >
+                    <option value="" disabled>Selecione</option>
+                    {renderOptions(10, 100)}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Gênero</label>
@@ -94,37 +126,37 @@ const SetupScreen = ({ userProfile, onComplete }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Peso (kg)</label>
-                  <input 
-                    type="number" 
-                    min="0"
+                  <select 
                     value={data.weight || ''}
-                    onFocus={(e) => e.target.select()}
                     onChange={(e) => handleChange('weight', e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
-                    className="w-full p-3 border rounded-xl"
-                  />
+                    className={`w-full p-3 border rounded-xl bg-white ${errors.weight ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                  >
+                    <option value="" disabled>Selecione</option>
+                    {renderOptions(30, 200)}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Altura (cm)</label>
-                  <input 
-                    type="number" 
-                    min="0"
+                  <select 
                     value={data.height || ''}
-                    onFocus={(e) => e.target.select()}
                     onChange={(e) => handleChange('height', e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
-                    className="w-full p-3 border rounded-xl"
-                  />
+                    className={`w-full p-3 border rounded-xl bg-white ${errors.height ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                  >
+                    <option value="" disabled>Selecione</option>
+                    {renderOptions(100, 230)}
+                  </select>
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Meta de Peso (kg)</label>
-                <input 
-                  type="number" 
-                    min="0"
+                <select 
                   value={data.targetWeight || ''}
-                  onFocus={(e) => e.target.select()}
                   onChange={(e) => handleChange('targetWeight', e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
-                  className="w-full p-3 border rounded-xl"
-                />
+                  className={`w-full p-3 border rounded-xl bg-white ${errors.targetWeight ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                >
+                  <option value="" disabled>Selecione</option>
+                  {renderOptions(30, 200)}
+                </select>
               </div>
             </>
           )}
@@ -139,16 +171,20 @@ const SetupScreen = ({ userProfile, onComplete }) => {
               <div className="mb-4">
                 <label className="block text-sm font-bold text-gray-700 mb-1">Frequência de Treinos</label>
                 <p className="text-xs text-gray-500 mb-2">Quantos dias por semana você pratica exercícios físicos?</p>
-                <input 
-                  type="number" 
-                  min="0" 
-                  max="7"
+                <select 
                   value={data.activityDays}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => handleChange('activityDays', e.target.value === '' ? '' : Math.min(7, Math.max(0, Number(e.target.value))))}
-                  className="w-full p-3 border rounded-xl"
-                  placeholder="Ex: 3"
-                />
+                  onChange={(e) => handleChange('activityDays', Number(e.target.value))}
+                  className={`w-full p-3 border rounded-xl bg-white ${errors.activityDays ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                >
+                  <option value={0}>0 dias (Sedentário)</option>
+                  <option value={1}>1 dia</option>
+                  <option value={2}>2 dias</option>
+                  <option value={3}>3 dias</option>
+                  <option value={4}>4 dias</option>
+                  <option value={5}>5 dias</option>
+                  <option value={6}>6 dias</option>
+                  <option value={7}>7 dias (Todos os dias)</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Intensidade do Esforço</label>
@@ -168,15 +204,14 @@ const SetupScreen = ({ userProfile, onComplete }) => {
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Prazo para a Meta (Semanas)</label>
                 <p className="text-xs text-gray-500 mb-2">Em quantas semanas você quer chegar ao peso ideal?</p>
-                <input 
-                  type="number" 
-                  min="1" 
+                <select 
                   value={data.weeks || ''}
-                  onFocus={(e) => e.target.select()}
                   onChange={(e) => handleChange('weeks', e.target.value === '' ? '' : Math.max(1, Number(e.target.value)))}
-                  className="w-full p-3 border rounded-xl"
-                  placeholder="Ex: 12"
-                />
+                  className={`w-full p-3 border rounded-xl bg-white ${errors.weeks ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                >
+                  <option value="" disabled>Selecione</option>
+                  {renderOptions(4, 52, 4)}
+                </select>
               </div>
             </div>
           )}

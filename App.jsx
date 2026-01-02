@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { FOOD_DATABASE, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures } from './constants';
 import PantryScreen from './components/PantryScreen';
 import PlateScreen from './components/PlateScreen';
@@ -9,6 +10,127 @@ import { Layout } from './components/Layout';
 
 // Definindo localmente para não depender de arquivo de tipos externo
 const Category = { INDUSTRIALIZADOS: 'Industrializados' };
+
+const TourOverlay = ({ step, onNext, onSkip }) => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  // Reseta a posição (drag) quando o passo muda para garantir que ele vá para o local "seguro" definido
+  useEffect(() => {
+    setPosition({ x: 0, y: 0 });
+  }, [step]);
+
+  const steps = [
+    {
+      title: "Bem-vindo ao NutriBrasil!",
+      content: "Seu perfil foi configurado com sucesso! Vamos fazer um tour rápido para você dominar o aplicativo e atingir suas metas?",
+      action: "Começar Tour",
+      arrow: null,
+      positionClass: "bottom-24 right-4"
+    },
+    {
+      title: "1. Sua Dispensa",
+      content: "Aqui você encontra todos os alimentos. Use a busca ou o microfone para encontrar o que vai comer. Clique no '+' ou no alimento para adicioná-lo ao seu Prato.",
+      action: "Próximo",
+      arrow: 'top',
+      positionClass: "bottom-24 right-4"
+    },
+    {
+      title: "2. Montando o Prato",
+      content: "Na aba 'Prato', você define a quantidade exata (ex: 2 colheres) de cada alimento selecionado. O app calcula as calorias em tempo real.",
+      action: "Entendi",
+      arrow: 'top',
+      positionClass: "bottom-24 right-4"
+    },
+    {
+      title: "3. Agendando",
+      content: "Depois de montar o prato, use os botões abaixo para escolher os dias e a refeição (ex: Almoço) onde esse prato será servido.",
+      action: "Próximo",
+      arrow: 'bottom',
+      positionClass: "top-24 right-4"
+    },
+    {
+      title: "4. Sua Agenda",
+      content: "Aqui fica seu planejamento completo. Você visualiza todas as refeições do dia e seus horários.",
+      action: "Próximo",
+      arrow: 'top',
+      positionClass: "bottom-24 right-4"
+    },
+    {
+      title: "5. Criando Refeições",
+      content: "Para criar uma nova refeição (ex: Lanche Extra), a regra é: PRIMEIRO selecione os dias no menu superior, e SÓ DEPOIS clique em 'Adicionar Refeição'.",
+      action: "Importante!",
+      arrow: 'bottom',
+      positionClass: "top-24 right-4"
+    },
+    {
+      title: "6. Fluxo Inverso",
+      content: "Você também pode criar uma refeição vazia na Agenda primeiro, e depois ir ao Prato e escolher 'Inserir em...' para preenchê-la.",
+      action: "Finalizar",
+      arrow: null,
+      positionClass: "bottom-24 right-4"
+    }
+  ];
+
+  const handleMouseDown = (e) => {
+    // Evita arrastar se clicar em botões
+    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (isDragging) {
+        setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+      }
+    };
+    const handleMouseUp = (e) => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragStart]);
+
+  const current = steps[step];
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-transparent pointer-events-none">
+      <style>{`@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }`}</style>
+      <div 
+        className={`bg-white rounded-2xl p-4 max-w-xs w-full shadow-xl border-2 border-emerald-500 absolute pointer-events-auto cursor-move transition-all duration-500 ease-in-out ${current.positionClass}`}
+        style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
+        onMouseDown={handleMouseDown}
+      >
+        <button 
+          onClick={onSkip} 
+          className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+          title="Fechar Tour"
+        >
+          <X size={16} />
+        </button>
+
+        <div className="mb-3">
+            <h3 className="text-sm font-black text-emerald-600 mb-1">{current.title}</h3>
+            <p className="text-gray-600 text-xs leading-relaxed">{current.content}</p>
+        </div>
+        <div className="flex gap-2 mt-2">
+            {step > 0 && <button onClick={onSkip} className="flex-1 py-1.5 rounded-lg font-bold text-xs text-gray-400 hover:bg-gray-100 transition-colors">Pular</button>}
+            <button onClick={onNext} className="flex-2 w-full py-1.5 bg-emerald-600 text-white rounded-lg font-bold text-xs shadow-md hover:bg-emerald-700 transition-transform transform active:scale-95">{current.action}</button>
+        </div>
+        <div className="flex justify-center gap-1 mt-2">{steps.map((_, i) => <div key={i} className={`w-1.5 h-1.5 rounded-full transition-colors ${i === step ? 'bg-emerald-500' : 'bg-gray-200'}`} />)}</div>
+      </div>
+    </div>
+  );
+};
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('pantry');
@@ -60,6 +182,8 @@ const App = () => {
 
   const [isListening, setIsListening] = useState(false);
   const [scheduleWarnings, setScheduleWarnings] = useState([]);
+  const [showTour, setShowTour] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
 
   useEffect(() => {
     localStorage.setItem('userProfile', JSON.stringify(userProfile));
@@ -67,6 +191,30 @@ const App = () => {
     localStorage.setItem('customFoods', JSON.stringify(customFoods));
     localStorage.setItem('mealSchedule', JSON.stringify(mealSchedule));
   }, [userProfile, pantryItems, customFoods, mealSchedule]);
+
+  useEffect(() => {
+    if (userProfile.isSetupDone) {
+      const hasSeen = localStorage.getItem('hasSeenTour');
+      if (!hasSeen) setShowTour(true);
+    }
+  }, [userProfile.isSetupDone]);
+
+  useEffect(() => {
+    if (showTour) {
+       if (tourStep === 1) setActiveTab('pantry');
+       if (tourStep === 2 || tourStep === 3) setActiveTab('plate');
+       if (tourStep >= 4) setActiveTab('schedule');
+    }
+  }, [tourStep, showTour]);
+
+  const handleTourNext = () => tourStep < 6 ? setTourStep(p => p + 1) : (setShowTour(false), localStorage.setItem('hasSeenTour', 'true'));
+  const handleTourSkip = () => (setShowTour(false), localStorage.setItem('hasSeenTour', 'true'));
+
+  const handleRestartTour = () => {
+    setTourStep(0);
+    setShowTour(true);
+    localStorage.removeItem('hasSeenTour');
+  };
 
   // Cálculo da Meta Diária (Duplicado do BrainScreen para uso nos alertas globais)
   const getDailyGoal = () => {
@@ -379,7 +527,8 @@ const App = () => {
   }
 
   return (
-    <Layout activeTab={activeTab} onTabChange={setActiveTab} plateCount={currentPlate.length}>
+    <>
+      <Layout activeTab={activeTab} onTabChange={setActiveTab} plateCount={currentPlate.length}>
       {activeTab === 'pantry' && (
         <PantryScreen 
           allFoods={allAvailableFoods} 
@@ -396,6 +545,8 @@ const App = () => {
           onVoiceClick={startListening}
           isListening={isListening}
           onAddManual={addCustomFood}
+          showTour={showTour}
+          tourStep={tourStep}
         />
       )}
       {activeTab === 'plate' && (
@@ -405,6 +556,8 @@ const App = () => {
           onUpdate={(id, up) => setCurrentPlate(p => p.map(x => x.foodId === id ? {...x, ...up} : x))} 
           allFoods={allAvailableFoods}
           meals={mealSchedule}
+          showTour={showTour}
+          tourStep={tourStep}
           onAssignMeal={(mealName, daysInput, targetId) => {
             const defaultTimes = { 
               'Café da Manhã': '08:00', 
@@ -483,6 +636,8 @@ const App = () => {
           onAddMeal={handleAddMeal}
           onDeleteMeal={handleDeleteMeal}
           onReorderMeal={handleReorderMeal}
+          showTour={showTour}
+          tourStep={tourStep}
         />
       )}
       {activeTab === 'brain' && (
@@ -490,10 +645,13 @@ const App = () => {
           schedule={mealSchedule} 
           allFoods={allAvailableFoods} 
           profile={userProfile}
+          onRestartTour={handleRestartTour}
           onEditProfile={() => setUserProfile(prev => ({ ...prev, isSetupDone: false }))}
         />
       )}
-    </Layout>
+      </Layout>
+      {showTour && <TourOverlay step={tourStep} onNext={handleTourNext} onSkip={handleTourSkip} />}
+    </>
   );
 };
 

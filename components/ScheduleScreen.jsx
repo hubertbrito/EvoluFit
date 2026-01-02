@@ -15,7 +15,7 @@ const formatFoodQuantity = (quantity, measure, foodName) => {
   return `${qty} ${meas} de ${foodName}`;
 };
 
-const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS }) => {
+const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep }) => {
   const [now, setNow] = useState(new Date());
   const [activeDays, setActiveDays] = useState(() => {
     const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
@@ -56,7 +56,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
       } else {
         newDays.push(day);
       }
-      return newDays.length ? newDays : ['Todos'];
+      return newDays;
     });
   };
 
@@ -129,13 +129,13 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
         </div>
       )}
 
-      <div className="sticky top-0 z-10 bg-gray-50/95 backdrop-blur-sm -mx-4 px-4 py-2 shadow-sm border-b border-gray-100">
-        <div className="flex flex-wrap gap-2 justify-center">
+      <div className="sticky top-0 z-10 bg-gray-50/95 backdrop-blur-sm -mx-4 px-2 py-1.5 shadow-sm border-b border-gray-100">
+        <div className="flex flex-wrap gap-1.5 justify-center">
           {days.map(d => (
             <button 
               key={d}
               onClick={() => toggleDay(d)}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all transform hover:scale-105 ${activeDays.includes(d) ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 ring-2 ring-indigo-100' : 'bg-white text-indigo-400 border border-indigo-100 hover:bg-indigo-50'}`}
+              className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all transform hover:scale-105 border ${activeDays.includes(d) ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200' : 'bg-white text-indigo-400 border-indigo-100 hover:bg-indigo-50'}`}
             >
               {d}
             </button>
@@ -161,6 +161,11 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
       </div>
 
       <div className="space-y-4">
+        {activeDays.length === 0 && (
+          <div className="text-center py-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+            <p className="text-gray-400 font-bold text-sm">Selecione um dia no menu acima para começar</p>
+          </div>
+        )}
         {filteredMeals.map((meal, index) => {
           const [mealHour] = meal.time.split(':');
           const [currentHour] = currentTimeStr.split(':');
@@ -330,15 +335,44 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
         })}
       </div>
 
-      <button
-        onClick={() => onAddMeal(activeDays)}
-        className="w-full mt-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-700 transition-colors"
-      >
-        <Plus className="w-4 h-4" /> Adicionar Refeição ({activeDays.join(', ')})
-      </button>
-      <p className="text-[10px] text-center text-gray-400 px-4">
-        Dica: Selecione os dias no menu acima para criar refeições simultâneas. Para repetir todos os dias, selecione 'Todos'.
-      </p>
+      <div className="relative">
+        {showTour && tourStep === 5 && (
+          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-xl z-[110] animate-bounce whitespace-nowrap">
+            👇 Clique aqui após selecionar os dias!
+            <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-emerald-500"></div>
+          </div>
+        )}
+        <button
+          onClick={() => {
+            if (activeDays.length === 0) {
+              alert("⚠️ ATENÇÃO: Primeiro selecione o dia (ou dias) no menu superior onde você deseja criar a refeição.");
+              return;
+            }
+            onAddMeal(activeDays);
+          }}
+          className="w-full mt-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-700 transition-colors"
+        >
+          <Plus className="w-4 h-4" /> Adicionar Refeição ({activeDays.length > 0 ? activeDays.join(', ') : 'Nenhum dia selecionado'})
+        </button>
+      </div>
+      
+      <div className="mt-8 px-2 space-y-5 text-gray-600">
+        <h3 className="text-sm font-black text-gray-800 border-b pb-2 uppercase">Como criar uma nova refeição:</h3>
+        
+        <div>
+            <p className="text-xs font-bold text-indigo-600 mb-1">PASSO 1</p>
+            <p className="text-sm leading-snug">
+                Primeiro, <strong>escolha no menu superior</strong> o dia, os dias simultâneos ou "Todos" onde você quer que o card da refeição apareça.
+            </p>
+        </div>
+        
+        <div>
+            <p className="text-xs font-bold text-indigo-600 mb-1">PASSO 2</p>
+            <p className="text-sm leading-snug">
+                Somente <strong>após selecionar os dias</strong>, clique no botão verde "Adicionar Refeição" acima. O sistema não permitirá criar sem escolher os dias antes.
+            </p>
+        </div>
+      </div>
 
       {showScrollTop && (
         <button
