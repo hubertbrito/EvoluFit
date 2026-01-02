@@ -2,10 +2,22 @@ import React, { useState } from 'react';
 import { Trash2, Plus, ChefHat, Calendar, Info, Clock, ChevronUp, ChevronDown } from 'lucide-react';
 import { MEASURE_UNITS, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures } from '../constants';
 
-const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddMore, meals, showTour, tourStep }) => {
-  const [selectedDays, setSelectedDays] = useState(['Todos']);
-  const days = ['Todos', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddMore, meals, showTour, tourStep, initialSelectedDays = [] }) => {
+  const [selectedDays, setSelectedDays] = useState(initialSelectedDays);
+  const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+  const allWeekDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
   const mealTypes = [
+    'Café da Manhã', 
+    'Lanche das 10h', 
+    'Almoço', 
+    'Chá das Três', 
+    'Lanche das 17h', 
+    'Jantar das 20h', 
+    'Lanche das 22h', 
+    'Ceia da Meia-noite'
+  ];
+
+  const fixedMealNames = [
     'Café da Manhã', 
     'Lanche das 10h', 
     'Almoço', 
@@ -27,23 +39,20 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
   };
 
   const toggleDay = (day) => {
-    if (day === 'Todos') {
-      setSelectedDays(['Todos']);
-      return;
-    }
     setSelectedDays(prev => {
-      const newSelection = prev.filter(d => d !== 'Todos'); // Remove 'Todos' se selecionar dia específico
-      if (newSelection.includes(day)) {
-        const filtered = newSelection.filter(d => d !== day);
-        return filtered.length ? filtered : ['Todos']; // Volta para Todos se desmarcar tudo
+      if (prev.includes(day)) {
+        return prev.filter(d => d !== day);
+      } else {
+        return [...prev, day];
       }
-      return [...newSelection, day];
     });
   };
 
-  // Filtra refeições criadas manualmente na agenda (aquelas que não são as padrão m1-m4 ou que têm nome "Nova Refeição")
-  // Assumindo que IDs manuais começam com 'm-' e timestamp, ou filtramos pelo nome.
-  const customMeals = meals.filter(m => m.name === 'Nova Refeição' || (m.id.startsWith('m-') && m.id.length > 5));
+  const selectAll = () => setSelectedDays(allWeekDays);
+  const clearAll = () => setSelectedDays([]);
+
+  // Exclui explicitamente as refeições fixas para evitar duplicação visual
+  const customMeals = meals.filter(m => !fixedMealNames.includes(m.name));
 
   return (
     <div className="p-4 space-y-6 pb-24">
@@ -189,15 +198,32 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                 Agendar para (selecione vários):
               </div>
               <div className="flex gap-2 flex-wrap justify-center">
-                {days.map(day => (
-                  <button
-                    key={day}
-                    onClick={() => toggleDay(day)}
-                    className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex-grow text-center ${selectedDays.includes(day) ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-gray-500 border border-gray-200'}`}
-                  >
-                    {day}
-                  </button>
-                ))}
+                <button
+                  onClick={selectAll}
+                  className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex-grow text-center ${selectedDays.length === 7 ? 'bg-emerald-600 text-white shadow-md' : 'bg-white text-emerald-600 border border-emerald-200'}`}
+                >
+                  Todos
+                </button>
+                <button
+                  onClick={clearAll}
+                  className="px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex-grow text-center bg-white text-gray-400 border border-gray-200 hover:bg-gray-50"
+                >
+                  Limpar
+                </button>
+              </div>
+              <div className="flex gap-2 flex-wrap justify-center mt-2">
+                {days.map(day => {
+                  const isSelected = selectedDays.includes(day);
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => toggleDay(day)}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex-grow text-center ${isSelected ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-gray-400 border border-gray-200'}`}
+                    >
+                      {day}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -206,7 +232,7 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
               {mealTypes.map(mealName => (
                 <button
                   key={mealName}
-                  onClick={() => onAssignMeal(mealName, selectedDays)}
+                  onClick={() => onAssignMeal(mealName, selectedDays.length === 7 ? ['Todos'] : selectedDays)}
                   className="p-3 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-sm hover:bg-emerald-100 transition-colors"
                 >
                   {mealName}

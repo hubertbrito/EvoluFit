@@ -15,7 +15,7 @@ const formatFoodQuantity = (quantity, measure, foodName) => {
   return `${qty} ${meas} de ${foodName}`;
 };
 
-const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep }) => {
+const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal, onClearMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep }) => {
   const [now, setNow] = useState(new Date());
   const [activeDays, setActiveDays] = useState(() => {
     const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
@@ -41,7 +41,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
     return () => main.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo', 'Todos', 'Avulso'];
+  const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo', 'Avulso'];
   const currentTimeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   const toggleDay = (day) => {
@@ -83,8 +83,8 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
   };
 
   const filteredMeals = meals.filter(m => {
-    // Se 'Todos' estiver selecionado, mostra apenas templates de 'Todos'
-    if (activeDays.includes('Todos')) return m.dayOfWeek === 'Todos';
+    // If 'Avulso' is selected, only show ad-hoc meals
+    if (activeDays.includes('Avulso')) return m.dayOfWeek === 'Avulso';
     
     // Se for um dos dias ativos, mostra
     if (activeDays.includes(m.dayOfWeek)) return true;
@@ -92,6 +92,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
     // Se for 'Todos' (template), mostra APENAS SE for relevante para algum dos dias ativos
     // e NÃO houver override (card específico) naquele dia
     if (m.dayOfWeek === 'Todos') {
+      if (activeDays.includes('Avulso')) return false; // Don't show templates on Avulso page
       return activeDays.some(day => {
         const hasOverride = meals.some(om => om.dayOfWeek === day && om.name === m.name);
         return !hasOverride;
@@ -141,9 +142,9 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
       <div className="flex justify-between items-center">
         <div>
             <h2 className="text-2xl font-black text-gray-800 tracking-tighter">
-              {activeDays.length === 1 && !['Todos', 'Avulso'].includes(activeDays[0]) 
+              {activeDays.length === 1 && activeDays[0] !== 'Avulso'
                 ? `Agenda de ${activeDays[0]}` 
-                : activeDays[0] === 'Todos' ? 'Agenda Geral' : 'Agenda'}
+                : activeDays[0] === 'Avulso' ? 'Agenda Avulsa' : 'Agenda'}
             </h2>
             <p className="text-emerald-600 font-bold text-[10px] uppercase flex items-center mt-1">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping mr-2"></span>
@@ -298,14 +299,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
 
                   <button 
                     onClick={() => {
-                        if (window.confirm('Deseja limpar todos os alimentos desta refeiçao?')) {
-                            if (meal.dayOfWeek === 'Todos' && !activeDays.includes('Todos')) {
-                                const newMeal = { ...meal, id: `m-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, dayOfWeek: activeDays[0], plate: [], isDone: false };
-                                onUpdateMeals([...meals, newMeal]);
-                            } else {
-                                updateMeal(meal.id, { plate: [] });
-                            }
-                        }
+                      onClearMeal(meal, activeDays[0]);
                     }}
                     disabled={meal.plate.length === 0}
                     className="px-3 py-2 bg-amber-50 rounded-xl text-amber-500 disabled:opacity-30 hover:bg-amber-100 transition-colors flex items-center gap-1" 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, Copy, AlertTriangle } from 'lucide-react';
+import { X, Trash2, Copy, AlertTriangle, Eraser } from 'lucide-react';
 import { FOOD_DATABASE, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures } from './constants';
 import PantryScreen from './components/PantryScreen';
 import PlateScreen from './components/PlateScreen';
@@ -419,6 +419,67 @@ const Confetti = () => {
   );
 };
 
+const ClearMealModal = ({ onClose, onConfirm, meal, contextDay }) => {
+  const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+  const isTodos = meal.dayOfWeek === 'Todos';
+  
+  const [selectedDays, setSelectedDays] = useState(
+    isTodos 
+      ? (contextDay && days.includes(contextDay) ? [contextDay] : days)
+      : [meal.dayOfWeek]
+  );
+
+  const toggleDay = (day) => {
+    if (!isTodos) return;
+    setSelectedDays(prev => 
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
+  };
+
+  const handleConfirm = () => {
+    if (selectedDays.length === 0) return alert('Selecione pelo menos um dia para limpar.');
+    onConfirm(selectedDays);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-bounce">
+        <div className="p-4 border-b bg-amber-50 flex justify-between items-center">
+          <h3 className="font-bold text-amber-800 flex items-center gap-2">
+            <Eraser size={20} /> Limpar Prato
+          </h3>
+          <button onClick={onClose}><X size={20} className="text-amber-600" /></button>
+        </div>
+        <div className="p-6">
+          <p className="text-gray-600 mb-4 text-sm">
+            Selecione os dias para limpar os alimentos de <strong>"{meal.name}"</strong>:
+          </p>
+          
+          {isTodos && (
+            <div className="flex gap-2 mb-4">
+              <button onClick={() => setSelectedDays(days)} className="flex-1 p-2 rounded-lg text-xs font-bold border border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100">Todos os Dias</button>
+              <button onClick={() => setSelectedDays([])} className="flex-1 p-2 rounded-lg text-xs font-bold border border-gray-200 text-gray-500 hover:bg-gray-50">Nenhum</button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-4 gap-2">
+            {days.map(day => (
+              <button key={day} onClick={() => toggleDay(day)} disabled={!isTodos && day !== meal.dayOfWeek} className={`p-2 rounded-lg text-xs font-bold transition-colors ${selectedDays.includes(day) ? 'bg-amber-500 text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'} ${(!isTodos && day !== meal.dayOfWeek) ? 'opacity-30 cursor-not-allowed' : ''}`}>
+                {day.slice(0, 3)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
+          <button onClick={onClose} className="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button>
+          <button onClick={handleConfirm} className="px-6 py-2 bg-amber-500 text-white rounded-lg font-bold text-sm shadow-md hover:bg-amber-600">Limpar</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ResetScheduleModal = ({ onClose, onConfirm }) => {
   const [inputValue, setInputValue] = useState('');
   const isMatch = inputValue === 'RESETAR';
@@ -513,6 +574,9 @@ const App = () => {
   const [mealToDuplicate, setMealToDuplicate] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [mealToClear, setMealToClear] = useState(null);
+  const [clearContextDay, setClearContextDay] = useState(null);
+  const [initialPlateDays, setInitialPlateDays] = useState([]);
 
   useEffect(() => {
     localStorage.setItem('userProfile', JSON.stringify(userProfile));
@@ -816,19 +880,62 @@ const App = () => {
   };
 
   const handleEditMeal = (meal) => {
+    const fixedMealNames = [
+      'Café da Manhã', 'Lanche das 10h', 'Almoço', 'Chá das Três', 
+      'Lanche das 17h', 'Jantar das 20h', 'Lanche das 22h', 'Ceia da Meia-noite'
+    ];
+
     if (currentPlate.length > 0) {
       if (!window.confirm('Seu "Prato" atual contém itens. Deseja substituí-los pelos itens desta refeição para editá-los?')) {
         return;
       }
     }
     setCurrentPlate(meal.plate);
-    setMealSchedule(prev => prev.map(m => m.id === meal.id ? { ...m, plate: [], isDone: false } : m));
+    setInitialPlateDays(meal.dayOfWeek === 'Todos' ? ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'] : [meal.dayOfWeek]);
+    
+    // Se for refeição fixa, apenas limpa o prato. Se for customizada, remove para permitir reagendamento de dias.
+    if (fixedMealNames.includes(meal.name)) {
+      setMealSchedule(prev => prev.map(m => m.id === meal.id ? { ...m, plate: [], isDone: false } : m));
+    } else {
+      setMealSchedule(prev => prev.filter(m => m.id !== meal.id));
+    }
+    
     setActiveTab('plate');
   };
 
   const handleDeleteMeal = (meal, contextDay) => {
     setMealToDelete(meal);
     setDeleteContextDay(contextDay);
+  };
+
+  const handleClearMeal = (meal, contextDay) => {
+    setMealToClear(meal);
+    setClearContextDay(contextDay);
+  };
+
+  const confirmClear = (daysToClear) => {
+    const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    
+    if (mealToClear.dayOfWeek === 'Todos') {
+      // Se selecionou todos os dias, limpa o card principal
+      if (daysToClear.length === 7) {
+        setMealSchedule(prev => prev.map(m => m.id === mealToClear.id ? { ...m, plate: [], isDone: false } : m));
+      } else {
+        // Cria overrides vazios para os dias selecionados
+        const newOverrides = daysToClear.map((d, i) => ({
+          ...mealToClear,
+          id: `m-${Date.now()}-${i}-clear`,
+          dayOfWeek: d,
+          plate: [],
+          isDone: false
+        }));
+        setMealSchedule(prev => [...prev, ...newOverrides]);
+      }
+    } else {
+      // Refeição específica, apenas limpa
+      setMealSchedule(prev => prev.map(m => m.id === mealToClear.id ? { ...m, plate: [], isDone: false } : m));
+    }
+    setMealToClear(null);
   };
 
   const confirmDelete = (daysToDelete) => {
@@ -998,6 +1105,7 @@ const App = () => {
       {activeTab === 'plate' && (
         <PlateScreen 
           key={mealSchedule.map(m => m.id).join('-')}
+          initialSelectedDays={initialPlateDays}
           plate={currentPlate} 
           onRemove={id => setCurrentPlate(p => p.filter(x => x.foodId !== id))} 
           onUpdate={(id, up) => setCurrentPlate(p => p.map(x => x.foodId === id ? {...x, ...up} : x))} 
@@ -1031,58 +1139,50 @@ const App = () => {
             }
 
             setMealSchedule(prev => {
-              // Se um ID específico foi fornecido (para "Nova Refeição" criada na Agenda), usamos ele
-              if (targetId) {
-                return prev.map(m => m.id === targetId 
-                  ? { ...m, plate: [...m.plate, ...currentPlate], isDone: true } 
-                  : m
-                );
-              }
-
-              // Se for uma refeição fixa (pré-renderizada), atualiza a existente (Todos) e impede duplicatas
-              if (fixedMealNames.includes(mealName)) {
-                const existingFixed = prev.find(m => m.name === mealName && m.dayOfWeek === 'Todos');
-                if (existingFixed) {
-                  return prev.map(m => m.id === existingFixed.id 
-                    ? { ...m, plate: [...m.plate, ...currentPlate], isDone: true }
-                    : m
-                  );
+                if (targetId) {
+                    return prev.map(m => m.id === targetId 
+                        ? { ...m, plate: [...m.plate, ...currentPlate], isDone: true } 
+                        : m
+                    );
                 }
-              }
 
-              // Normaliza a entrada para garantir que seja um array de dias
-              const days = Array.isArray(daysInput) ? daysInput : [daysInput];
-              let nextSchedule = [...prev];
+                const days = Array.isArray(daysInput) ? daysInput : [daysInput];
+                let nextSchedule = [...prev];
 
-              days.forEach(day => {
-                // Se for 'Todos', atualiza a refeição padrão existente
-                if (day === 'Todos') {
-                  nextSchedule = nextSchedule.map(m => m.name === mealName && m.dayOfWeek === 'Todos' 
-                    ? { ...m, plate: [...m.plate, ...currentPlate], isDone: true } 
-                    : m
-                  );
-                } else {
-                  // Se for dia específico, verifica se já existe para atualizar ou cria nova
-                  const existsIndex = nextSchedule.findIndex(m => m.name === mealName && m.dayOfWeek === day);
-                  
-                  if (existsIndex >= 0) {
-                    const m = nextSchedule[existsIndex];
-                    nextSchedule[existsIndex] = { ...m, plate: [...m.plate, ...currentPlate], isDone: true };
-                  } else {
-                    // Cria nova entrada específica para o dia
-                    // Tenta herdar o horário do card padrão 'Todos' para manter consistência
-                    const templateMeal = nextSchedule.find(m => m.name === mealName && m.dayOfWeek === 'Todos');
-                    const mealTime = templateMeal ? templateMeal.time : time;
-
-                    nextSchedule.push({ id: `m-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, name: mealName, time: mealTime, plate: [...currentPlate], isDone: true, dayOfWeek: day });
-                  }
+                // Caso 1: Agendamento para 'Todos' os dias
+                if (days.length === 1 && days[0] === 'Todos') {
+                    const mealToUpdate = nextSchedule.find(m => m.name === mealName && m.dayOfWeek === 'Todos');
+                    if (mealToUpdate) {
+                        return nextSchedule.map(m => m.id === mealToUpdate.id
+                            ? { ...m, plate: [...m.plate, ...currentPlate], isDone: true }
+                            : m
+                        );
+                    }
                 }
-              });
 
-              return nextSchedule;
+                // Caso 2: Agendamento para dias específicos
+                days.forEach(day => {
+                    if (day === 'Todos') return; // Segurança, não deve acontecer aqui
+
+                    const existingOverrideIndex = nextSchedule.findIndex(m => m.name === mealName && m.dayOfWeek === day);
+
+                    if (existingOverrideIndex !== -1) {
+                        // Atualiza um card de dia específico que já existe
+                        const mealToUpdate = nextSchedule[existingOverrideIndex];
+                        nextSchedule[existingOverrideIndex] = { ...mealToUpdate, plate: [...mealToUpdate.plate, ...currentPlate], isDone: true };
+                    } else {
+                        // Cria um novo card para o dia específico
+                        const templateMeal = nextSchedule.find(m => m.name === mealName && m.dayOfWeek === 'Todos');
+                        const mealTime = templateMeal ? templateMeal.time : time;
+                        nextSchedule.push({ id: `m-${Date.now()}-${day}`, name: mealName, time: mealTime, plate: [...currentPlate], isDone: true, dayOfWeek: day });
+                    }
+                });
+
+                return nextSchedule;
             });
             
             setCurrentPlate([]);
+            setInitialPlateDays([]);
             setActiveTab('schedule');
           }}
           onAddMore={() => setActiveTab('pantry')}
@@ -1098,6 +1198,7 @@ const App = () => {
           onClearWarnings={() => setScheduleWarnings([])}
           onAddMeal={() => setShowAddMealModal(true)}
           onEditMeal={handleEditMeal}
+          onClearMeal={handleClearMeal}
           onDeleteMeal={handleDeleteMeal}
           onReorderMeal={handleReorderMeal}
           showTour={showTour}
@@ -1138,6 +1239,7 @@ const App = () => {
       />}
       {showConfetti && <Confetti />}
       {showResetModal && <ResetScheduleModal onClose={() => setShowResetModal(false)} onConfirm={confirmReset} />}
+      {mealToClear && <ClearMealModal onClose={() => setMealToClear(null)} onConfirm={confirmClear} meal={mealToClear} contextDay={clearContextDay} />}
     </>
   );
 };

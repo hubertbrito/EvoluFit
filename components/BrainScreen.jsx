@@ -1,6 +1,37 @@
 import React, { useState } from 'react';
 import { Brain, Activity, Target, Zap, Calendar, AlertTriangle, Edit, CheckCircle, FileText, ArrowRight, RefreshCw } from 'lucide-react';
 
+const PieChart = ({ data, size = 120, strokeWidth = 20 }) => {
+  const center = size / 2;
+  const radius = center - strokeWidth / 2;
+  const circumference = 2 * Math.PI * radius;
+
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+  if (total === 0) {
+    return (
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <circle cx={center} cy={center} r={radius} fill="transparent" stroke="#e2e8f0" strokeWidth={strokeWidth} />
+      </svg>
+    );
+  }
+
+  let accumulatedPercentage = 0;
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
+      {data.map((item, index) => {
+        const percentage = item.value / total;
+        const strokeDashoffset = accumulatedPercentage * circumference;
+        accumulatedPercentage += percentage;
+        
+        return (
+          <circle key={index} cx={center} cy={center} r={radius} fill="transparent" stroke={item.color} strokeWidth={strokeWidth} strokeDasharray={`${percentage * circumference} ${circumference}`} style={{ strokeDashoffset: -strokeDashoffset }} />
+        );
+      })}
+    </svg>
+  );
+};
+
 const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour, onResetSchedule }) => {
   const [filterDay, setFilterDay] = useState('Hoje');
   const days = ['Hoje', 'Semana Toda', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
@@ -77,6 +108,22 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
   const { bmr, tdee, dailyGoal } = calculateMetabolism();
   const caloriePercentage = Math.min(100, (totals.totalCalories / dailyGoal) * 100);
   
+  // Data for Pie Chart
+  const consumed = Math.round(totals.totalCalories);
+  const goal = Math.round(dailyGoal);
+  const remaining = Math.max(0, goal - consumed);
+  const excess = Math.max(0, consumed - goal);
+
+  const pieChartData = consumed <= goal 
+      ? [
+          { value: goal, color: '#e2e8f0' }, // Fundo (slate-200)
+          { value: consumed, color: '#22c55e' }, // Progresso (emerald-500)
+      ]
+      : [
+          { value: consumed, color: '#f43f5e' }, // Fundo em excesso (rose-500)
+          { value: goal, color: '#22c55e' }, // Meta (emerald-500)
+      ];
+
   // Avisos do Dossiê
   const warnings = [];
   if (totals.totalCalories > dailyGoal * 1.1) {
@@ -151,6 +198,46 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
               style={{ width: `${caloriePercentage}%` }}
             ></div>
           </div>
+        </div>
+
+        {/* Gráfico de Pizza */}
+        <div className="mt-8 border-t border-gray-100 pt-6">
+            <h3 className="text-sm font-bold text-gray-700 mb-4 text-center">Distribuição Calórica do Dia</h3>
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8">
+                <div className="relative">
+                    <PieChart data={pieChartData} size={140} strokeWidth={22} />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span className="text-3xl font-black text-gray-800">{consumed}</span>
+                        <span className="text-xs text-gray-500 -mt-1">kcal</span>
+                    </div>
+                </div>
+                <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                        <div>
+                            <div className="font-bold text-gray-600">Consumido</div>
+                            <div className="text-gray-500">{consumed} kcal</div>
+                        </div>
+                    </div>
+                    {consumed <= goal ? (
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-slate-200"></div>
+                            <div>
+                                <div className="font-bold text-gray-600">Restante</div>
+                                <div className="text-gray-500">{remaining} kcal</div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-rose-500"></div>
+                            <div>
+                                <div className="font-bold text-rose-600">Excesso</div>
+                                <div className="text-rose-500">{excess} kcal</div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
