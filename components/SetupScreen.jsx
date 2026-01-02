@@ -75,7 +75,7 @@ const SetupScreen = ({ userProfile, onComplete }) => {
                   type="text" 
                   value={data.name}
                   onChange={(e) => handleChange('name', e.target.value)}
-                  className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none ${errors.name ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                  className={`w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none ${errors.name ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                   placeholder="Ex: Maria"
                 />
               </div>
@@ -85,7 +85,7 @@ const SetupScreen = ({ userProfile, onComplete }) => {
                   type="tel" 
                   value={data.phone || ''}
                   onChange={(e) => handleChange('phone', e.target.value)}
-                  className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
                   placeholder="Ex: 11999999999"
                 />
               </div>
@@ -95,7 +95,7 @@ const SetupScreen = ({ userProfile, onComplete }) => {
                   <select 
                     value={data.age || ''}
                     onChange={(e) => handleChange('age', e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
-                    className={`w-full p-3 border rounded-xl bg-white ${errors.age ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                    className={`w-full p-2.5 border rounded-xl bg-white ${errors.age ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                   >
                     <option value="" disabled>Selecione</option>
                     {renderOptions(10, 100)}
@@ -106,7 +106,7 @@ const SetupScreen = ({ userProfile, onComplete }) => {
                   <select 
                     value={data.gender}
                     onChange={(e) => handleChange('gender', e.target.value)}
-                    className="w-full p-3 border rounded-xl bg-white"
+                    className="w-full p-2.5 border rounded-xl bg-white"
                   >
                     <option value="M">Masculino</option>
                     <option value="F">Feminino</option>
@@ -129,7 +129,7 @@ const SetupScreen = ({ userProfile, onComplete }) => {
                   <select 
                     value={data.weight || ''}
                     onChange={(e) => handleChange('weight', e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
-                    className={`w-full p-3 border rounded-xl bg-white ${errors.weight ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                    className={`w-full p-2.5 border rounded-xl bg-white ${errors.weight ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                   >
                     <option value="" disabled>Selecione</option>
                     {renderOptions(30, 200)}
@@ -140,7 +140,7 @@ const SetupScreen = ({ userProfile, onComplete }) => {
                   <select 
                     value={data.height || ''}
                     onChange={(e) => handleChange('height', e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
-                    className={`w-full p-3 border rounded-xl bg-white ${errors.height ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                    className={`w-full p-2.5 border rounded-xl bg-white ${errors.height ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                   >
                     <option value="" disabled>Selecione</option>
                     {renderOptions(100, 230)}
@@ -152,7 +152,7 @@ const SetupScreen = ({ userProfile, onComplete }) => {
                 <select 
                   value={data.targetWeight || ''}
                   onChange={(e) => handleChange('targetWeight', e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
-                  className={`w-full p-3 border rounded-xl bg-white ${errors.targetWeight ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                  className={`w-full p-2.5 border rounded-xl bg-white ${errors.targetWeight ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                 >
                   <option value="" disabled>Selecione</option>
                   {renderOptions(30, 200)}
@@ -174,7 +174,7 @@ const SetupScreen = ({ userProfile, onComplete }) => {
                 <select 
                   value={data.activityDays}
                   onChange={(e) => handleChange('activityDays', Number(e.target.value))}
-                  className={`w-full p-3 border rounded-xl bg-white ${errors.activityDays ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                  className={`w-full p-2.5 border rounded-xl bg-white ${errors.activityDays ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                 >
                   <option value={0}>0 dias (Sedentário)</option>
                   <option value={1}>1 dia</option>
@@ -192,7 +192,7 @@ const SetupScreen = ({ userProfile, onComplete }) => {
                 <select 
                   value={data.activityLevel}
                   onChange={(e) => handleChange('activityLevel', e.target.value)}
-                  className="w-full p-3 border rounded-xl bg-white mb-4"
+                  className="w-full p-2.5 border rounded-xl bg-white mb-4"
                 >
                   <option value="Sedentário">Nenhum / Sedentário</option>
                   <option value="Leve">Leve (Caminhada, Yoga, Alongamento)</option>
@@ -207,7 +207,7 @@ const SetupScreen = ({ userProfile, onComplete }) => {
                 <select 
                   value={data.weeks || ''}
                   onChange={(e) => handleChange('weeks', e.target.value === '' ? '' : Math.max(1, Number(e.target.value)))}
-                  className={`w-full p-3 border rounded-xl bg-white ${errors.weeks ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                  className={`w-full p-2.5 border rounded-xl bg-white ${errors.weeks ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                 >
                   <option value="" disabled>Selecione</option>
                   {renderOptions(4, 52, 4)}

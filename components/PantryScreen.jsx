@@ -176,7 +176,7 @@ const PantryScreen = ({
             <input 
               type="text" 
               placeholder="Digite o nome do alimento..." 
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-100 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-emerald-200 bg-emerald-50/50 shadow-sm focus:outline-none focus:border-emerald-500 focus:ring-0 placeholder:text-emerald-600/60 text-emerald-900 font-medium"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

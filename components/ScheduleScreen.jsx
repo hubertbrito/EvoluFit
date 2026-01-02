@@ -348,7 +348,10 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onReorderMe
               alert("⚠️ ATENÇÃO: Primeiro selecione o dia (ou dias) no menu superior onde você deseja criar a refeição.");
               return;
             }
-            onAddMeal(activeDays);
+            
+            if (window.confirm(`Você vai criar uma refeição para: ${activeDays.join(', ')}.\n\nEstá correto? Se não, clique em Cancelar e mude o dia no menu.`)) {
+              onAddMeal(activeDays);
+            }
           }}
           className="w-full mt-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-700 transition-colors"
         >
