@@ -1139,46 +1139,41 @@ const App = () => {
             }
 
             setMealSchedule(prev => {
-                if (targetId) {
-                    return prev.map(m => m.id === targetId 
-                        ? { ...m, plate: [...m.plate, ...currentPlate], isDone: true } 
-                        : m
-                    );
-                }
+              if (targetId) {
+                return prev.map(m => m.id === targetId 
+                  ? { ...m, plate: [...m.plate, ...currentPlate], isDone: true } 
+                  : m
+                );
+              }
 
-                const days = Array.isArray(daysInput) ? daysInput : [daysInput];
-                let nextSchedule = [...prev];
+              const days = Array.isArray(daysInput) ? daysInput : [daysInput];
 
-                // Caso 1: Agendamento para 'Todos' os dias
-                if (days.length === 1 && days[0] === 'Todos') {
-                    const mealToUpdate = nextSchedule.find(m => m.name === mealName && m.dayOfWeek === 'Todos');
-                    if (mealToUpdate) {
-                        return nextSchedule.map(m => m.id === mealToUpdate.id
-                            ? { ...m, plate: [...m.plate, ...currentPlate], isDone: true }
-                            : m
-                        );
-                    }
-                }
-
-                // Caso 2: Agendamento para dias específicos
-                days.forEach(day => {
-                    if (day === 'Todos') return; // Segurança, não deve acontecer aqui
-
-                    const existingOverrideIndex = nextSchedule.findIndex(m => m.name === mealName && m.dayOfWeek === day);
-
-                    if (existingOverrideIndex !== -1) {
-                        // Atualiza um card de dia específico que já existe
-                        const mealToUpdate = nextSchedule[existingOverrideIndex];
-                        nextSchedule[existingOverrideIndex] = { ...mealToUpdate, plate: [...mealToUpdate.plate, ...currentPlate], isDone: true };
-                    } else {
-                        // Cria um novo card para o dia específico
-                        const templateMeal = nextSchedule.find(m => m.name === mealName && m.dayOfWeek === 'Todos');
-                        const mealTime = templateMeal ? templateMeal.time : time;
-                        nextSchedule.push({ id: `m-${Date.now()}-${day}`, name: mealName, time: mealTime, plate: [...currentPlate], isDone: true, dayOfWeek: day });
-                    }
+              // Caso 1: Agendamento para 'Todos' os dias
+              if (days.length === 1 && days[0] === 'Todos') {
+                // Atualiza TODOS os cards com este nome de refeição (o template 'Todos' e quaisquer overrides de dias específicos)
+                return prev.map(meal => {
+                  if (meal.name === mealName) {
+                    return { ...meal, plate: [...meal.plate, ...currentPlate] };
+                  }
+                  return meal;
                 });
-
+              } 
+              // Caso 2: Agendamento para dias específicos (lógica existente e correta)
+              else {
+                let nextSchedule = [...prev];
+                days.forEach(day => {
+                  if (day === 'Todos') return;
+                  const existingOverrideIndex = nextSchedule.findIndex(m => m.name === mealName && m.dayOfWeek === day);
+                  if (existingOverrideIndex !== -1) {
+                    nextSchedule[existingOverrideIndex] = { ...nextSchedule[existingOverrideIndex], plate: [...nextSchedule[existingOverrideIndex].plate, ...currentPlate] };
+                  } else {
+                    const templateMeal = nextSchedule.find(m => m.name === mealName && m.dayOfWeek === 'Todos');
+                    const mealTime = templateMeal ? templateMeal.time : time;
+                    nextSchedule.push({ id: `m-${Date.now()}-${day}`, name: mealName, time: mealTime, plate: [...currentPlate], isDone: true, dayOfWeek: day });
+                  }
+                });
                 return nextSchedule;
+              }
             });
             
             setCurrentPlate([]);

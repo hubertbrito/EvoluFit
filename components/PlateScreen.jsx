@@ -48,7 +48,6 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
     });
   };
 
-  const selectAll = () => setSelectedDays(allWeekDays);
   const clearAll = () => setSelectedDays([]);
 
   // Exclui explicitamente as refeições fixas para evitar duplicação visual
@@ -198,12 +197,6 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                 Agendar para (selecione vários):
               </div>
               <div className="flex gap-2 flex-wrap justify-center">
-                <button
-                  onClick={selectAll}
-                  className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex-grow text-center ${selectedDays.length === 7 ? 'bg-emerald-600 text-white shadow-md' : 'bg-white text-emerald-600 border border-emerald-200'}`}
-                >
-                  Todos
-                </button>
                 <button
                   onClick={clearAll}
                   className="px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex-grow text-center bg-white text-gray-400 border border-gray-200 hover:bg-gray-50"
