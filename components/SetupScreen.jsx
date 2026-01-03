@@ -1,5 +1,81 @@
-import React, { useState } from 'react';
-import { ArrowRight, User, Activity, Info } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowRight, User, Activity, Info, ChevronDown } from 'lucide-react';
+
+const CustomSelect = ({ options, value, onChange, placeholder, error }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen && selectedRef.current) {
+      // Scroll the selected item into view when the modal opens
+      setTimeout(() => { // Timeout to allow rendering
+        selectedRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }, 100);
+    }
+  }, [isOpen, value]);
+
+  const handleSelect = (optionValue) => {
+    onChange(optionValue);
+    setIsOpen(false);
+  };
+
+  // Find the label for the currently selected value
+  const selectedOption = options.find(opt => opt.value === value);
+  const displayLabel = selectedOption ? selectedOption.label : placeholder;
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        className={`w-full p-2.5 border rounded-xl bg-white text-left flex justify-between items-center transition-colors ${error ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500'}`}
+      >
+        <span className={value !== undefined && value !== '' && value !== null ? 'text-gray-900' : 'text-gray-400'}>
+          {displayLabel}
+        </span>
+        <ChevronDown className="w-4 h-4 text-gray-400" />
+      </button>
+
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setIsOpen(false)}>
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/40 animate-fade-in-fast"></div>
+          
+          <div 
+            className="bg-white w-full max-w-md rounded-t-2xl shadow-lg max-h-[40vh] flex flex-col z-10 animate-slide-up"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
+          >
+            <div className="p-4 border-b text-center font-bold text-gray-700 shrink-0">
+              {placeholder}
+            </div>
+            <div className="overflow-y-auto">
+              {options.map(option => {
+                const isSelected = option.value === value;
+                return (
+                  <button
+                    key={option.value}
+                    ref={isSelected ? selectedRef : null}
+                    onClick={() => handleSelect(option.value)}
+                    className={`w-full text-center p-3 text-lg transition-colors ${isSelected ? 'bg-emerald-500 text-white font-bold' : 'text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Add animations */}
+      <style>{`
+        @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; }
+        @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .animate-slide-up { animation: slide-up 0.3s ease-out forwards; }
+      `}</style>
+    </div>
+  );
+};
 
 const SetupScreen = ({ userProfile, onComplete }) => {
   const [step, setStep] = useState(1);
@@ -43,12 +119,20 @@ const SetupScreen = ({ userProfile, onComplete }) => {
     if (step > 1) setStep(step - 1);
   };
 
-  // Helper para gerar opções de datalist
-  const renderOptions = (start, end, step = 1) => {
-    const options = [];
-    for (let i = start; i <= end; i += step) options.push(<option key={i} value={i}>{i}</option>);
-    return options;
-  };
+  const ageOptions = Array.from({ length: 91 }, (_, i) => ({ value: i + 10, label: `${i + 10}` }));
+  const weightOptions = Array.from({ length: 171 }, (_, i) => ({ value: i + 30, label: `${i + 30} kg` }));
+  const heightOptions = Array.from({ length: 131 }, (_, i) => ({ value: i + 100, label: `${i + 100} cm` }));
+  const weeksOptions = Array.from({ length: 13 }, (_, i) => ({ value: (i + 1) * 4, label: `${(i + 1) * 4} semanas` }));
+  const activityDaysOptions = [
+    { value: 0, label: '0 dias (Sedentário)' },
+    { value: 1, label: '1 dia' },
+    { value: 2, label: '2 dias' },
+    { value: 3, label: '3 dias' },
+    { value: 4, label: '4 dias' },
+    { value: 5, label: '5 dias' },
+    { value: 6, label: '6 dias' },
+    { value: 7, label: '7 dias (Todos os dias)' },
+  ];
 
   return (
     <div className="min-h-screen bg-white p-6 flex flex-col justify-center">
@@ -92,14 +176,13 @@ const SetupScreen = ({ userProfile, onComplete }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Idade</label>
-                  <select 
-                    value={data.age || ''}
-                    onChange={(e) => handleChange('age', e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
-                    className={`w-full p-2.5 border rounded-xl bg-white ${errors.age ? 'border-red-500 ring-1 ring-red-500' : ''}`}
-                  >
-                    <option value="" disabled>Selecione</option>
-                    {renderOptions(10, 100)}
-                  </select>
+                  <CustomSelect
+                    value={data.age}
+                    onChange={(val) => handleChange('age', val)}
+                    options={ageOptions}
+                    placeholder="Selecione"
+                    error={errors.age}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Gênero</label>
@@ -126,37 +209,34 @@ const SetupScreen = ({ userProfile, onComplete }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Peso (kg)</label>
-                  <select 
-                    value={data.weight || ''}
-                    onChange={(e) => handleChange('weight', e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
-                    className={`w-full p-2.5 border rounded-xl bg-white ${errors.weight ? 'border-red-500 ring-1 ring-red-500' : ''}`}
-                  >
-                    <option value="" disabled>Selecione</option>
-                    {renderOptions(30, 200)}
-                  </select>
+                  <CustomSelect
+                    value={data.weight}
+                    onChange={(val) => handleChange('weight', val)}
+                    options={weightOptions}
+                    placeholder="Selecione"
+                    error={errors.weight}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Altura (cm)</label>
-                  <select 
-                    value={data.height || ''}
-                    onChange={(e) => handleChange('height', e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
-                    className={`w-full p-2.5 border rounded-xl bg-white ${errors.height ? 'border-red-500 ring-1 ring-red-500' : ''}`}
-                  >
-                    <option value="" disabled>Selecione</option>
-                    {renderOptions(100, 230)}
-                  </select>
+                  <CustomSelect
+                    value={data.height}
+                    onChange={(val) => handleChange('height', val)}
+                    options={heightOptions}
+                    placeholder="Selecione"
+                    error={errors.height}
+                  />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Meta de Peso (kg)</label>
-                <select 
-                  value={data.targetWeight || ''}
-                  onChange={(e) => handleChange('targetWeight', e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
-                  className={`w-full p-2.5 border rounded-xl bg-white ${errors.targetWeight ? 'border-red-500 ring-1 ring-red-500' : ''}`}
-                >
-                  <option value="" disabled>Selecione</option>
-                  {renderOptions(30, 200)}
-                </select>
+                <CustomSelect
+                  value={data.targetWeight}
+                  onChange={(val) => handleChange('targetWeight', val)}
+                  options={weightOptions}
+                  placeholder="Selecione"
+                  error={errors.targetWeight}
+                />
               </div>
             </>
           )}
@@ -171,20 +251,13 @@ const SetupScreen = ({ userProfile, onComplete }) => {
               <div className="mb-4">
                 <label className="block text-sm font-bold text-gray-700 mb-1">Frequência de Treinos</label>
                 <p className="text-xs text-gray-500 mb-2">Quantos dias por semana você pratica exercícios físicos?</p>
-                <select 
+                <CustomSelect
                   value={data.activityDays}
-                  onChange={(e) => handleChange('activityDays', Number(e.target.value))}
-                  className={`w-full p-2.5 border rounded-xl bg-white ${errors.activityDays ? 'border-red-500 ring-1 ring-red-500' : ''}`}
-                >
-                  <option value={0}>0 dias (Sedentário)</option>
-                  <option value={1}>1 dia</option>
-                  <option value={2}>2 dias</option>
-                  <option value={3}>3 dias</option>
-                  <option value={4}>4 dias</option>
-                  <option value={5}>5 dias</option>
-                  <option value={6}>6 dias</option>
-                  <option value={7}>7 dias (Todos os dias)</option>
-                </select>
+                  onChange={(val) => handleChange('activityDays', val)}
+                  options={activityDaysOptions}
+                  placeholder="Selecione"
+                  error={errors.activityDays}
+                />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Intensidade do Esforço</label>
@@ -204,14 +277,13 @@ const SetupScreen = ({ userProfile, onComplete }) => {
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Prazo para a Meta (Semanas)</label>
                 <p className="text-xs text-gray-500 mb-2">Em quantas semanas você quer chegar ao peso ideal?</p>
-                <select 
-                  value={data.weeks || ''}
-                  onChange={(e) => handleChange('weeks', e.target.value === '' ? '' : Math.max(1, Number(e.target.value)))}
-                  className={`w-full p-2.5 border rounded-xl bg-white ${errors.weeks ? 'border-red-500 ring-1 ring-red-500' : ''}`}
-                >
-                  <option value="" disabled>Selecione</option>
-                  {renderOptions(4, 52, 4)}
-                </select>
+                <CustomSelect
+                  value={data.weeks}
+                  onChange={(val) => handleChange('weeks', val)}
+                  options={weeksOptions}
+                  placeholder="Selecione"
+                  error={errors.weeks}
+                />
               </div>
             </div>
           )}
