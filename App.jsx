@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, Copy, AlertTriangle, Eraser } from 'lucide-react';
+import { X, Trash2, Copy, AlertTriangle, Eraser, Download } from 'lucide-react';
 import { FOOD_DATABASE, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures } from './constants';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 import PantryScreen from './components/PantryScreen';
 import PlateScreen from './components/PlateScreen';
 import BrainScreen from './components/BrainScreen';
@@ -38,7 +39,7 @@ const TourOverlay = ({ step, onNext, onBack, onSkip, highlightedRect }) => {
 
   const steps = [
     {
-      title: "Bem-vindo ao NutriBrasil!",
+      title: "Bem-vindo ao EvoluFit!",
       content: "Seu perfil foi configurado com sucesso! Vamos fazer um tour rápido para você dominar o aplicativo e atingir suas metas?",
       action: "Começar Tour",
       positionClass: "bottom-24 right-4"
@@ -172,7 +173,7 @@ const TourOverlay = ({ step, onNext, onBack, onSkip, highlightedRect }) => {
   );
 };
 
-const ManualScreen = ({ onClose, onReset }) => (
+const ManualScreen = ({ onClose, onReset, onInstallClick, showInstallButton }) => (
   <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
     <style>{`
       @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } 
@@ -221,9 +222,31 @@ const ManualScreen = ({ onClose, onReset }) => (
             Arraste ou use as setas para reordenar.
           </p>
         </div>
+
+        <div className="space-y-2 bg-amber-50 p-4 rounded-lg border border-amber-200">
+          <h3 className="font-bold text-amber-800 text-base">Importante: Limites do Alerta Sonoro</h3>
+          <p className="text-amber-700 text-xs leading-relaxed">
+            Para que o alarme das refeições funcione, o aplicativo precisa estar aberto em uma aba do seu navegador (mesmo que em segundo plano ou com a tela do celular apagada).
+            Se o navegador for completamente fechado, os alertas não serão disparados. Esta é uma limitação da tecnologia web atual para economizar bateria.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="font-bold text-emerald-700 text-base">4. Instalar o Aplicativo</h3>
+          <p>
+            Para uma experiência mais rápida e acesso offline, instale o EvoluFit na tela inicial do seu celular. Procure pelo botão <Download size={14} className="inline-block -mt-1" /> no topo do app ou siga os passos:
+          </p>
+          <ul className="list-disc list-inside pl-2 text-xs space-y-1">
+            <li><strong>Android (Chrome):</strong> Toque nos três pontinhos (⋮) no canto superior direito e selecione "Instalar aplicativo" ou "Adicionar à tela inicial".</li>
+            <li><strong>iOS (Safari):</strong> Toque no ícone de Compartilhamento (um quadrado com uma seta para cima) e selecione "Adicionar à Tela de Início".</li>
+          </ul>
+        </div>
       </div>
 
       <div className="p-4 border-t bg-gray-50 flex justify-between items-center">
+        {showInstallButton && (
+          <button onClick={onInstallClick} className="text-emerald-600 text-xs font-bold hover:text-emerald-800 underline flex items-center gap-1"><Download size={14}/> Instalar App</button>
+        )}
         <button onClick={onReset} className="text-rose-500 text-xs font-bold hover:text-rose-700 underline">
           Resetar Agenda
         </button>
@@ -578,6 +601,31 @@ const App = () => {
   const [clearContextDay, setClearContextDay] = useState(null);
   const [initialPlateDays, setInitialPlateDays] = useState([]);
 
+  // --- PWA Logic ---
+  const {
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW();
+
+  const [installPrompt, setInstallPrompt] = useState(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    setInstallPrompt(null);
+  };
+
   const [isAlerting, setIsAlerting] = useState(false);
 
 const AlertAnimationOverlay = () => (
@@ -818,14 +866,14 @@ const AlertAnimationOverlay = () => (
 
   // 4. Notificação Visual Nativa (fora do app)
   if ("Notification" in window && Notification.permission === "granted") {
-    new Notification('⏰ Lembrete NutriBrasil', {
+    new Notification('⏰ Lembrete EvoluFit', {
       body: `Está na hora do seu ${mealName}!`,
       icon: '/logo192.png', // Ícone padrão de PWAs.
       vibrate: [200, 100, 200], // Vibração junto com a notificação
     });
   } else {
     // Fallback para o alerta se as notificações não forem permitidas
-    setTimeout(() => alert(`⏰ Lembrete NutriBrasil: Hora do ${mealName}!`), 500);
+    setTimeout(() => alert(`⏰ Lembrete EvoluFit: Hora do ${mealName}!`), 500);
   }
   };
 
@@ -1089,6 +1137,8 @@ const AlertAnimationOverlay = () => (
         plateCount={currentPlate.length}
         onRestartTour={handleRestartTour}
         onToggleManual={() => setShowManual(p => !p)}
+        onInstallClick={handleInstallClick}
+        showInstallButton={!!installPrompt}
       >
       {activeTab === 'pantry' && (
         <PantryScreen 
@@ -1220,7 +1270,12 @@ const AlertAnimationOverlay = () => (
       )}
       </Layout>
       {showTour && <TourOverlay step={tourStep} onNext={handleTourNext} onBack={handleTourBack} onSkip={handleTourSkip} highlightedRect={highlightedRect} />}
-      {showManual && <ManualScreen onClose={() => setShowManual(false)} onReset={handleResetSchedule} />}
+      {showManual && <ManualScreen 
+        onClose={() => setShowManual(false)} 
+        onReset={handleResetSchedule} 
+        onInstallClick={handleInstallClick}
+        showInstallButton={!!installPrompt}
+      />}
       {showAddMealModal && <AddMealModal onClose={() => setShowAddMealModal(false)} onConfirm={handleAddMeal} />}
       {mealToDelete && (
         <DeleteMealModal 

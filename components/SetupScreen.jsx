@@ -141,7 +141,7 @@ const SetupScreen = ({ userProfile, onComplete }) => {
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <User className="w-8 h-8 text-emerald-600" />
           </div>
-          <h1 className="text-2xl font-black text-gray-900">Bem-vindo ao NutriBrasil</h1>
+          <h1 className="text-2xl font-black text-gray-900">Bem-vindo ao EvoluFit</h1>
           <p className="text-gray-500 text-sm mt-1">Vamos configurar seu perfil para gerar metas precisas e personalizadas.</p>
         </div>
 

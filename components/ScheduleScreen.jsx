@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Clock, AlertCircle, Zap, Wheat, Droplets, CalendarDays, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser, Edit } from 'lucide-react';
+import { Clock, AlertCircle, Zap, Wheat, Droplets, Calendar, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser, Edit, CalendarDays } from 'lucide-react';
 import { UNIT_WEIGHTS, getFoodUnitWeight } from '../constants';
 
 // Função auxiliar para formatar a quantidade e medida do alimento
@@ -13,6 +13,18 @@ const formatFoodQuantity = (quantity, measure, foodName) => {
     return `${total} ${match[2]} de ${foodName}`;
   }
   return `${qty} ${meas} de ${foodName}`;
+};
+
+const dayColors = {
+  Segunda: 'bg-red-100 text-red-800 border border-red-200',
+  Terça: 'bg-orange-100 text-orange-800 border border-orange-200',
+  Quarta: 'bg-amber-100 text-amber-800 border border-amber-200',
+  Quinta: 'bg-lime-100 text-lime-800 border border-lime-200',
+  Sexta: 'bg-sky-100 text-sky-800 border border-sky-200',
+  Sábado: 'bg-indigo-100 text-indigo-800 border border-indigo-200',
+  Domingo: 'bg-purple-100 text-purple-800 border border-purple-200',
+  Todos: 'bg-slate-100 text-slate-800 border border-slate-200',
+  Avulso: 'bg-gray-100 text-gray-800 border border-gray-200',
 };
 
 const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal, onClearMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep }) => {
@@ -167,6 +179,14 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
           const isFixed = fixedMealNames.includes(meal.name);
           const nutrients = calculateMealNutrients(meal.plate);
 
+          // Encontra todos os dias agendados para esta refeição específica
+          const scheduledDays = meal.dayOfWeek === 'Todos' 
+            ? ['Todos'] 
+            : meal.dayOfWeek === 'Avulso'
+            ? ['Avulso']
+            : meals.filter(m => m.name === meal.name && m.dayOfWeek !== 'Todos' && m.dayOfWeek !== 'Avulso').map(m => m.dayOfWeek);
+
+
           return (
             <div 
                 key={`${meal.id}-${activeDays[0]}`} 
@@ -263,17 +283,31 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-2">
-                        <span className={`w-2 h-2 rounded-full ${meal.dayOfWeek === 'Todos' ? 'bg-blue-400' : 'bg-orange-500'}`}></span>
-                        <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">{meal.dayOfWeek}</span>
-                      </div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                        <CalendarDays size={12} className="text-indigo-300" />
+                        {scheduledDays.map(day => (
+                            <span 
+                                key={day} 
+                                className={`px-1.5 py-0.5 rounded text-[9px] font-black ${dayColors[day] || dayColors.Avulso}`}
+                            >
+                                {day.substring(0, 3).toUpperCase()}
+                            </span>
+                        ))}
                     </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center space-x-2 text-xs font-bold text-indigo-300 uppercase italic py-3 bg-indigo-50/50 rounded-2xl border border-dashed border-indigo-100">
-                  <AlertCircle size={14}/>
-                  <span>Vazio ({meal.dayOfWeek})</span>
+                <div className="flex flex-col items-center justify-center gap-2 text-xs font-bold text-indigo-300 uppercase italic py-3 bg-indigo-50/50 rounded-2xl border border-dashed border-indigo-100">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle size={14}/>
+                        <span>Vazio</span>
+                    </div>
+                    <div className="flex items-center gap-1 flex-wrap justify-center px-2">
+                        {scheduledDays.map(day => (
+                            <span key={day} className={`px-1.5 py-0.5 rounded text-[9px] font-black not-italic ${dayColors[day] || dayColors.Avulso}`}>
+                                {day.substring(0, 3).toUpperCase()}
+                            </span>
+                        ))}
+                    </div>
                 </div>
               )}
 
