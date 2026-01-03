@@ -578,12 +578,42 @@ const App = () => {
   const [clearContextDay, setClearContextDay] = useState(null);
   const [initialPlateDays, setInitialPlateDays] = useState([]);
 
+  const [isAlerting, setIsAlerting] = useState(false);
+
+const AlertAnimationOverlay = () => (
+  <div className="fixed inset-0 max-w-md mx-auto pointer-events-none z-[200]">
+    <style>{`
+      @keyframes pulse-border-alert {
+        0% { box-shadow: inset 0 0 0 0px rgba(34, 197, 94, 0); }
+        20% { box-shadow: inset 0 0 0 10px rgba(34, 197, 94, 0.8); }
+        100% { box-shadow: inset 0 0 0 0px rgba(34, 197, 94, 0); }
+      }
+      .animate-pulse-visual-alert {
+        /* A animação dura 2s e se repete 2 vezes, totalizando 4s */
+        animation: pulse-border-alert 2s ease-out 2;
+        border-radius: 1.5rem; /* Para combinar com o arredondamento do layout se houver */
+      }
+    `}</style>
+    <div className="w-full h-full animate-pulse-visual-alert"></div>
+  </div>
+);
+
+
   useEffect(() => {
     localStorage.setItem('userProfile', JSON.stringify(userProfile));
     localStorage.setItem('pantry', JSON.stringify(pantryItems));
     localStorage.setItem('customFoods', JSON.stringify(customFoods));
     localStorage.setItem('mealSchedule', JSON.stringify(mealSchedule));
   }, [userProfile, pantryItems, customFoods, mealSchedule]);
+
+  // Solicita permissão para notificações na primeira vez que o app é aberto
+  useEffect(() => {
+    if ("Notification" in window) {
+      if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission();
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (userProfile.isSetupDone) {
@@ -741,84 +771,62 @@ const App = () => {
       const now = ctx.currentTime;
       const name = mealName.toLowerCase();
 
-      // Configura sons diferentes baseados no nome da refeição
-      if (name.includes('café')) {
-        // Som "Despertar" (Crescente)
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, now);
-        osc.frequency.exponentialRampToValueAtTime(880, now + 0.5);
-      } else if (name.includes('almoço') || name.includes('jantar') || name.includes('ceia')) {
-        // Som "Gongo" (Grave e lento)
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(220, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
-      } else {
-        // Lanches (Bip duplo rápido)
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(800, now);
-        gain.gain.setValueAtTime(0.05, now);
-        osc.stop(now + 0.1);
-        
-        // Segundo bip
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.connect(gain2);
-        gain2.connect(ctx.destination);
-        osc2.type = 'square';
-        osc2.frequency.setValueAtTime(1200, now + 0.15);
-        gain2.gain.setValueAtTime(0.05, now + 0.15);
-        osc2.start(now + 0.15);
-        osc2.stop(now + 0.25);
-        return; 
-      }
+      // Som suave tipo flauta/notificação
+      osc.type = 'sine'; // 'sine' é o tom mais puro e suave
+      gain.gain.setValueAtTime(0, now);
+
+      const playNote = (freq, startTime, duration) => {
+        gain.gain.linearRampToValueAtTime(0.1, startTime + 0.01); // Fade in suave
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.linearRampToValueAtTime(0, startTime + duration); // Fade out suave
+      };
+
+      // Sequência de 3 notas ascendentes
+      playNote(880, now, 0.15); // A5
+      playNote(1046.50, now + 0.2, 0.15); // C6
+      playNote(1318.51, now + 0.4, 0.2); // E6
 
       osc.start(now);
-      osc.stop(now + 1.5);
+      osc.stop(now + 0.7);
+
     } catch (e) {
       console.error("Erro ao tocar som", e);
     }
   };
 
   const triggerAlert = (mealName, plate) => {
-    // 1. Tocar som personalizado
-    playMealSound(mealName);
+    // 1. Ativa a animação visual na tela
+    setIsAlerting(true);
+    setTimeout(() => {
+      setIsAlerting(false);
+    }, 4000); // Desliga a animação após 4 segundos
 
     // 2. Vibrar (se suportado) para feedback tátil
     if ('vibrate' in navigator) {
-      navigator.vibrate([200, 100, 200]);
+      navigator.vibrate([100, 50, 100, 50, 100]); // Vibração tripla para chamar atenção
     }
 
-    // 3. Notificação Visual e WhatsApp
-    setTimeout(() => {
-      const MOVIE_QUOTES = [
-        "Faça ou não faça. A tentativa não existe. – Yoda (Star Wars)",
-        "Não é o quanto você bate, mas o quanto aguenta apanhar e continuar. – Rocky Balboa",
-        "Ao infinito e além! – Toy Story",
-        "Por que caímos? Para aprendermos a nos levantar. – Batman",
-        "Continue a nadar. – Procurando Nemo",
-        "Carpe Diem. Aproveitem o dia. Façam suas vidas serem extraordinárias. – Sociedade dos Poetas Mortos",
-        "Grandes poderes trazem grandes responsabilidades. – Homem-Aranha",
-        "Que a Força esteja com você. – Star Wars",
-        "O passado pode doer. Mas você pode fugir dele ou aprender com ele. – O Rei Leão",
-        "A flor que desabrocha na adversidade é a mais rara e bonita de todas. – Mulan",
-        "Você é mais corajoso do que acredita e mais forte do que parece. – Ursinho Pooh",
-        "O que fazemos em vida ecoa na eternidade. – Gladiador",
-        "A vida é como uma caixa de chocolates. – Forrest Gump"
-      ];
-      const randomQuote = MOVIE_QUOTES[Math.floor(Math.random() * MOVIE_QUOTES.length)];
-
-      if (userProfile.phone) {
-        const cleanPhone = userProfile.phone.replace(/\D/g, '');
-        const text = `⏰ Lembrete NutriBrasil: Hora do ${mealName}!\n\n🎬 "${randomQuote}"`;
-        const link = `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(text)}`;
-        
-        // Abre o WhatsApp diretamente. Navegadores podem bloquear isso se não for uma ação direta do usuário.
-        window.open(link, '_blank');
-      } else {
-        // Para usuários sem telefone, mostra um alerta simples como mensagem de texto.
-        alert(`NUTRI BRASIL: Hora do ${mealName}!\n\n"${randomQuote}"`);
+    // 3. Tocar som personalizado em loop (3 vezes)
+    let repeat = 0;
+    const soundInterval = setInterval(() => {
+      playMealSound(mealName);
+      repeat++;
+      if (repeat >= 3) {
+        clearInterval(soundInterval);
       }
-    }, 500); // Pequeno delay para o som começar antes do alerta pausar a tela
+    }, 1200); // Intervalo de 1.2s entre as repetições
+
+  // 4. Notificação Visual Nativa (fora do app)
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification('⏰ Lembrete NutriBrasil', {
+      body: `Está na hora do seu ${mealName}!`,
+      icon: '/logo192.png', // Ícone padrão de PWAs.
+      vibrate: [200, 100, 200], // Vibração junto com a notificação
+    });
+  } else {
+    // Fallback para o alerta se as notificações não forem permitidas
+    setTimeout(() => alert(`⏰ Lembrete NutriBrasil: Hora do ${mealName}!`), 500);
+  }
   };
 
   const allAvailableFoods = [...FOOD_DATABASE, ...customFoods];
@@ -1235,6 +1243,7 @@ const App = () => {
       {showConfetti && <Confetti />}
       {showResetModal && <ResetScheduleModal onClose={() => setShowResetModal(false)} onConfirm={confirmReset} />}
       {mealToClear && <ClearMealModal onClose={() => setMealToClear(null)} onConfirm={confirmClear} meal={mealToClear} contextDay={clearContextDay} />}
+      {isAlerting && <AlertAnimationOverlay />}
     </>
   );
 };
