@@ -554,11 +554,11 @@ const App = () => {
     const saved = localStorage.getItem('userProfile');
     return saved ? JSON.parse(saved) : {
       name: '', 
-      weight: 70, 
-      height: 170, 
-      age: 30, 
-      targetWeight: 70, 
-      weeks: 12, 
+      weight: '', 
+      height: '', 
+      age: '', 
+      targetWeight: '', 
+      weeks: '', 
       gender: 'M', 
       activityLevel: 'Sedentário',
       activityDays: 0,
