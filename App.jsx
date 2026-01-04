@@ -944,20 +944,21 @@ const AlertAnimationOverlay = () => (
       'Lanche das 17h', 'Jantar das 20h', 'Lanche das 22h', 'Ceia da Meia-noite'
     ];
 
-    if (currentPlate.length > 0) {
-      if (!window.confirm('Seu "Prato" atual contém itens. Deseja substituí-los pelos itens desta refeição para editá-los?')) {
+    if (currentPlate.length > 0 && JSON.stringify(currentPlate) !== JSON.stringify(meal.plate)) {
+      if (!window.confirm('Seu "Prato" atual contém itens diferentes. Deseja substituí-los pelos itens desta refeição para editá-los?')) {
         return;
       }
     }
+
+    // Encontra todas as instâncias de dias específicos para pré-selecionar
+    const allInstances = mealSchedule.filter(m => m.name === meal.name && m.dayOfWeek !== 'Todos' && m.dayOfWeek !== 'Avulso');
+    const initialDays = allInstances.length > 0 
+      ? allInstances.map(m => m.dayOfWeek) 
+      : (meal.dayOfWeek === 'Todos' ? ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'] : []);
+
     setCurrentPlate(meal.plate);
-    setInitialPlateDays(meal.dayOfWeek === 'Todos' ? ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'] : [meal.dayOfWeek]);
-    
-    // Se for refeição fixa, apenas limpa o prato. Se for customizada, remove para permitir reagendamento de dias.
-    if (fixedMealNames.includes(meal.name)) {
-      setMealSchedule(prev => prev.map(m => m.id === meal.id ? { ...m, plate: [], isDone: false } : m));
-    } else {
-      setMealSchedule(prev => prev.filter(m => m.id !== meal.id));
-    }
+    setInitialPlateDays(initialDays);
+    setEditingMealInfo({ name: meal.name, isFixed: fixedMealNames.includes(meal.name) });
     
     setActiveTab('plate');
   };
@@ -1199,46 +1200,62 @@ const AlertAnimationOverlay = () => (
               }
             }
 
-            setMealSchedule(prev => {
-              if (targetId) {
-                return prev.map(m => m.id === targetId 
-                  ? { ...m, plate: [...m.plate, ...currentPlate], isDone: true } 
-                  : m
-                );
-              }
+            // Se estivermos em um fluxo de edição, usamos a nova lógica de limpeza e substituição.
+            if (editingMealInfo) {
+              setMealSchedule(prev => {
+                let schedule = [...prev];
+                const nameToClear = editingMealInfo.name;
 
-              const days = Array.isArray(daysInput) ? daysInput : [daysInput];
+                // 1. Limpeza: Remove todas as instâncias antigas, exceto o template 'Todos' de refeições fixas.
+                schedule = schedule.filter(m => {
+                  if (m.name !== nameToClear) return true;
+                  if (editingMealInfo.isFixed && m.dayOfWeek === 'Todos') return true;
+                  return false;
+                });
 
-              // Caso 1: Agendamento para 'Todos' os dias
-              if (days.length === 1 && days[0] === 'Todos') {
-                // Atualiza TODOS os cards com este nome de refeição (o template 'Todos' e quaisquer overrides de dias específicos)
-                return prev.map(meal => {
-                  if (meal.name === mealName) {
-                    return { ...meal, plate: [...meal.plate, ...currentPlate] };
+                // 2. Adição: Cria as novas instâncias com o prato atualizado.
+                const days = Array.isArray(daysInput) ? daysInput : [daysInput];
+                if (days.length === 1 && days[0] === 'Todos') {
+                  const mealToUpdateIndex = schedule.findIndex(m => m.name === nameToClear && m.dayOfWeek === 'Todos');
+                  if (mealToUpdateIndex !== -1) {
+                    schedule[mealToUpdateIndex] = { ...schedule[mealToUpdateIndex], plate: [...currentPlate], isDone: true };
                   }
-                  return meal;
-                });
-              } 
-              // Caso 2: Agendamento para dias específicos (lógica existente e correta)
-              else {
-                let nextSchedule = [...prev];
-                days.forEach(day => {
-                  if (day === 'Todos') return;
-                  const existingOverrideIndex = nextSchedule.findIndex(m => m.name === mealName && m.dayOfWeek === day);
-                  if (existingOverrideIndex !== -1) {
-                    nextSchedule[existingOverrideIndex] = { ...nextSchedule[existingOverrideIndex], plate: [...nextSchedule[existingOverrideIndex].plate, ...currentPlate] };
-                  } else {
-                    const templateMeal = nextSchedule.find(m => m.name === mealName && m.dayOfWeek === 'Todos');
-                    const mealTime = templateMeal ? templateMeal.time : time;
-                    nextSchedule.push({ id: `m-${Date.now()}-${day}`, name: mealName, time: mealTime, plate: [...currentPlate], isDone: true, dayOfWeek: day });
-                  }
-                });
-                return nextSchedule;
-              }
-            });
+                } else {
+                  days.forEach(day => {
+                    if (day === 'Todos') return;
+                    const templateMeal = schedule.find(m => m.name === nameToClear && m.dayOfWeek === 'Todos');
+                    const mealTime = templateMeal ? templateMeal.time : (defaultTimes[nameToClear] || '12:00');
+                    schedule.push({ id: `m-${Date.now()}-${day}`, name: nameToClear, time: mealTime, plate: [...currentPlate], isDone: true, dayOfWeek: day });
+                  });
+                }
+                return schedule;
+              });
+            } else {
+              // Se não for edição, usa a lógica original de adicionar alimentos, que já funciona bem.
+              setMealSchedule(prev => {
+                const days = Array.isArray(daysInput) ? daysInput : [daysInput];
+                if (days.length === 1 && days[0] === 'Todos') {
+                  return prev.map(meal => meal.name === mealName ? { ...meal, plate: [...meal.plate, ...currentPlate] } : meal);
+                } else {
+                  let nextSchedule = [...prev];
+                  days.forEach(day => {
+                    const existingOverrideIndex = nextSchedule.findIndex(m => m.name === mealName && m.dayOfWeek === day);
+                    if (existingOverrideIndex !== -1) {
+                      nextSchedule[existingOverrideIndex] = { ...nextSchedule[existingOverrideIndex], plate: [...nextSchedule[existingOverrideIndex].plate, ...currentPlate] };
+                    } else {
+                      const templateMeal = nextSchedule.find(m => m.name === mealName && m.dayOfWeek === 'Todos');
+                      const mealTime = templateMeal ? templateMeal.time : time;
+                      nextSchedule.push({ id: `m-${Date.now()}-${day}`, name: mealName, time: mealTime, plate: [...currentPlate], isDone: true, dayOfWeek: day });
+                    }
+                  });
+                  return nextSchedule;
+                }
+              });
+            }
             
             setCurrentPlate([]);
             setInitialPlateDays([]);
+            setEditingMealInfo(null); // Limpa o estado de edição após a conclusão.
             setActiveTab('schedule');
           }}
           onAddMore={() => setActiveTab('pantry')}
