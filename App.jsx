@@ -665,6 +665,9 @@ const AlertAnimationOverlay = () => (
 
   useEffect(() => {
     if (userProfile.isSetupDone) {
+      // Substitui a entrada atual no histórico para impedir o retorno à tela de configuração
+      window.history.replaceState(null, '', window.location.pathname);
+
       const hasSeen = localStorage.getItem('hasSeenTour');
       if (!hasSeen) setShowTour(true);
     }
