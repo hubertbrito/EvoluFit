@@ -179,12 +179,13 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
           const isFixed = fixedMealNames.includes(meal.name);
           const nutrients = calculateMealNutrients(meal.plate);
 
-          // Encontra todos os dias agendados para esta refeição específica
-          const scheduledDays = meal.dayOfWeek === 'Todos' 
-            ? ['Todos'] 
-            : meal.dayOfWeek === 'Avulso'
-            ? ['Avulso']
-            : meals.filter(m => m.name === meal.name && m.dayOfWeek !== 'Todos' && m.dayOfWeek !== 'Avulso').map(m => m.dayOfWeek);
+          // Se a refeição tem um groupId, encontra todos os outros no mesmo grupo para exibir seus dias.
+          // Caso contrário, mostra apenas o seu próprio dia. Isso torna a UI reativa às mudanças no grupo.
+          const scheduledDays = meal.plate.length === 0
+            ? ['Todos'] // Se o prato está vazio, o card volta a representar o template padrão 'Todos os Dias'.
+            : meal.groupId
+              ? meals.filter(m => m.groupId === meal.groupId).map(m => m.dayOfWeek).sort((a, b) => days.indexOf(a) - days.indexOf(b))
+              : [meal.dayOfWeek];
 
 
           return (
@@ -290,7 +291,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                                 key={day} 
                                 className={`px-1.5 py-0.5 rounded text-[9px] font-black ${dayColors[day] || dayColors.Avulso}`}
                             >
-                                {day.substring(0, 3).toUpperCase()}
+                                {day === 'Todos' ? 'TODOS OS DIAS' : day.substring(0, 3).toUpperCase()}
                             </span>
                         ))}
                     </div>
@@ -304,7 +305,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                     <div className="flex items-center gap-1 flex-wrap justify-center px-2">
                         {scheduledDays.map(day => (
                             <span key={day} className={`px-1.5 py-0.5 rounded text-[9px] font-black not-italic ${dayColors[day] || dayColors.Avulso}`}>
-                                {day.substring(0, 3).toUpperCase()}
+                                {day === 'Todos' ? 'TODOS OS DIAS' : day.substring(0, 3).toUpperCase()}
                             </span>
                         ))}
                     </div>

@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Trash2, Plus, ChefHat, Calendar, Info, Clock, ChevronUp, ChevronDown } from 'lucide-react';
 import { MEASURE_UNITS, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures } from '../constants';
 
-const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddMore, meals, showTour, tourStep, initialSelectedDays = [] }) => {
+const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddMore, meals, showTour, tourStep, initialSelectedDays = [], editingMealInfo = null }) => {
   const [selectedDays, setSelectedDays] = useState(initialSelectedDays);
+  const [selectedMealName, setSelectedMealName] = useState(() => editingMealInfo ? editingMealInfo.name : null);
+  const [selectedTargetId, setSelectedTargetId] = useState(null);
   const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
   const allWeekDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
   const mealTypes = [
@@ -52,6 +54,19 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
 
   // Exclui explicitamente as refeições fixas para evitar duplicação visual
   const customMeals = meals.filter(m => !fixedMealNames.includes(m.name));
+
+  const handleSelectMeal = (mealName, targetId = null) => {
+    setSelectedMealName(mealName);
+    setSelectedTargetId(targetId);
+  };
+
+  const handleConfirmAssignment = () => {
+    if (!selectedMealName && !selectedTargetId) return alert('Por favor, selecione uma refeição para classificar o prato.');
+    if (selectedDays.length === 0 && !selectedTargetId) return alert('Por favor, selecione pelo menos um dia para agendar.');
+
+    const daysToAssign = selectedDays.length === 7 ? ['Todos'] : selectedDays;
+    onAssignMeal(selectedMealName, daysToAssign, selectedTargetId);
+  };
 
   return (
     <div className="p-4 space-y-6 pb-24">
@@ -225,8 +240,8 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
               {mealTypes.map(mealName => (
                 <button
                   key={mealName}
-                  onClick={() => onAssignMeal(mealName, selectedDays.length === 7 ? ['Todos'] : selectedDays)}
-                  className="p-3 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-sm hover:bg-emerald-100 transition-colors"
+                  onClick={() => handleSelectMeal(mealName)}
+                  className={`p-3 rounded-xl font-bold text-sm transition-colors ${selectedMealName === mealName && !selectedTargetId ? 'bg-emerald-600 text-white shadow-lg' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'}`}
                 >
                   {mealName}
                 </button>
@@ -248,8 +263,8 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                   {customMeals.map(meal => (
                     <button
                       key={meal.id}
-                      onClick={() => onAssignMeal(null, null, meal.id)}
-                      className="w-full p-3 bg-blue-100 text-blue-800 rounded-xl font-bold text-sm hover:bg-blue-200 transition-colors border border-blue-200 text-left flex justify-between items-center"
+                      onClick={() => handleSelectMeal(meal.name, meal.id)}
+                      className={`w-full p-3 rounded-xl font-bold text-sm transition-colors border text-left flex justify-between items-center ${selectedTargetId === meal.id ? 'bg-blue-600 text-white shadow-lg border-blue-600' : 'bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200'}`}
                     >
                       <span>Inserir em "{meal.name}" ({meal.dayOfWeek})</span>
                       <span className="text-xs bg-white px-2 py-1 rounded text-blue-600">{meal.time}</span>
@@ -258,6 +273,14 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                 </div>
               </div>
             )}
+
+            <button
+              onClick={handleConfirmAssignment}
+              disabled={(!selectedMealName && !selectedTargetId) || (selectedDays.length === 0 && !selectedTargetId)}
+              className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg"
+            >
+              Confirmar Agendamento
+            </button>
           </div>
         </div>
       )}
