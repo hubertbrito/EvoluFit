@@ -6,6 +6,7 @@ import PantryScreen from './components/PantryScreen';
 import PlateScreen from './components/PlateScreen';
 import BrainScreen from './components/BrainScreen';
 import ScheduleScreen from './components/ScheduleScreen';
+import ScheduleSummaryModal from './components/ScheduleSummaryModal';
 import SetupScreen from './components/SetupScreen';
 import { Layout } from './components/Layout';
 
@@ -602,6 +603,7 @@ const App = () => {
   const [clearContextDay, setClearContextDay] = useState(null);
   const [initialPlateDays, setInitialPlateDays] = useState([]);
   const [groupToClear, setGroupToClear] = useState(null);
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [editingMealInfo, setEditingMealInfo] = useState(null);
 
   // --- PWA Logic ---
@@ -1189,6 +1191,7 @@ const AlertAnimationOverlay = () => (
         onToggleManual={() => setShowManual(p => !p)}
         onInstallClick={handleInstallClick}
         showInstallButton={!!installPrompt}
+        onToggleSummary={() => setShowSummaryModal(true)}
       >
       {activeTab === 'pantry' && (
         <PantryScreen 
@@ -1383,6 +1386,7 @@ const AlertAnimationOverlay = () => (
           groupMembers={groupToClear}
         />
       }
+      {showSummaryModal && <ScheduleSummaryModal meals={mealSchedule} onClose={() => setShowSummaryModal(false)} />}
       {isAlerting && <AlertAnimationOverlay />}
     </>
   );
