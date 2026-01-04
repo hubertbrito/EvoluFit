@@ -79,7 +79,15 @@ const CustomSelect = ({ options, value, onChange, placeholder, error }) => {
 
 const SetupScreen = ({ userProfile, onComplete }) => {
   const [step, setStep] = useState(1);
-  const [data, setData] = useState(userProfile);
+  // Garante que os campos numéricos com select customizado comecem vazios
+  const [data, setData] = useState({
+    ...userProfile,
+    age: userProfile.age || '',
+    weight: userProfile.weight || '',
+    height: userProfile.height || '',
+    targetWeight: userProfile.targetWeight || '',
+    weeks: userProfile.weeks || '',
+  });
   const [errors, setErrors] = useState({});
 
   const handleChange = (field, value) => {
