@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Clock, AlertCircle, Zap, Wheat, Droplets, Calendar, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser, Edit, CalendarDays } from 'lucide-react';
+import { Clock, AlertCircle, Zap, Wheat, Droplets, Calendar, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser, Edit, CalendarDays, Users, MapPin } from 'lucide-react';
 import { UNIT_WEIGHTS, getFoodUnitWeight } from '../constants';
 
 // Função auxiliar para formatar a quantidade e medida do alimento
@@ -295,6 +295,24 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                             </span>
                         ))}
                     </div>
+
+                    {/* --- FASE 3: Exibição das Anotações Sociais --- */}
+                    {(meal.withWhom || meal.eventLocation) && (
+                      <div className="mt-3 pt-3 border-t border-indigo-100/50 text-xs text-indigo-800 space-y-1.5">
+                        {meal.withWhom && (
+                          <div className="flex items-center gap-2">
+                            <Users size={14} className="text-indigo-400 shrink-0" />
+                            <span className="font-semibold">{meal.withWhom}</span>
+                          </div>
+                        )}
+                        {meal.eventLocation && (
+                          <div className="flex items-center gap-2">
+                            <MapPin size={14} className="text-indigo-400 shrink-0" />
+                            <span className="font-semibold">{meal.eventLocation}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center gap-2 text-xs font-bold text-indigo-300 uppercase italic py-3 bg-indigo-50/50 rounded-2xl border border-dashed border-indigo-100">

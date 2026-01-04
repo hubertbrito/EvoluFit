@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ClipboardList, AlertCircle } from 'lucide-react';
+import { X, ClipboardList, AlertCircle, Users, MapPin } from 'lucide-react';
 
 const dayColors = {
   Segunda: 'bg-red-100 text-red-800 border border-red-200',
@@ -29,6 +29,8 @@ const ScheduleSummaryModal = ({ meals, onClose }) => {
         name: meal.name,
         days: [],
         time: meal.time,
+        withWhom: meal.withWhom,
+        eventLocation: meal.eventLocation,
       };
     }
     acc[key].days.push(meal.dayOfWeek);
@@ -73,18 +75,36 @@ const ScheduleSummaryModal = ({ meals, onClose }) => {
         <div className="p-3 overflow-y-auto space-y-2">
           {summaryList.length > 0 ? (
             summaryList.map((item, index) => (
-              <div key={index} className="bg-gray-50 p-2 rounded-lg border border-gray-200 flex items-center justify-between gap-2 text-xs">
-                <div className="flex items-center gap-2 truncate">
-                   <span className="font-bold text-emerald-700 shrink-0">{item.time}</span>
-                   <span className="font-semibold text-gray-600 truncate">{item.name}</span>
+              <div key={index} className="bg-gray-50 p-2.5 rounded-lg border border-gray-200 flex flex-col gap-1.5 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 truncate">
+                     <span className="font-bold text-emerald-700 shrink-0">{item.time}</span>
+                     <span className="font-semibold text-gray-600 truncate">{item.name}</span>
+                  </div>
+                  <div className="flex gap-1 flex-wrap justify-end shrink-0">
+                    {item.days.map(day => (
+                      <span key={day} className={`px-1.5 py-0.5 rounded text-[9px] font-black ${dayColors[day] || dayColors.Avulso}`}>
+                        {day === 'Todos' ? 'TODOS' : day.substring(0, 3).toUpperCase()}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex gap-1 flex-wrap justify-end shrink-0">
-                  {item.days.map(day => (
-                    <span key={day} className={`px-1.5 py-0.5 rounded text-[9px] font-black ${dayColors[day] || dayColors.Avulso}`}>
-                      {day === 'Todos' ? 'TODOS' : day.substring(0, 3).toUpperCase()}
-                    </span>
-                  ))}
-                </div>
+                {(item.withWhom || item.eventLocation) && (
+                  <div className="flex items-center gap-4 pt-1.5 border-t border-gray-200/80 text-gray-500">
+                    {item.withWhom && (
+                      <div className="flex items-center gap-1.5">
+                        <Users size={12} />
+                        <span className="font-medium">{item.withWhom}</span>
+                      </div>
+                    )}
+                    {item.eventLocation && (
+                      <div className="flex items-center gap-1.5">
+                        <MapPin size={12} />
+                        <span className="font-medium">{item.eventLocation}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))
           ) : (

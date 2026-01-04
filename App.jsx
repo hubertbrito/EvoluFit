@@ -1252,7 +1252,7 @@ const AlertAnimationOverlay = () => (
           showTour={showTour}
           tourStep={tourStep}
           editingMealInfo={editingMealInfo}
-          onAssignMeal={(mealName, daysInput, targetId) => {
+          onAssignMeal={(mealName, daysInput, targetId, withWhom, eventLocation) => {
     const defaultTimes = {
         'Café da Manhã': '08:00', 'Lanche das 10h': '10:00', 'Almoço': '12:00',
         'Chá das Três': '15:00', 'Lanche das 17h': '17:00', 'Jantar das 20h': '20:00',
@@ -1263,7 +1263,7 @@ const AlertAnimationOverlay = () => (
     // Case 1: Inserting into an existing custom meal ("Inserir em...")
     if (targetId) {
         setMealSchedule(prev =>
-            prev.map(m => m.id === targetId ? { ...m, plate: [...currentPlate] } : m)
+            prev.map(m => m.id === targetId ? { ...m, plate: [...currentPlate], withWhom, eventLocation } : m)
         );
         const targetMeal = mealSchedule.find(m => m.id === targetId);
         if (targetMeal) alert(`Prato inserido com sucesso em "${targetMeal.name}"!`);
@@ -1287,7 +1287,7 @@ const AlertAnimationOverlay = () => (
             if (days.length === 1 && days[0] === 'Todos' && editingMealInfo.isFixed) {
                 const mealToUpdateIndex = schedule.findIndex(m => m.name === nameToUpdate && m.dayOfWeek === 'Todos');
                 if (mealToUpdateIndex !== -1) {
-                    schedule[mealToUpdateIndex] = { ...schedule[mealToUpdateIndex], plate: [...currentPlate] };
+                    schedule[mealToUpdateIndex] = { ...schedule[mealToUpdateIndex], plate: [...currentPlate], withWhom, eventLocation };
                 }
             } else {
             // 3. Add back the new specific-day instances with the updated plate.
@@ -1295,7 +1295,7 @@ const AlertAnimationOverlay = () => (
                     if (day === 'Todos') return;
                     const templateMeal = mealSchedule.find(m => m.name === nameToUpdate && m.dayOfWeek === 'Todos');
                     const mealTime = templateMeal ? templateMeal.time : (defaultTimes[nameToUpdate] || '12:00');
-                    schedule.push({ id: `m-${Date.now()}-${day}`, name: nameToUpdate, time: mealTime, plate: [...currentPlate], isDone: false, dayOfWeek: day });
+                    schedule.push({ id: `m-${Date.now()}-${day}`, name: nameToUpdate, time: mealTime, plate: [...currentPlate], isDone: false, dayOfWeek: day, withWhom, eventLocation });
                 });
             }
             return schedule;
@@ -1312,7 +1312,7 @@ const AlertAnimationOverlay = () => (
             if (isFullWeek) {
                 const mealToUpdateIndex = nextSchedule.findIndex(m => m.name === mealName && m.dayOfWeek === 'Todos');
                 if (mealToUpdateIndex !== -1) {
-                    nextSchedule[mealToUpdateIndex] = { ...nextSchedule[mealToUpdateIndex], plate: [...currentPlate] };
+                    nextSchedule[mealToUpdateIndex] = { ...nextSchedule[mealToUpdateIndex], plate: [...currentPlate], withWhom, eventLocation };
                 }
                 // Also remove any specific day overrides for this meal name
                 nextSchedule = nextSchedule.filter(m => m.name !== mealName || m.dayOfWeek === 'Todos');
@@ -1325,14 +1325,15 @@ const AlertAnimationOverlay = () => (
                 if (existingOverrideIndex !== -1) {
                     // If it exists, update plate and assign groupId if part of a new group
                     const oldMeal = nextSchedule[existingOverrideIndex];
-                    nextSchedule[existingOverrideIndex] = { ...oldMeal, plate: [...currentPlate], groupId: newGroupId };
+                    nextSchedule[existingOverrideIndex] = { ...oldMeal, plate: [...currentPlate], groupId: newGroupId, withWhom, eventLocation };
                 } else {
                     const templateMeal = nextSchedule.find(m => m.name === mealName && m.dayOfWeek === 'Todos');
                     const mealTime = templateMeal ? templateMeal.time : time;
                     nextSchedule.push({ 
                         id: `m-${Date.now()}-${day}`, name: mealName, time: mealTime, 
                         plate: [...currentPlate], isDone: false, dayOfWeek: day,
-                        groupId: newGroupId
+                        groupId: newGroupId,
+                        withWhom, eventLocation
                     });
                 }
             });
