@@ -219,66 +219,6 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
             <Plus className="w-4 h-4" /> Adicionar mais itens
           </button>
 
-          {/* --- FASE 1: Social Context UI --- */}
-          <div className="pt-4 space-y-4">
-            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-              <div className="flex items-center gap-2 mb-3 text-blue-800 font-bold text-sm">
-                <Users className="w-4 h-4" />
-                Anotações da Refeição (Opcional)
-              </div>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-bold text-gray-600 mb-1 block">Com quem?</label>
-                  <select
-                    value={withWhom}
-                    onChange={(e) => setWithWhom(e.target.value)}
-                    className={`w-full p-2 border-2 rounded-lg bg-white text-sm appearance-none focus:outline-none transition-all
-                      ${withWhom ? 'text-gray-800 border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]' : 'text-gray-400 border-gray-300'}
-                    `}
-                  >
-                    <option value="" disabled>Selecione uma companhia...</option>
-                    {withWhomOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    <option value="Outro...">Outro (digitar)</option>
-                  </select>
-                  {withWhom === 'Outro...' && (
-                    <input 
-                      type="text"
-                      autoFocus
-                      value={customWithWhom}
-                      onChange={(e) => setCustomWithWhom(e.target.value)}
-                      placeholder="Digite com quem..."
-                      className="w-full p-2 border rounded-lg bg-white mt-2 text-sm"
-                    />
-                  )}
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-600 mb-1 block">Local / Evento</label>
-                  <select
-                    value={eventLocation}
-                    onChange={(e) => setEventLocation(e.target.value)}
-                    className={`w-full p-2 border-2 rounded-lg bg-white text-sm appearance-none focus:outline-none transition-all
-                      ${eventLocation ? 'text-gray-800 border-fuchsia-400 shadow-[0_0_10px_rgba(217,70,239,0.5)]' : 'text-gray-400 border-gray-300'}
-                    `}
-                  >
-                    <option value="" disabled>Selecione um local...</option>
-                    {eventLocationOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    <option value="Outro...">Outro (digitar)</option>
-                  </select>
-                  {eventLocation === 'Outro...' && (
-                    <input 
-                      type="text"
-                      autoFocus
-                      value={customEventLocation}
-                      onChange={(e) => setCustomEventLocation(e.target.value)}
-                      placeholder="Digite o local/evento..."
-                      className="w-full p-2 border rounded-lg bg-white mt-2 text-sm"
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div className="pt-4" data-tour-id="plate-scheduling">
             <div className="bg-emerald-50 p-4 rounded-xl mb-4 border border-emerald-100">
               <div className="flex items-center gap-2 mb-2 text-emerald-800 font-bold text-sm">
@@ -347,6 +287,66 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                 </div>
               </div>
             )}
+
+            {/* --- Social Context UI (Moved Here) --- */}
+            <div className="my-6">
+              <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                <div className="flex items-center gap-2 mb-3 text-blue-800 font-bold text-sm">
+                  <Users className="w-4 h-4" />
+                  Anotações da Refeição (Opcional)
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-bold text-gray-600 mb-1 block">Com quem?</label>
+                    <select
+                      value={withWhom}
+                      onChange={(e) => setWithWhom(e.target.value)}
+                      className={`w-full p-2 border-2 rounded-lg bg-white text-sm appearance-none focus:outline-none transition-all
+                        ${withWhom ? 'text-gray-800 border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]' : 'text-gray-400 border-gray-300'}
+                      `}
+                    >
+                      <option value="" disabled>Selecione uma companhia...</option>
+                      {withWhomOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      <option value="Outro...">Outro (digitar)</option>
+                    </select>
+                    {withWhom === 'Outro...' && (
+                      <input 
+                        type="text"
+                        autoFocus
+                        value={customWithWhom}
+                        onChange={(e) => setCustomWithWhom(e.target.value)}
+                        placeholder="Digite com quem..."
+                        className="w-full p-2 border rounded-lg bg-white mt-2 text-sm"
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-600 mb-1 block">Local / Evento</label>
+                    <select
+                      value={eventLocation}
+                      onChange={(e) => setEventLocation(e.target.value)}
+                      className={`w-full p-2 border-2 rounded-lg bg-white text-sm appearance-none focus:outline-none transition-all
+                        ${eventLocation ? 'text-gray-800 border-fuchsia-400 shadow-[0_0_10px_rgba(217,70,239,0.5)]' : 'text-gray-400 border-gray-300'}
+                      `}
+                    >
+                      <option value="" disabled>Selecione um local...</option>
+                      {eventLocationOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      <option value="Outro...">Outro (digitar)</option>
+                    </select>
+                    {eventLocation === 'Outro...' && (
+                      <input 
+                        type="text"
+                        autoFocus
+                        value={customEventLocation}
+                        onChange={(e) => setCustomEventLocation(e.target.value)}
+                        placeholder="Digite o local/evento..."
+                        className="w-full p-2 border rounded-lg bg-white mt-2 text-sm"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <button
               onClick={handleConfirmAssignment}
