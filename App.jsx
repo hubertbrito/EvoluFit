@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Trash2, Copy, AlertTriangle, Eraser, Download } from 'lucide-react';
 import { FOOD_DATABASE, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures, inferNutrients } from './constants';
 import { useRegisterSW } from 'virtual:pwa-register/react';
+import { populateDB } from './db.js';
 import PantryScreen from './components/PantryScreen';
 import PlateScreen from './components/PlateScreen';
 import BrainScreen from './components/BrainScreen';
@@ -612,6 +613,11 @@ const App = () => {
   const [editingMealInfo, setEditingMealInfo] = useState(null);
 
   // --- PWA Logic ---
+  useEffect(() => {
+    // Na inicialização do app, verifica e popula o IndexedDB se necessário.
+    populateDB();
+  }, []);
+
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,

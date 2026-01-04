@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Mic, Plus, Trash2, Utensils, Info, Filter, ArrowUp } from 'lucide-react';
+import { Search, Mic, Plus, Trash2, Utensils, Info, Filter, ArrowUp, Loader } from 'lucide-react';
 import { DIET_TYPES } from '../constants';
+import { searchFoodsDB, getFoodsByCategoryDB } from '../db.js';
 
 // Função auxiliar para formatar a quantidade e medida do alimento
 const formatFoodQuantity = (quantity, measure, foodName) => {
@@ -31,6 +32,8 @@ const PantryScreen = ({
   showTour,
   tourStep
 }) => {
+  const [displayedFoods, setDisplayedFoods] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   // const [searchTerm, setSearchTerm] = useState(''); // Estado movido para App.jsx
   const [activeCategory, setActiveCategory] = useState('Dispensa');
   const [viewMode, setViewMode] = useState('categories'); // 'categories' | 'diets'
@@ -41,32 +44,36 @@ const PantryScreen = ({
   const categories = ['Dispensa', 'Frutas', 'Vegetais', 'Carboidratos', 'Proteínas', 'Leguminosas', 'Laticínios', 'Gorduras', 'Bebidas', 'Doces', 'Industrializados'];
   const diets = ['Todas', ...DIET_TYPES];
 
-  // Lógica de Filtro: Busca > Categoria > Dispensa
-  const displayedFoods = (() => {
-    if (searchTerm) {
-      const normalize = (str) => {
-        return (str || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      };
-      const term = normalize(searchTerm);
-      
-      return allFoods
-        .filter(f => normalize(f.name).includes(term))
-        .sort((a, b) => {
-          const nameA = normalize(a.name);
-          const nameB = normalize(b.name);
-          const startsA = nameA.startsWith(term);
-          const startsB = nameB.startsWith(term);
-          if (startsA && !startsB) return -1;
-          if (!startsA && startsB) return 1;
-          return a.name.localeCompare(b.name);
-        });
+  useEffect(() => {
+    const fetchAndSetFoods = async () => {
+      setIsLoading(true);
+      if (searchTerm) {
+        const results = await searchFoodsDB(searchTerm);
+        results.sort((a, b) => a.name.localeCompare(b.name));
+        setDisplayedFoods(results);
+      } else {
+        let foods;
+        // A busca por categoria agora também é otimizada com IndexedDB
+        if (viewMode === 'categories') {
+          if (activeCategory === 'Dispensa') {
+            foods = allFoods.filter(f => userPantry.includes(f.id));
+          } else {
+            foods = await getFoodsByCategoryDB(activeCategory);
+          }
+        } else { // A filtragem por dieta continua em memória por ser mais complexa
+          foods = activeDiet === 'Todas' 
+            ? allFoods 
+            : allFoods.filter(f => f.diets && f.diets.includes(activeDiet));
+        }
+        setDisplayedFoods(foods);
+      }
+      setIsLoading(false);
+    };
+
+    if (allFoods.length > 0) {
+      fetchAndSetFoods();
     }
-    if (viewMode === 'categories') {
-        if (activeCategory === 'Dispensa') return allFoods.filter(f => userPantry.includes(f.id));
-        return allFoods.filter(f => f.category === activeCategory);
-    }
-    return activeDiet === 'Todas' ? allFoods : allFoods.filter(f => f.diets && f.diets.includes(activeDiet));
-  })();
+  }, [searchTerm, activeCategory, viewMode, activeDiet, allFoods, userPantry]);
 
   const resultCountText = (() => {
     const count = displayedFoods.length;
@@ -216,13 +223,20 @@ const PantryScreen = ({
 
       {/* Add Manual Button if search doesn't match */}
       {searchTerm && displayedFoods.length === 0 && (
-        <button 
-          onClick={handleManualAdd} // A função interna agora usa as props
+        <button
+          onClick={handleManualAdd}
           className="w-full py-3 bg-emerald-50 text-emerald-600 rounded-xl border border-dashed border-emerald-200 font-bold text-sm flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Adicionar "{searchTerm}"
         </button>
+      )}
+
+      {isLoading && searchTerm && (
+        <div className="flex justify-center items-center py-10 text-emerald-600">
+          <Loader className="w-6 h-6 animate-spin mr-3" />
+          <span className="font-bold">Buscando...</span>
+        </div>
       )}
 
       {/* List */}
