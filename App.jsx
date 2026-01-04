@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trash2, Copy, AlertTriangle, Eraser, Download } from 'lucide-react';
-import { FOOD_DATABASE, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures } from './constants';
+import { FOOD_DATABASE, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures, inferNutrients } from './constants';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import PantryScreen from './components/PantryScreen';
 import PlateScreen from './components/PlateScreen';
 import BrainScreen from './components/BrainScreen';
 import ScheduleScreen from './components/ScheduleScreen';
+import FoodAddedModal from './components/FoodAddedModal';
 import ScheduleSummaryModal from './components/ScheduleSummaryModal';
 import SetupScreen from './components/SetupScreen';
 import { Layout } from './components/Layout';
@@ -196,50 +197,50 @@ const ManualScreen = ({ onClose, onReset, onInstallClick, showInstallButton }) =
         </button>
       </div>
       
-      <div className="p-6 overflow-y-auto space-y-6 text-sm text-gray-600 leading-relaxed">
+      <div className="p-6 overflow-y-auto space-y-6 text-xs text-gray-600 leading-relaxed">
         <div className="space-y-2">
-          <h3 className="font-bold text-emerald-700 text-base">1. Dispensa & Busca</h3>
-          <p>
-            Use a barra de busca ou o botão de microfone 🎤 para encontrar alimentos. 
-            Clique no alimento ou no botão <strong>+</strong> para colocá-lo no seu "Prato".
-            Se não encontrar, o app sugere criar um alimento personalizado.
+          <h3 className="font-bold text-emerald-700 text-base">Funcionalidades Principais</h3>
+          <ul className="list-disc list-inside space-y-2 pl-1">
+            <li>
+              <strong>Dispensa e Prato:</strong> Busque alimentos por texto ou voz 🎤, filtre por categorias ou dietas, e adicione-os à sua dispensa. Toque em um item para movê-lo para o "Prato", onde você ajusta quantidades e vê as calorias em tempo real.
+            </li>
+            <li>
+              <strong>Agenda Inteligente:</strong> Agende pratos para dias e refeições específicas. Crie refeições personalizadas (ex: "Ceia"), reordene, edite, limpe ou exclua cards. As refeições agendadas em grupo se mantêm conectadas.
+            </li>
+            <li>
+              <strong>Cérebro e Metas:</strong> Acompanhe seu progresso calórico, veja a distribuição de macronutrientes e receba um relatório completo sobre seu metabolismo e metas com base no seu perfil.
+            </li>
+            <li>
+              <strong>Resumo da Agenda:</strong> No topo da tela, clique no ícone de "Resumo" (📋) para ter uma visão geral e compacta de todas as refeições que você já agendou.
+            </li>
+          </ul>
+        </div>
+
+        <div className="space-y-3 bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <h3 className="font-bold text-blue-800 text-base">Uso Offline e Limitações</h3>
+          <p className="text-blue-700">
+            O EvoluFit foi projetado para funcionar offline! Após o primeiro uso com internet, você pode acessá-lo a qualquer momento, mesmo sem conexão.
           </p>
+          <ul className="list-disc list-inside space-y-1 pl-1 text-blue-700">
+              <li><strong>O que funciona offline:</strong> Quase tudo! Visualizar e editar sua agenda, montar pratos, fazer cálculos, acessar a dispensa e o banco de dados de alimentos.</li>
+              <li className="font-bold">
+                O que pode falhar offline:
+              </li>
+              <ul className="list-['-_'] list-inside pl-4 space-y-1">
+                  <li><strong>Busca por Voz (Microfone):</strong> Este recurso depende do seu navegador e sistema operacional, e frequentemente precisa de internet para funcionar. Em modo offline, prefira digitar o nome do alimento.</li>
+                  <li><strong>Alertas de Refeição:</strong> Para que o alarme funcione, o app precisa estar aberto em uma aba do navegador (mesmo em segundo plano). Se o navegador for fechado, os alertas não serão disparados.</li>
+              </ul>
+          </ul>
         </div>
 
         <div className="space-y-2">
-          <h3 className="font-bold text-emerald-700 text-base">2. Montando o Prato</h3>
+          <h3 className="font-bold text-emerald-700 text-base">Instalar o Aplicativo</h3>
           <p>
-            Na aba <strong>Prato</strong>, ajuste as quantidades (ex: 2 colheres). 
-            O app calcula as calorias automaticamente. Quando terminar, clique nos botões 
-            de refeição (ex: "Almoço") para agendar esse prato para os dias que desejar.
+            Para uma experiência de aplicativo nativo (mais rápido e com ícone na sua tela inicial), instale o EvoluFit. Procure pelo botão <Download size={14} className="inline-block -mt-1" /> no topo da tela ou siga os passos do seu navegador:
           </p>
-        </div>
-
-        <div className="space-y-2">
-          <h3 className="font-bold text-emerald-700 text-base">3. Agenda Inteligente</h3>
-          <p>
-            Visualize seu dia a dia. Você pode criar refeições extras (ex: "Lanche da Tarde") 
-            selecionando os dias no topo e clicando em <strong>+ Adicionar Refeição</strong>.
-            Arraste ou use as setas para reordenar.
-          </p>
-        </div>
-
-        <div className="space-y-2 bg-amber-50 p-4 rounded-lg border border-amber-200">
-          <h3 className="font-bold text-amber-800 text-base">Importante: Limites do Alerta Sonoro</h3>
-          <p className="text-amber-700 text-xs leading-relaxed">
-            Para que o alarme das refeições funcione, o aplicativo precisa estar aberto em uma aba do seu navegador (mesmo que em segundo plano ou com a tela do celular apagada).
-            Se o navegador for completamente fechado, os alertas não serão disparados. Esta é uma limitação da tecnologia web atual para economizar bateria.
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <h3 className="font-bold text-emerald-700 text-base">4. Instalar o Aplicativo</h3>
-          <p>
-            Para uma experiência mais rápida e acesso offline, instale o EvoluFit na tela inicial do seu celular. Procure pelo botão <Download size={14} className="inline-block -mt-1" /> no topo do app ou siga os passos:
-          </p>
-          <ul className="list-disc list-inside pl-2 text-xs space-y-1">
-            <li><strong>Android (Chrome):</strong> Toque nos três pontinhos (⋮) no canto superior direito e selecione "Instalar aplicativo" ou "Adicionar à tela inicial".</li>
-            <li><strong>iOS (Safari):</strong> Toque no ícone de Compartilhamento (um quadrado com uma seta para cima) e selecione "Adicionar à Tela de Início".</li>
+          <ul className="list-disc list-inside pl-2 space-y-1">
+            <li><strong>Android (Chrome):</strong> Toque nos três pontinhos (⋮) e selecione "Instalar aplicativo" ou "Adicionar à tela inicial".</li>
+            <li><strong>iOS (Safari):</strong> Toque no ícone de Compartilhamento (quadrado com seta) e selecione "Adicionar à Tela de Início".</li>
           </ul>
         </div>
       </div>
@@ -603,6 +604,10 @@ const App = () => {
   const [clearContextDay, setClearContextDay] = useState(null);
   const [initialPlateDays, setInitialPlateDays] = useState([]);
   const [groupToClear, setGroupToClear] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFoodAddedModal, setShowFoodAddedModal] = useState(false);
+  const [voiceAddedFoodId, setVoiceAddedFoodId] = useState(null);
+  const [newlyAddedFoodName, setNewlyAddedFoodName] = useState('');
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [editingMealInfo, setEditingMealInfo] = useState(null);
 
@@ -630,6 +635,16 @@ const App = () => {
     await installPrompt.prompt();
     setInstallPrompt(null);
   };
+
+  // Efeito para limpar o destaque do item adicionado por voz após um tempo
+  useEffect(() => {
+    if (voiceAddedFoodId) {
+      const timer = setTimeout(() => {
+        setVoiceAddedFoodId(null);
+      }, 10000); // Destaque dura 10 segundos
+      return () => clearTimeout(timer);
+    }
+  }, [voiceAddedFoodId]);
 
   const [isAlerting, setIsAlerting] = useState(false);
 
@@ -899,14 +914,26 @@ const AlertAnimationOverlay = () => (
 
   const addCustomFood = (name) => {
     const newId = `custom-${Date.now()}`;
-    const measures = inferFoodMeasures(name); // Infere medidas automaticamente pelo nome
-    const newFood = {
-      id: newId, name, emoji: '', category: Category.INDUSTRIALIZADOS,
+    const measures = inferFoodMeasures(name);
+    
+    // Tenta inferir nutrientes de um alimento base. Se não conseguir, usa um padrão.
+    const inferred = inferNutrients(name);
+    const baseNutrients = inferred || {
       calories: 120, protein: 4, carbs: 20, fat: 3, fiber: 1,
-      measures // Anexa as medidas ao novo alimento
+      emoji: '🍽️', category: Category.INDUSTRIALIZADOS
     };
+
+    const newFood = {
+      id: newId, 
+      name, 
+      ...baseNutrients, // Usa os nutrientes, emoji e categoria inferidos ou padrão
+      measures
+    };
+    
     setCustomFoods(prev => [...prev, newFood]);
     setPantryItems(prev => Array.from(new Set([...prev, newId])));
+    setNewlyAddedFoodName(name);
+    setShowFoodAddedModal(true);
     return newId;
   };
 
@@ -917,23 +944,11 @@ const AlertAnimationOverlay = () => (
     recognition.onstart = () => setIsListening(true);
     recognition.onend = () => setIsListening(false);
     recognition.onresult = async (event) => {
-      const fullTranscript = event.results[0][0].transcript;
-      const transcript = fullTranscript.toLowerCase();
-
-      const allFoods = [...FOOD_DATABASE, ...customFoods];
-      const foundFoodIds = new Set();
-
-      allFoods.forEach(food => {
-        if (transcript.includes(food.name.toLowerCase())) {
-          foundFoodIds.add(food.id);
-        }
-      });
-
-      if (foundFoodIds.size > 0) {
-        setPantryItems(prev => Array.from(new Set([...prev, ...foundFoodIds])));
-      } else {
-        addCustomFood(fullTranscript);
-      }
+      const transcript = event.results[0][0].transcript;
+      // Ação principal: atualiza o termo de busca, que vai filtrar a lista na PantryScreen
+      setSearchTerm(transcript);
+      // Garante que o usuário veja a busca, mudando para a aba da dispensa
+      setActiveTab('pantry');
     };
     recognition.start();
   };
@@ -1208,7 +1223,13 @@ const AlertAnimationOverlay = () => (
           }}
           onVoiceClick={startListening}
           isListening={isListening}
-          onAddManual={addCustomFood}
+          searchTerm={searchTerm}
+          onSearchTermChange={setSearchTerm}
+          onAddManual={(foodName) => {
+            addCustomFood(foodName);
+            setSearchTerm(''); // Limpa a busca após adicionar
+          }}
+          voiceAddedFoodId={voiceAddedFoodId}
           showTour={showTour}
           tourStep={tourStep}
         />
@@ -1387,6 +1408,14 @@ const AlertAnimationOverlay = () => (
         />
       }
       {showSummaryModal && <ScheduleSummaryModal meals={mealSchedule} onClose={() => setShowSummaryModal(false)} />}
+      {showFoodAddedModal && <FoodAddedModal 
+        foodName={newlyAddedFoodName} 
+        onClose={() => {
+          setShowFoodAddedModal(false);
+          setNewlyAddedFoodName('');
+        }} 
+      />
+      }
       {isAlerting && <AlertAnimationOverlay />}
     </>
   );

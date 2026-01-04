@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, Mic, Plus, Trash2, Utensils, Info, Filter, ArrowUp } from 'lucide-react';
 import { DIET_TYPES } from '../constants';
 
@@ -25,14 +25,18 @@ const PantryScreen = ({
   onVoiceClick, 
   isListening, 
   onAddManual,
+  searchTerm,
+  onSearchTermChange,
+  voiceAddedFoodId,
   showTour,
   tourStep
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  // const [searchTerm, setSearchTerm] = useState(''); // Estado movido para App.jsx
   const [activeCategory, setActiveCategory] = useState('Dispensa');
   const [viewMode, setViewMode] = useState('categories'); // 'categories' | 'diets'
   const [activeDiet, setActiveDiet] = useState('Todas');
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const listRef = useRef(null);
   
   const categories = ['Dispensa', 'Frutas', 'Vegetais', 'Carboidratos', 'Proteínas', 'Leguminosas', 'Laticínios', 'Gorduras', 'Bebidas', 'Doces', 'Industrializados'];
   const diets = ['Todas', ...DIET_TYPES];
@@ -79,7 +83,7 @@ const PantryScreen = ({
   const handleManualAdd = () => {
     if (searchTerm) {
       onAddManual(searchTerm);
-      setSearchTerm('');
+      onSearchTermChange(''); // Limpa o termo de busca no App.jsx
     }
   };
 
@@ -99,6 +103,16 @@ const PantryScreen = ({
     return () => main.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Efeito para rolar a tela até o item adicionado por voz
+  useEffect(() => {
+    if (voiceAddedFoodId && listRef.current) {
+      const itemElement = listRef.current.querySelector(`[data-food-id="${voiceAddedFoodId}"]`);
+      if (itemElement) {
+        itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [voiceAddedFoodId]);
+
   return (
     <div className="p-4 space-y-4 pb-24">
       <style>{`
@@ -109,6 +123,14 @@ const PantryScreen = ({
         .animate-fade-in {
           animation: fadeIn 0.3s ease-out forwards;
         }
+        @keyframes pulse-highlight {
+          0% { box-shadow: 0 0 0 0px rgba(59, 130, 246, 0.7); }
+          50% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+          100% { box-shadow: 0 0 0 0px rgba(59, 130, 246, 0); }
+        }
+        .highlight-voice-add {
+          animation: pulse-highlight 2s ease-out 5; /* 2s x 5 = 10s de destaque */
+        }
       `}</style>
       <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-start gap-2">
         <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
@@ -117,6 +139,34 @@ const PantryScreen = ({
 
       {/* Sticky Menu Container */}
       <div className="sticky top-0 z-20 bg-gray-50 -mx-4 px-4 py-2 space-y-3 shadow-sm">
+        {/* Header / Search */}
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-gray-600 block ml-1">
+            Busque um alimento ou digite para cadastrar um novo:
+          </label>
+          <div className="flex gap-2" data-tour-id="pantry-search">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input 
+                type="text" 
+                placeholder="Digite o nome do alimento..." 
+                className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-emerald-200 bg-emerald-50/50 shadow-sm focus:outline-none focus:border-emerald-500 focus:ring-0 placeholder:text-emerald-600/60 text-emerald-900 font-medium"
+                value={searchTerm}
+                onChange={(e) => onSearchTermChange(e.target.value)}
+              />
+            </div>
+            <button 
+              onClick={onVoiceClick}
+              className={`p-3 rounded-xl transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'}`}
+            >
+              <Mic className="w-5 h-5" />
+            </button>
+          </div>
+          <p className="text-center text-rose-500 text-[11px] font-semibold px-2 pt-1">
+            Dica: Em modo offline, o microfone pode falhar. Prefira digitar.
+          </p>
+        </div>
+
         {/* Toggle View Mode */}
         <div className="flex bg-gray-100 p-1 rounded-xl">
           <button 
@@ -145,6 +195,7 @@ const PantryScreen = ({
                 onClick={() => {
                   if (viewMode === 'categories') setActiveCategory(item);
                   else setActiveDiet(item);
+                  onSearchTermChange(''); // Limpa a busca ao trocar de categoria
                   scrollToTop();
                 }}
                 className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors 
@@ -159,38 +210,14 @@ const PantryScreen = ({
         </div>
       </div>
 
-      {/* Header / Search */}
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-gray-600 block ml-1">
-          Busque um alimento ou digite para cadastrar um novo:
-        </label>
-        <div className="flex gap-2" data-tour-id="pantry-search">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input 
-              type="text" 
-              placeholder="Digite o nome do alimento..." 
-              className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-emerald-200 bg-emerald-50/50 shadow-sm focus:outline-none focus:border-emerald-500 focus:ring-0 placeholder:text-emerald-600/60 text-emerald-900 font-medium"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <button 
-            onClick={onVoiceClick}
-            className={`p-3 rounded-xl transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'}`}
-          >
-            <Mic className="w-5 h-5" />
-          </button>
-        </div>
-        <div key={resultCountText} className="text-sm font-bold text-emerald-700 ml-1 animate-fade-in">
-          {resultCountText}
-        </div>
+      <div key={resultCountText} className="text-sm font-bold text-emerald-700 ml-1 animate-fade-in">
+        {resultCountText}
       </div>
 
       {/* Add Manual Button if search doesn't match */}
       {searchTerm && displayedFoods.length === 0 && (
         <button 
-          onClick={handleManualAdd}
+          onClick={handleManualAdd} // A função interna agora usa as props
           className="w-full py-3 bg-emerald-50 text-emerald-600 rounded-xl border border-dashed border-emerald-200 font-bold text-sm flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" />
@@ -199,16 +226,25 @@ const PantryScreen = ({
       )}
 
       {/* List */}
-      <div key={`${viewMode}-${viewMode === 'categories' ? activeCategory : activeDiet}`} className="space-y-3 animate-fade-in">
+      <div ref={listRef} key={`${viewMode}-${viewMode === 'categories' ? activeCategory : activeDiet}`} className="space-y-3 animate-fade-in">
         {displayedFoods.map(food => {
           const isInPantry = userPantry.includes(food.id);
           const plateItem = currentPlate.find(p => p.foodId === food.id);
           const isSelected = !!plateItem;
+          const isVoiceAdded = food.id === voiceAddedFoodId;
+
+          const itemClasses = [
+            'p-4 rounded-2xl shadow-sm border flex items-center justify-between cursor-pointer transition-all',
+            isSelected ? 'bg-emerald-50 border-emerald-500 ring-1 ring-emerald-500' : 'bg-white border-gray-100',
+            isVoiceAdded ? 'highlight-voice-add' : ''
+          ].filter(Boolean).join(' ');
+
           return (
             <div 
               key={food.id} 
+              data-food-id={food.id}
               onClick={() => isInPantry ? onAddToPlate(food.id) : onToggle(food.id)}
-              className={`p-4 rounded-2xl shadow-sm border flex items-center justify-between cursor-pointer transition-all ${isSelected ? 'bg-emerald-50 border-emerald-500 ring-1 ring-emerald-500' : 'bg-white border-gray-100'}`}
+              className={itemClasses}
             >
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{food.emoji || '🍽️'}</span>

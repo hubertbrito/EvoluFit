@@ -385,3 +385,59 @@ export const getFoodUnitWeight = (foodInput, unit) => {
   // 3. Fallback para a tabela global
   return UNIT_WEIGHTS[unit] || 1;
 };
+
+// Função para inferir nutrientes com base em palavras-chave no nome do alimento
+export const inferNutrients = (name) => {
+  const n = name.toLowerCase();
+  
+  const inferenceMap = {
+    'frango': '14',   // Peito de Frango Grelhado
+    'peito de peru': '351',
+    'bife': '16',     // Bife Bovino Grelhado
+    'carne': '15',    // Carne Moída (Refogada)
+    'peixe': '345',   // Tilápia Grelhada
+    'salmão': '346',  // Salmão Grelhado
+    'atum': '347',    // Atum (Lata/Água)
+    'sardinha': '348',// Sardinha (Lata/Óleo)
+    'ovo': '17',      // Ovo Cozido
+    'queijo': '35',   // Queijo Mussarela
+    'leite': '34',    // Leite Integral
+    'iogurte': '36',  // Iogurte Natural
+    'arroz': '1',     // Arroz Branco
+    'macarrão': '3',  // Macarrão Cozido
+    'pão': '5',       // Pão de Forma
+    'batata': '314',  // Batata Inglesa Cozida
+    'mandioca': '316',// Mandioca Cozida
+    'feijão': '10',   // Feijão Carioca
+    'lentilha': '12', // Lentilha Cozida
+    'grão de bico': '13',
+    'alface': '21',
+    'tomate': '22',
+    'cenoura': '23',
+    'brócolis': '24',
+    'banana': '26',
+    'maçã': '27',
+    'laranja': '28',
+    'mamão': '29',
+    'abacate': '387',
+    'azeite': '409',
+    'castanha': '412', // Castanha de Caju
+    'amendoim': '416',
+    'bolo': '48', // Bolo de Chocolate
+  };
+
+  const foundKeyword = Object.keys(inferenceMap).find(keyword => n.includes(keyword));
+  
+  if (foundKeyword) {
+    const foodId = inferenceMap[foundKeyword];
+    const baseFood = RAW_FOOD_DATABASE.find(f => f.id === foodId);
+    if (baseFood) {
+      return {
+        calories: baseFood.calories, protein: baseFood.protein, carbs: baseFood.carbs,
+        fat: baseFood.fat, fiber: baseFood.fiber, emoji: baseFood.emoji, category: baseFood.category,
+      };
+    }
+  }
+
+  return null; // Retorna null se nenhuma correspondência for encontrada
+};
