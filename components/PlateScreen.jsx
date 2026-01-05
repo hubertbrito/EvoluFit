@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Trash2, Plus, ChefHat, Calendar, Info, Clock, ChevronUp, ChevronDown, Users, MapPin } from 'lucide-react';
 import { MEASURE_UNITS, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures } from '../constants';
+import CustomSelect from './CustomSelect';
 
 const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddMore, meals, showTour, tourStep, initialSelectedDays = [], editingMealInfo = null }) => {
   const [selectedDays, setSelectedDays] = useState(initialSelectedDays);
@@ -13,8 +14,11 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
   const [eventLocation, setEventLocation] = useState('');
   const [customEventLocation, setCustomEventLocation] = useState('');
 
-  const withWhomOptions = ['Sozinho(a)', 'Família', 'Amigos', 'Namorado(a)', 'Colegas', 'Cliente', 'Date', 'Trabalho'];
-  const eventLocationOptions = ['Em casa', 'Restaurante', 'Trabalho', 'Na rua', 'Academia (pós-treino)', 'Parque / Piquenique', 'Encontro', 'Festa', 'Viagem'];
+  const withWhomOptions = ['Sozinho(a)', 'Família', 'Amigos', 'Namorado(a)', 'Colegas', 'Cliente', 'Date', 'Trabalho'].map(opt => ({ value: opt, label: opt }));
+  withWhomOptions.push({ value: 'Outro...', label: 'Outro (digitar)' });
+
+  const eventLocationOptions = ['Em casa', 'Restaurante', 'Trabalho', 'Na rua', 'Academia (pós-treino)', 'Parque / Piquenique', 'Encontro', 'Festa', 'Viagem'].map(opt => ({ value: opt, label: opt }));
+  eventLocationOptions.push({ value: 'Outro...', label: 'Outro (digitar)' });
 
   // These variables will hold the final string to be saved later in Phase 2
   const finalWithWhom = withWhom === 'Outro...' ? customWithWhom : withWhom;
@@ -297,18 +301,14 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <label className="text-xs font-bold text-gray-600 mb-1 block">Com quem?</label>
-                    <select
+                    <label className="text-xs font-bold text-blue-800 mb-1 block">Com quem?</label>
+                    <CustomSelect
                       value={withWhom}
-                      onChange={(e) => setWithWhom(e.target.value)}
-                      className={`w-full p-2 border-2 rounded-lg bg-white text-sm appearance-none focus:outline-none transition-all
-                        ${withWhom ? 'text-gray-800 border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]' : 'text-gray-400 border-gray-300'}
-                      `}
-                    >
-                      <option value="" disabled>Selecione uma companhia...</option>
-                      {withWhomOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      <option value="Outro...">Outro (digitar)</option>
-                    </select>
+                      onChange={(val) => setWithWhom(val)}
+                      options={withWhomOptions}
+                      placeholder="Selecione uma companhia..."
+                      className={withWhom ? 'border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]' : 'border-gray-200'}
+                    />
                     {withWhom === 'Outro...' && (
                       <input 
                         type="text"
@@ -316,23 +316,19 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                         value={customWithWhom}
                         onChange={(e) => setCustomWithWhom(e.target.value)}
                         placeholder="Digite com quem..."
-                        className="w-full p-2 border rounded-lg bg-white mt-2 text-sm"
+                        className="w-full p-2.5 border-2 border-cyan-300 rounded-lg bg-white mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
                       />
                     )}
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-600 mb-1 block">Local / Evento</label>
-                    <select
+                    <label className="text-xs font-bold text-blue-800 mb-1 block">Local / Evento</label>
+                    <CustomSelect
                       value={eventLocation}
-                      onChange={(e) => setEventLocation(e.target.value)}
-                      className={`w-full p-2 border-2 rounded-lg bg-white text-sm appearance-none focus:outline-none transition-all
-                        ${eventLocation ? 'text-gray-800 border-fuchsia-400 shadow-[0_0_10px_rgba(217,70,239,0.5)]' : 'text-gray-400 border-gray-300'}
-                      `}
-                    >
-                      <option value="" disabled>Selecione um local...</option>
-                      {eventLocationOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      <option value="Outro...">Outro (digitar)</option>
-                    </select>
+                      onChange={(val) => setEventLocation(val)}
+                      options={eventLocationOptions}
+                      placeholder="Selecione um local..."
+                      className={eventLocation ? 'border-fuchsia-400 shadow-[0_0_10px_rgba(217,70,239,0.5)]' : 'border-gray-200'}
+                    />
                     {eventLocation === 'Outro...' && (
                       <input 
                         type="text"
@@ -340,7 +336,7 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                         value={customEventLocation}
                         onChange={(e) => setCustomEventLocation(e.target.value)}
                         placeholder="Digite o local/evento..."
-                        className="w-full p-2 border rounded-lg bg-white mt-2 text-sm"
+                        className="w-full p-2.5 border-2 border-fuchsia-300 rounded-lg bg-white mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-400"
                       />
                     )}
                   </div>

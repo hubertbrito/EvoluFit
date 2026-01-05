@@ -1,81 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, User, Activity, Info, ChevronDown } from 'lucide-react';
-
-const CustomSelect = ({ options, value, onChange, placeholder, error }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const selectedRef = useRef(null);
-
-  useEffect(() => {
-    if (isOpen && selectedRef.current) {
-      // Scroll the selected item into view when the modal opens
-      setTimeout(() => { // Timeout to allow rendering
-        selectedRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      }, 100);
-    }
-  }, [isOpen, value]);
-
-  const handleSelect = (optionValue) => {
-    onChange(optionValue);
-    setIsOpen(false);
-  };
-
-  // Find the label for the currently selected value
-  const selectedOption = options.find(opt => opt.value === value);
-  const displayLabel = selectedOption ? selectedOption.label : placeholder;
-
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        className={`w-full p-2.5 border rounded-xl bg-white text-left flex justify-between items-center transition-colors ${error ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500'}`}
-      >
-        <span className={value !== undefined && value !== '' && value !== null ? 'text-gray-900' : 'text-gray-400'}>
-          {displayLabel}
-        </span>
-        <ChevronDown className="w-4 h-4 text-gray-400" />
-      </button>
-
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setIsOpen(false)}>
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/40 animate-fade-in-fast"></div>
-          
-          <div 
-            className="bg-white w-full max-w-md rounded-t-2xl shadow-lg max-h-[40vh] flex flex-col z-10 animate-slide-up"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
-          >
-            <div className="p-4 border-b text-center font-bold text-gray-700 shrink-0">
-              {placeholder}
-            </div>
-            <div className="overflow-y-auto">
-              {options.map(option => {
-                const isSelected = option.value === value;
-                return (
-                  <button
-                    key={option.value}
-                    ref={isSelected ? selectedRef : null}
-                    onClick={() => handleSelect(option.value)}
-                    className={`w-full text-center p-3 text-lg transition-colors ${isSelected ? 'bg-emerald-500 text-white font-bold' : 'text-gray-700 hover:bg-gray-50'}`}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Add animations */}
-      <style>{`
-        @keyframes fade-in-fast { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fade-in-fast { animation: fade-in-fast 0.2s ease-out forwards; }
-        @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .animate-slide-up { animation: slide-up 0.3s ease-out forwards; }
-      `}</style>
-    </div>
-  );
-};
+import CustomSelect from './CustomSelect';
 
 const SetupScreen = ({ userProfile, onComplete }) => {
   const [step, setStep] = useState(1);
@@ -155,45 +80,46 @@ const SetupScreen = ({ userProfile, onComplete }) => {
 
         <div className="space-y-4">
           {step === 1 && (
-            <>
-              <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 flex gap-3 items-start">
-                <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                <p className="text-xs text-blue-700"><strong>Passo 1/3:</strong> Comece nos dizendo quem é você. Esses dados identificam seu perfil no relatório.</p>
+            <div className="animate-fade-in-fast">
+              <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex gap-3 items-start">
+                <Info className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-emerald-700"><strong>Passo 1/3:</strong> Comece nos dizendo quem é você. Esses dados identificam seu perfil no relatório.</p>
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Seu Nome</label>
+              <div className="mt-6">
+                <label className="block text-sm font-bold text-emerald-800 mb-1">Seu Nome</label>
                 <input 
                   type="text" 
                   value={data.name}
                   onChange={(e) => handleChange('name', e.target.value)}
-                  className={`w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none ${errors.name ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                  className={`w-full p-2.5 border-2 bg-emerald-50/50 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none ${errors.name ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                   placeholder="Ex: Maria"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">WhatsApp (com DDD)</label>
+              <div className="mt-4">
+                <label className="block text-sm font-bold text-emerald-800 mb-1">WhatsApp (com DDD)</label>
                 <input 
                   type="tel" 
                   value={data.phone || ''}
                   onChange={(e) => handleChange('phone', e.target.value)}
-                  className="w-full p-2.5 border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full p-2.5 border-2 bg-emerald-50/50 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
                   placeholder="Ex: 11999999999"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Idade</label>
+                  <label className="block text-sm font-bold text-emerald-800 mb-1">Idade</label>
                   <CustomSelect
                     value={data.age}
                     onChange={(val) => handleChange('age', val)}
                     options={ageOptions}
                     placeholder="Selecione"
                     error={errors.age}
+                    className="bg-emerald-50/50 border-emerald-200"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Gênero</label>
+                  <label className="block text-sm font-bold text-emerald-800 mb-1">Gênero</label>
                   <select 
                     value={data.gender}
                     onChange={(e) => handleChange('gender', e.target.value)}
@@ -204,60 +130,63 @@ const SetupScreen = ({ userProfile, onComplete }) => {
                   </select>
                 </div>
               </div>
-            </>
+            </div>
           )}
 
           {step === 2 && (
-            <>
+            <div className="animate-fade-in-fast">
               <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 flex gap-3 items-start">
                 <Activity className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                 <p className="text-xs text-blue-700"><strong>Passo 2/3:</strong> Suas medidas corporais são essenciais para calcular sua <strong>Taxa Metabólica Basal (TMB)</strong>.</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 mt-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Peso (kg)</label>
+                  <label className="block text-sm font-bold text-blue-800 mb-1">Peso (kg)</label>
                   <CustomSelect
                     value={data.weight}
                     onChange={(val) => handleChange('weight', val)}
                     options={weightOptions}
                     placeholder="Selecione"
                     error={errors.weight}
+                    className="bg-blue-50/50 border-blue-200"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Altura (cm)</label>
+                  <label className="block text-sm font-bold text-blue-800 mb-1">Altura (cm)</label>
                   <CustomSelect
                     value={data.height}
                     onChange={(val) => handleChange('height', val)}
                     options={heightOptions}
                     placeholder="Selecione"
                     error={errors.height}
+                    className="bg-blue-50/50 border-blue-200"
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Meta de Peso (kg)</label>
+              <div className="mt-4">
+                <label className="block text-sm font-bold text-blue-800 mb-1">Meta de Peso (kg)</label>
                 <CustomSelect
                   value={data.targetWeight}
                   onChange={(val) => handleChange('targetWeight', val)}
                   options={weightOptions}
                   placeholder="Selecione"
                   error={errors.targetWeight}
+                  className="bg-blue-50/50 border-blue-200"
                 />
               </div>
-            </>
+            </div>
           )}
 
           {step === 3 && (
-            <div>
-              <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex gap-3 items-start mb-6">
-                <Activity className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                <p className="text-xs text-emerald-700"><strong>Passo 3/3:</strong> Defina seu nível de atividade e o <strong>prazo da meta</strong>. Isso ajustará seu cálculo calórico diário.</p>
+            <div className="animate-fade-in-fast">
+              <div className="bg-purple-50 p-3 rounded-xl border border-purple-100 flex gap-3 items-start mb-6">
+                <Activity className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-purple-700"><strong>Passo 3/3:</strong> Defina seu nível de atividade e o <strong>prazo da meta</strong>. Isso ajustará seu cálculo calórico diário.</p>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-bold text-gray-700 mb-1">Frequência de Treinos</label>
+                <label className="block text-sm font-bold text-purple-800 mb-1">Frequência de Treinos</label>
                 <p className="text-xs text-gray-500 mb-2">Quantos dias por semana você pratica exercícios físicos?</p>
                 <CustomSelect
                   value={data.activityDays}
@@ -265,10 +194,11 @@ const SetupScreen = ({ userProfile, onComplete }) => {
                   options={activityDaysOptions}
                   placeholder="Selecione"
                   error={errors.activityDays}
+                  className="bg-purple-50/50 border-purple-200"
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Intensidade do Esforço</label>
+                <label className="block text-sm font-bold text-purple-800 mb-1">Intensidade do Esforço</label>
                 <p className="text-xs text-gray-500 mb-2">Como você descreveria o nível de cansaço dos seus treinos?</p>
                 <select 
                   value={data.activityLevel}
@@ -283,7 +213,7 @@ const SetupScreen = ({ userProfile, onComplete }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Prazo para a Meta (Semanas)</label>
+                <label className="block text-sm font-bold text-purple-800 mb-1">Prazo para a Meta (Semanas)</label>
                 <p className="text-xs text-gray-500 mb-2">Em quantas semanas você quer chegar ao peso ideal?</p>
                 <CustomSelect
                   value={data.weeks}
@@ -291,6 +221,7 @@ const SetupScreen = ({ userProfile, onComplete }) => {
                   options={weeksOptions}
                   placeholder="Selecione"
                   error={errors.weeks}
+                  className="bg-purple-50/50 border-purple-200"
                 />
               </div>
             </div>
