@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ClipboardList, AlertCircle, Users, MapPin } from 'lucide-react';
+import { X, ClipboardList, AlertCircle, Users, MapPin, CalendarCheck2, StickyNote } from 'lucide-react';
 
 const dayColors = {
   Segunda: 'bg-red-100 text-red-800 border border-red-200',
@@ -21,8 +21,8 @@ const ScheduleSummaryModal = ({ meals, onClose }) => {
 
   // 2. Agrupa as refeições por nome e ID de grupo
   const summary = scheduledMeals.reduce((acc, meal) => {
-    // Para refeições em grupo, a chave é o groupId. Para refeições únicas, é o ID da própria refeição.
-    const key = meal.groupId || meal.id;
+    // Refeições com data específica são sempre únicas.
+    const key = meal.specificDate ? meal.id : (meal.groupId || meal.id);
 
     if (!acc[key]) {
       acc[key] = {
@@ -31,6 +31,8 @@ const ScheduleSummaryModal = ({ meals, onClose }) => {
         time: meal.time,
         withWhom: meal.withWhom,
         eventLocation: meal.eventLocation,
+        specificDate: meal.specificDate,
+        description: meal.description,
       };
     }
     acc[key].days.push(meal.dayOfWeek);
@@ -81,16 +83,26 @@ const ScheduleSummaryModal = ({ meals, onClose }) => {
                      <span className="font-bold text-emerald-700 shrink-0">{item.time}</span>
                      <span className="font-semibold text-gray-600 truncate">{item.name}</span>
                   </div>
-                  <div className="flex gap-1 flex-wrap justify-end shrink-0">
-                    {item.days.map(day => (
-                      <span key={day} className={`px-1.5 py-0.5 rounded text-[9px] font-black ${dayColors[day] || dayColors.Avulso}`}>
-                        {day === 'Todos' ? 'TODOS' : day.substring(0, 3).toUpperCase()}
+                  {item.specificDate ? (
+                    <div className="flex items-center gap-1.5 text-emerald-700">
+                      <CalendarCheck2 size={12} />
+                      <span className="text-xs font-bold">
+                        {new Date(item.specificDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
                       </span>
-                    ))}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="flex gap-1 flex-wrap justify-end shrink-0">
+                      {item.days.map(day => (
+                        <span key={day} className={`px-1.5 py-0.5 rounded text-[9px] font-black ${dayColors[day] || dayColors.Avulso}`}>
+                          {day === 'Todos' ? 'TODOS' : day.substring(0, 3).toUpperCase()}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                {(item.withWhom || item.eventLocation) && (
-                  <div className="flex items-center gap-4 pt-1.5 border-t border-gray-200/80 text-gray-500">
+                {(item.withWhom || item.eventLocation || item.description) && (
+                  <div className="flex flex-col gap-1 pt-1.5 border-t border-gray-200/80 text-gray-500">
+                    <div className="flex items-center gap-4">
                     {item.withWhom && (
                       <div className="flex items-center gap-1.5">
                         <Users size={12} />
@@ -101,6 +113,13 @@ const ScheduleSummaryModal = ({ meals, onClose }) => {
                       <div className="flex items-center gap-1.5">
                         <MapPin size={12} />
                         <span className="font-medium">{item.eventLocation}</span>
+                      </div>
+                    )}
+                    </div>
+                    {item.description && (
+                      <div className="flex items-center gap-1.5 text-yellow-700 bg-yellow-50 px-2 py-1 rounded-md self-start mt-1">
+                        <StickyNote size={10} />
+                        <span className="text-[10px] italic font-medium">{item.description}</span>
                       </div>
                     )}
                   </div>

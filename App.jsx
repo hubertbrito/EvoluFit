@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, Copy, AlertTriangle, Eraser, Download } from 'lucide-react';
+import { X, Trash2, Copy, AlertTriangle, Eraser, Download, Loader } from 'lucide-react';
 import { FOOD_DATABASE, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures, inferNutrients } from './constants';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { populateDB } from './db.js';
 import PantryScreen from './components/PantryScreen';
@@ -10,6 +12,7 @@ import ScheduleScreen from './components/ScheduleScreen';
 import FoodAddedModal from './components/FoodAddedModal';
 import ScheduleSummaryModal from './components/ScheduleSummaryModal';
 import SetupScreen from './components/SetupScreen';
+import SchedulePdfView from './components/SchedulePdfView';
 import { Layout } from './components/Layout';
 
 // Definindo localmente para não depender de arquivo de tipos externo
@@ -611,6 +614,7 @@ const App = () => {
   const [newlyAddedFoodName, setNewlyAddedFoodName] = useState('');
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [editingMealInfo, setEditingMealInfo] = useState(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   // --- PWA Logic ---
   useEffect(() => {
@@ -1198,8 +1202,52 @@ const AlertAnimationOverlay = () => (
     validateSchedule(newProfile);
   };
 
+  const handleExportPDF = () => {
+    setIsExportingPdf(true);
+  };
+
+  useEffect(() => {
+    if (isExportingPdf) {
+      const input = document.getElementById('pdf-export-content');
+      if (input) {
+        html2canvas(input, { scale: 2 }) // Aumenta a escala para melhor qualidade
+          .then((canvas) => {
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft >= 0) {
+              position = heightLeft - imgHeight;
+              pdf.addPage();
+              pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+              heightLeft -= pageHeight;
+            }
+            pdf.save('EvoluFit-Agenda.pdf');
+            setIsExportingPdf(false); // Finaliza o processo
+          });
+      } else {
+        setIsExportingPdf(false); // Garante que o estado é resetado se o elemento não for encontrado
+      }
+    }
+  }, [isExportingPdf]);
+
+  const handleProfileCancel = () => {
+    setUserProfile(prev => ({ ...prev, isSetupDone: true }));
+  };
+
   if (!userProfile.isSetupDone) {
-    return <SetupScreen userProfile={userProfile} onComplete={handleProfileUpdate} />;
+    return <SetupScreen 
+      userProfile={userProfile} 
+      onComplete={handleProfileUpdate} 
+      onCancel={userProfile.name ? handleProfileCancel : undefined}
+    />;
   }
 
   return (
@@ -1213,6 +1261,7 @@ const AlertAnimationOverlay = () => (
         onInstallClick={handleInstallClick}
         showInstallButton={!!installPrompt}
         onToggleSummary={() => setShowSummaryModal(true)}
+        onExportPDF={handleExportPDF}
       >
       {activeTab === 'pantry' && (
         <PantryScreen 
@@ -1252,18 +1301,23 @@ const AlertAnimationOverlay = () => (
           showTour={showTour}
           tourStep={tourStep}
           editingMealInfo={editingMealInfo}
-          onAssignMeal={(mealName, daysInput, targetId, withWhom, eventLocation) => {
+          onAssignMeal={(mealName, assignmentData, targetId, withWhom, eventLocation, description) => {
     const defaultTimes = {
         'Café da Manhã': '08:00', 'Lanche das 10h': '10:00', 'Almoço': '12:00',
         'Chá das Três': '15:00', 'Lanche das 17h': '17:00', 'Jantar das 20h': '20:00',
         'Lanche das 22h': '22:00', 'Ceia da Meia-noite': '00:00'
     };
     const time = defaultTimes[mealName] || '12:00';
+    const daysOfWeekMap = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+    // Extrai os dados do agendamento
+    const { days: daysInput, date: specificDate } = assignmentData;
+    const isDateSpecific = !!specificDate;
 
     // Case 1: Inserting into an existing custom meal ("Inserir em...")
     if (targetId) {
         setMealSchedule(prev =>
-            prev.map(m => m.id === targetId ? { ...m, plate: [...currentPlate], withWhom, eventLocation } : m)
+            prev.map(m => m.id === targetId ? { ...m, plate: [...currentPlate], withWhom, eventLocation, description } : m)
         );
         const targetMeal = mealSchedule.find(m => m.id === targetId);
         if (targetMeal) alert(`Prato inserido com sucesso em "${targetMeal.name}"!`);
@@ -1281,13 +1335,15 @@ const AlertAnimationOverlay = () => (
                 return false;
             });
 
-            const days = Array.isArray(daysInput) ? daysInput : [daysInput];
+            const days = isDateSpecific 
+              ? ['Avulso'] // Direciona para a aba "Avulso"
+              : (Array.isArray(daysInput) ? daysInput : [daysInput]);
 
             // 2. Handle 'Todos' case for fixed meals
             if (days.length === 1 && days[0] === 'Todos' && editingMealInfo.isFixed) {
                 const mealToUpdateIndex = schedule.findIndex(m => m.name === nameToUpdate && m.dayOfWeek === 'Todos');
                 if (mealToUpdateIndex !== -1) {
-                    schedule[mealToUpdateIndex] = { ...schedule[mealToUpdateIndex], plate: [...currentPlate], withWhom, eventLocation };
+                    schedule[mealToUpdateIndex] = { ...schedule[mealToUpdateIndex], plate: [...currentPlate], withWhom, eventLocation, description };
                 }
             } else {
             // 3. Add back the new specific-day instances with the updated plate.
@@ -1295,7 +1351,7 @@ const AlertAnimationOverlay = () => (
                     if (day === 'Todos') return;
                     const templateMeal = mealSchedule.find(m => m.name === nameToUpdate && m.dayOfWeek === 'Todos');
                     const mealTime = templateMeal ? templateMeal.time : (defaultTimes[nameToUpdate] || '12:00');
-                    schedule.push({ id: `m-${Date.now()}-${day}`, name: nameToUpdate, time: mealTime, plate: [...currentPlate], isDone: false, dayOfWeek: day, withWhom, eventLocation });
+                    schedule.push({ id: `m-${Date.now()}-${day}`, name: nameToUpdate, time: mealTime, plate: [...currentPlate], isDone: false, dayOfWeek: day, withWhom, eventLocation, description, specificDate: isDateSpecific ? specificDate : null });
                 });
             }
             return schedule;
@@ -1304,7 +1360,9 @@ const AlertAnimationOverlay = () => (
     // Case 3: Assigning a new plate from scratch
     else {
         setMealSchedule(prev => {
-            const days = Array.isArray(daysInput) ? daysInput.filter(d => d !== 'Todos') : [daysInput];
+            const days = isDateSpecific
+              ? ['Avulso'] // Direciona para a aba "Avulso"
+              : (Array.isArray(daysInput) ? daysInput.filter(d => d !== 'Todos') : [daysInput]);
             let nextSchedule = [...prev];
             const isFullWeek = daysInput.length === 7 || (Array.isArray(daysInput) && daysInput[0] === 'Todos');
             const newGroupId = days.length > 1 ? `group-${Date.now()}` : null;
@@ -1312,7 +1370,7 @@ const AlertAnimationOverlay = () => (
             if (isFullWeek) {
                 const mealToUpdateIndex = nextSchedule.findIndex(m => m.name === mealName && m.dayOfWeek === 'Todos');
                 if (mealToUpdateIndex !== -1) {
-                    nextSchedule[mealToUpdateIndex] = { ...nextSchedule[mealToUpdateIndex], plate: [...currentPlate], withWhom, eventLocation };
+                    nextSchedule[mealToUpdateIndex] = { ...nextSchedule[mealToUpdateIndex], plate: [...currentPlate], withWhom, eventLocation, description };
                 }
                 // Also remove any specific day overrides for this meal name
                 nextSchedule = nextSchedule.filter(m => m.name !== mealName || m.dayOfWeek === 'Todos');
@@ -1325,7 +1383,7 @@ const AlertAnimationOverlay = () => (
                 if (existingOverrideIndex !== -1) {
                     // If it exists, update plate and assign groupId if part of a new group
                     const oldMeal = nextSchedule[existingOverrideIndex];
-                    nextSchedule[existingOverrideIndex] = { ...oldMeal, plate: [...currentPlate], groupId: newGroupId, withWhom, eventLocation };
+                    nextSchedule[existingOverrideIndex] = { ...oldMeal, plate: [...currentPlate], groupId: newGroupId, withWhom, eventLocation, description };
                 } else {
                     const templateMeal = nextSchedule.find(m => m.name === mealName && m.dayOfWeek === 'Todos');
                     const mealTime = templateMeal ? templateMeal.time : time;
@@ -1333,7 +1391,8 @@ const AlertAnimationOverlay = () => (
                         id: `m-${Date.now()}-${day}`, name: mealName, time: mealTime, 
                         plate: [...currentPlate], isDone: false, dayOfWeek: day,
                         groupId: newGroupId,
-                        withWhom, eventLocation
+                        withWhom, eventLocation, description,
+                        specificDate: isDateSpecific ? specificDate : null
                     });
                 }
             });
@@ -1424,6 +1483,20 @@ const AlertAnimationOverlay = () => (
       />
       }
       {isAlerting && <AlertAnimationOverlay />}
+      {isExportingPdf && (
+        <>
+          <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm">
+            <Loader className="w-12 h-12 text-white animate-spin" />
+            <p className="text-white mt-4 font-bold">Gerando PDF, por favor aguarde...</p>
+          </div>
+          <SchedulePdfView 
+            meals={mealSchedule} 
+            allFoods={allAvailableFoods} 
+            profile={userProfile}
+            dailyGoal={getDailyGoal()}
+          />
+        </>
+      )}
     </>
   );
 };

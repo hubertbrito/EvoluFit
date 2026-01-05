@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
-import { Trash2, Plus, ChefHat, Calendar, Info, Clock, ChevronUp, ChevronDown, Users, MapPin } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Trash2, Plus, ChefHat, Calendar, Info, Clock, ChevronUp, ChevronDown, Users, MapPin, StickyNote } from 'lucide-react';
 import { MEASURE_UNITS, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures } from '../constants';
 import CustomSelect from './CustomSelect';
 
 const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddMore, meals, showTour, tourStep, initialSelectedDays = [], editingMealInfo = null }) => {
   const [selectedDays, setSelectedDays] = useState(initialSelectedDays);
+  const [specificDate, setSpecificDate] = useState('');
   const [selectedMealName, setSelectedMealName] = useState(() => editingMealInfo ? editingMealInfo.name : null);
   const [selectedTargetId, setSelectedTargetId] = useState(null);
+  const dateInputRef = useRef(null);
 
   // Estado para a nova funcionalidade de contexto social, começando vazio
   const [withWhom, setWithWhom] = useState('');
   const [customWithWhom, setCustomWithWhom] = useState('');
   const [eventLocation, setEventLocation] = useState('');
   const [customEventLocation, setCustomEventLocation] = useState('');
+  const [description, setDescription] = useState('');
 
   const withWhomOptions = ['Sozinho(a)', 'Família', 'Amigos', 'Namorado(a)', 'Colegas', 'Cliente', 'Date', 'Trabalho'].map(opt => ({ value: opt, label: opt }));
   withWhomOptions.push({ value: 'Outro...', label: 'Outro (digitar)' });
@@ -60,6 +63,7 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
 
   const toggleDay = (day) => {
     setSelectedDays(prev => {
+      setSpecificDate(''); // Limpa a data específica ao selecionar um dia da semana
       if (prev.includes(day)) {
         return prev.filter(d => d !== day);
       } else {
@@ -68,7 +72,15 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
     });
   };
 
-  const clearAll = () => setSelectedDays([]);
+  const handleDateChange = (e) => {
+    setSpecificDate(e.target.value);
+    setSelectedDays([]); // Limpa os dias da semana ao selecionar uma data específica
+  };
+
+  const clearAll = () => {
+    setSelectedDays([]);
+    setSpecificDate('');
+  };
 
   // Exclui explicitamente as refeições fixas para evitar duplicação visual
   const customMeals = meals.filter(m => !fixedMealNames.includes(m.name));
@@ -80,14 +92,29 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
 
   const handleConfirmAssignment = () => {
     if (!selectedMealName && !selectedTargetId) return alert('Por favor, selecione uma refeição para classificar o prato.');
-    if (selectedDays.length === 0 && !selectedTargetId) return alert('Por favor, selecione pelo menos um dia para agendar.');
+    if (selectedDays.length === 0 && !specificDate && !selectedTargetId) return alert('Por favor, selecione um dia da semana ou uma data específica para agendar.');
 
-    const daysToAssign = selectedDays.length === 7 ? ['Todos'] : selectedDays;
-    onAssignMeal(selectedMealName, daysToAssign, selectedTargetId, finalWithWhom, finalEventLocation);
+    const assignmentData = {
+      days: selectedDays.length === 7 ? ['Todos'] : selectedDays,
+      date: specificDate,
+    };
+    onAssignMeal(selectedMealName, assignmentData, selectedTargetId, finalWithWhom, finalEventLocation, description);
   };
 
   return (
     <div className="p-4 space-y-6 pb-24">
+      {/* Estilo para forçar a área clicável do input de data a cobrir todo o elemento */}
+      <style>{`
+        .custom-date-input::-webkit-calendar-picker-indicator {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          background: transparent;
+          color: transparent;
+        }
+      `}</style>
       <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-start gap-2">
         <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
         <p className="text-xs text-blue-700"><strong>Montagem do Prato:</strong> Ajuste as quantidades e medidas de cada item. O cálculo de calorias é atualizado na hora. Ao final, agende para um dia e refeição específicos.</p>
@@ -225,10 +252,33 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
 
           <div className="pt-4" data-tour-id="plate-scheduling">
             <div className="bg-emerald-50 p-4 rounded-xl mb-4 border border-emerald-100">
-              <div className="flex items-center gap-2 mb-2 text-emerald-800 font-bold text-sm">
-                <Calendar className="w-4 h-4" />
-                Agendar para (selecione vários):
+              <div className="flex justify-between items-center mb-3">
+                <div className="flex items-center gap-2 text-emerald-800 font-bold text-sm">
+                  <Calendar className="w-4 h-4" />
+                  Agendar para:
+                </div>
+                {/* Abordagem robusta: Input invisível sobreposto ao botão visual */}
+                <div className="relative">
+                  <div className="flex items-center gap-1.5 text-xs font-bold bg-white text-emerald-600 px-2 py-1 rounded-lg border border-emerald-200">
+                    <Calendar size={12} />
+                    <span>Calendário</span>
+                  </div>
+                  <input
+                    type="date"
+                    value={specificDate}
+                    onChange={handleDateChange}
+                    className="custom-date-input absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    title="Selecionar uma data específica"
+                  />
+                </div>
               </div>
+              {specificDate && (
+                <div className="mb-3 p-2 text-center bg-emerald-100 border-2 border-dashed border-emerald-300 rounded-lg">
+                  <span className="text-emerald-800 font-bold text-sm">
+                    Data selecionada: {new Date(specificDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                  </span>
+                </div>
+              )}
               <div className="flex gap-2 flex-wrap justify-center">
                 <button
                   onClick={clearAll}
@@ -244,7 +294,10 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                     <button
                       key={day}
                       onClick={() => toggleDay(day)}
-                      className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex-grow text-center ${isSelected ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-gray-400 border border-gray-200'}`}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex-grow text-center disabled:opacity-30 disabled:cursor-not-allowed ${
+                        isSelected ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-gray-400 border border-gray-200'
+                      }`}
+                      disabled={!!specificDate}
                     >
                       {day}
                     </button>
@@ -340,13 +393,28 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                       />
                     )}
                   </div>
+                  <div>
+                    <label className="text-xs font-bold text-blue-800 mb-1 block">Lembrete / Descrição</label>
+                    <div className="relative">
+                      <input 
+                        type="text"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        maxLength={80}
+                        placeholder="Ex: Levar a sobremesa..."
+                        className="w-full p-2.5 pl-9 border-2 border-indigo-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-400"
+                      />
+                      <StickyNote className="w-4 h-4 text-indigo-300 absolute left-2.5 top-3" />
+                    </div>
+                    <div className="text-[10px] text-right text-indigo-300 mt-1 font-medium">{description.length}/80</div>
+                  </div>
                 </div>
               </div>
             </div>
 
             <button
               onClick={handleConfirmAssignment}
-              disabled={(!selectedMealName && !selectedTargetId) || (selectedDays.length === 0 && !selectedTargetId)}
+              disabled={(!selectedMealName && !selectedTargetId) || (selectedDays.length === 0 && !specificDate && !selectedTargetId)}
               className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg"
             >
               Confirmar Agendamento

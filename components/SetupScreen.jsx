@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight, User, Activity, Info, ChevronDown } from 'lucide-react';
+import { ArrowRight, User, Activity, Info, ChevronDown, X } from 'lucide-react';
 import CustomSelect from './CustomSelect';
 
-const SetupScreen = ({ userProfile, onComplete }) => {
+const SetupScreen = ({ userProfile, onComplete, onCancel }) => {
   const [step, setStep] = useState(1);
   // Garante que os campos numéricos com select customizado comecem vazios
   const [data, setData] = useState({
@@ -69,7 +69,19 @@ const SetupScreen = ({ userProfile, onComplete }) => {
 
   return (
     <div className="min-h-screen bg-white p-6 flex flex-col justify-center">
-      <div className="max-w-md mx-auto w-full space-y-8">
+      <div className="max-w-md mx-auto w-full space-y-8 relative">
+        {/* Botão de Cancelar Edição (Só aparece se onCancel for passado) */}
+        {onCancel && (
+          <button 
+            onClick={onCancel}
+            className="absolute -top-12 right-0 p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all flex items-center gap-1"
+            title="Cancelar Edição e Voltar"
+          >
+            <span className="text-xs font-bold uppercase">Cancelar</span>
+            <X size={20} />
+          </button>
+        )}
+
         <div className="text-center">
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <User className="w-8 h-8 text-emerald-600" />

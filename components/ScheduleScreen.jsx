@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Clock, AlertCircle, Zap, Wheat, Droplets, Calendar, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser, Edit, CalendarDays, Users, MapPin } from 'lucide-react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { Clock, AlertCircle, Zap, Wheat, Droplets, Calendar, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser, Edit, CalendarDays, Users, MapPin, CalendarCheck2, StickyNote } from 'lucide-react';
 import { UNIT_WEIGHTS, getFoodUnitWeight } from '../constants';
 
 // Função auxiliar para formatar a quantidade e medida do alimento
@@ -75,7 +75,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
     onUpdateMeals(meals.map(m => m.id === id ? { ...m, ...updates } : m));
   };
 
-  const calculateMealNutrients = (plate) => {
+  const calculateMealNutrients = useCallback((plate) => {
     return plate.reduce((acc, item) => {
       const food = allFoods.find(f => String(f.id) === String(item.foodId));
       if (!food) return acc;
@@ -92,11 +92,16 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
         fiber: acc.fiber + ((Number(food.fiber) || 0) * weightFactor),
       };
     }, { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
-  };
+  }, [allFoods]);
 
-  const filteredMeals = meals.filter(m => {
+  const filteredMeals = useMemo(() => {
+    const result = meals.filter(m => {
     // If 'Avulso' is selected, only show ad-hoc meals
-    if (activeDays.includes('Avulso')) return m.dayOfWeek === 'Avulso';
+    if (activeDays.includes('Avulso')) {
+      // Mostra apenas refeições que são explicitamente 'Avulso' E têm uma data específica.
+      // Ordena por data.
+      return m.dayOfWeek === 'Avulso' && m.specificDate;
+    }
     
     // Se for um dos dias ativos, mostra
     if (activeDays.includes(m.dayOfWeek)) return true;
@@ -111,7 +116,14 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
       });
     }
     return false;
-  });
+    });
+
+    // Ordena as refeições avulsas por data
+    if (activeDays.includes('Avulso')) {
+      result.sort((a, b) => new Date(a.specificDate) - new Date(b.specificDate));
+    }
+    return result;
+  }, [meals, activeDays]);
 
   return (
     <div className="p-4 space-y-6 pb-28">
@@ -190,7 +202,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
 
           return (
             <div 
-                key={`${meal.id}-${activeDays[0]}`} 
+                key={meal.id} 
                 className={`p-4 rounded-[2rem] border-2 transition-all relative overflow-hidden ${isCurrent ? 'bg-orange-50 border-orange-400 shadow-xl ring-4 ring-orange-400/10' : 'bg-white border-indigo-50 shadow-sm hover:border-orange-300'}`}
             >
               <div className="flex justify-between items-start mb-5 gap-3">
@@ -296,8 +308,18 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                         ))}
                     </div>
 
+                    {/* Exibe a data específica, se houver */}
+                    {meal.specificDate && (
+                      <div className="flex items-center gap-1.5 mt-2">
+                        <CalendarCheck2 size={12} className="text-emerald-500" />
+                        <span className="text-xs font-bold text-emerald-700">
+                          {new Date(meal.specificDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                        </span>
+                      </div>
+                    )}
+
                     {/* --- FASE 3: Exibição das Anotações Sociais --- */}
-                    {(meal.withWhom || meal.eventLocation) && (
+                    {(meal.withWhom || meal.eventLocation || meal.description) && (
                       <div className="mt-3 pt-3 border-t border-indigo-100/50 text-xs text-indigo-800 space-y-1.5">
                         {meal.withWhom && (
                           <div className="flex items-center gap-2">
@@ -309,6 +331,12 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                           <div className="flex items-center gap-2">
                             <MapPin size={14} className="text-indigo-400 shrink-0" />
                             <span className="font-semibold">{meal.eventLocation}</span>
+                          </div>
+                        )}
+                        {meal.description && (
+                          <div className="flex items-start gap-2 mt-1.5 bg-yellow-50 p-2 rounded-lg border border-yellow-100 text-yellow-800">
+                            <StickyNote size={14} className="shrink-0 mt-0.5" />
+                            <span className="italic leading-tight">{meal.description}</span>
                           </div>
                         )}
                       </div>
@@ -382,14 +410,17 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
         })}
       </div>
 
-      <div data-tour-id="schedule-add-meal">
-        <button
-          onClick={onAddMeal}
-          className="w-full mt-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" /> Adicionar Nova Refeição
-        </button>
-      </div>
+      {/* O botão de adicionar refeição não faz sentido na aba "Avulso" */}
+      {!activeDays.includes('Avulso') && (
+        <div data-tour-id="schedule-add-meal">
+          <button
+            onClick={onAddMeal}
+            className="w-full mt-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Adicionar Nova Refeição
+          </button>
+        </div>
+      )}
       
       <div className="mt-8 px-2 space-y-5 text-gray-600">
         <h3 className="text-sm font-black text-gray-800 border-b pb-2 uppercase">Como criar uma nova refeição:</h3>

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Brain, Activity, Target, Zap, Calendar, AlertTriangle, Edit, CheckCircle, FileText, ArrowRight, RefreshCw } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Brain, Activity, Target, Zap, Calendar, AlertTriangle, Edit, CheckCircle, FileText, ArrowRight, RefreshCw, BarChart2, TrendingUp, TrendingDown, Share2 } from 'lucide-react';
+import { getFoodUnitWeight } from '../constants';
 
 const PieChart = ({ data, size = 120, strokeWidth = 20 }) => {
   const center = size / 2;
@@ -32,6 +33,48 @@ const PieChart = ({ data, size = 120, strokeWidth = 20 }) => {
   );
 };
 
+const BarChart = ({ data, dailyGoal }) => {
+  const maxVal = Math.max(...data.map(d => d.calories), dailyGoal) * 1.15;
+  const height = 120;
+  const width = 300;
+  const barWidth = 24;
+  const gap = (width - (data.length * barWidth)) / (data.length + 1);
+
+  return (
+    <div className="w-full overflow-x-auto no-scrollbar">
+      <svg width="100%" height={height + 30} viewBox={`0 0 ${width} ${height + 30}`} className="overflow-visible">
+        {/* Linha da Meta */}
+        <line 
+          x1="0" 
+          y1={height - (dailyGoal / maxVal) * height} 
+          x2={width} 
+          y2={height - (dailyGoal / maxVal) * height} 
+          stroke="#10b981" 
+          strokeWidth="2" 
+          strokeDasharray="4,4" 
+          opacity="0.5"
+        />
+        <text x={width} y={height - (dailyGoal / maxVal) * height - 5} fontSize="10" fill="#10b981" textAnchor="end" fontWeight="bold">Meta</text>
+        
+        {data.map((d, i) => {
+          const barHeight = (d.calories / maxVal) * height;
+          const x = gap + i * (barWidth + gap);
+          const y = height - barHeight;
+          const isOver = d.calories > dailyGoal;
+          
+          return (
+            <g key={i}>
+              <rect x={x} y={y} width={barWidth} height={barHeight} fill={isOver ? '#f43f5e' : '#3b82f6'} rx="4" />
+              <text x={x + barWidth/2} y={height + 15} fontSize="10" textAnchor="middle" fill="#64748b" fontWeight="bold">{d.day.slice(0, 3)}</text>
+              <text x={x + barWidth/2} y={y - 5} fontSize="8" textAnchor="middle" fill="#94a3b8">{Math.round(d.calories)}</text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+};
+
 const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour, onResetSchedule }) => {
   const [filterDay, setFilterDay] = useState('Hoje');
   const days = ['Hoje', 'Semana Toda', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
@@ -48,22 +91,28 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
 
     daysToCalculate.forEach(day => {
       // Para cada dia, pega as refeições que se aplicam (específicas do dia OU 'Todos')
-      const dailyMeals = schedule.filter(m => m.dayOfWeek === day || m.dayOfWeek === 'Todos');
-      
-      // Evita duplicidade: se tiver um almoço específico de Segunda e um almoço de Todos, 
-      // a lógica ideal seria o específico sobrescrever, mas para simplificar somamos o que está agendado.
-      // (Numa versão avançada filtraríamos overrides).
+      const dailyMeals = schedule.filter(m => {
+        if (m.dayOfWeek === day) return true;
+        if (m.dayOfWeek === 'Todos') {
+           // Verifica se existe um override (refeição específica) para este dia
+           const hasOverride = schedule.some(om => om.dayOfWeek === day && om.name === m.name);
+           return !hasOverride;
+        }
+        return false;
+      });
       
       dailyMeals.forEach(meal => {
         if (meal.plate) {
           meal.plate.forEach(item => {
             const food = allFoods.find(f => f.id === item.foodId);
             if (food) {
-              const multiplier = item.multiplier || 1;
-              totals.totalCalories += food.calories * multiplier;
-              totals.totalProtein += food.protein * multiplier;
-              totals.totalCarbs += food.carbs * multiplier;
-              totals.totalFat += food.fat * multiplier;
+              const weight = getFoodUnitWeight(food, item.unit) * (item.quantity || 0);
+              const multiplier = weight / 100; // calorias são por 100g
+              
+              totals.totalCalories += (food.calories || 0) * multiplier;
+              totals.totalProtein += (food.protein || 0) * multiplier;
+              totals.totalCarbs += (food.carbs || 0) * multiplier;
+              totals.totalFat += (food.fat || 0) * multiplier;
             }
           });
         }
@@ -107,6 +156,39 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
 
   const { bmr, tdee, dailyGoal } = calculateMetabolism();
   const caloriePercentage = Math.min(100, (totals.totalCalories / dailyGoal) * 100);
+
+  // Dados para o Gráfico Semanal
+  const weeklyData = useMemo(() => {
+    const weekDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    return weekDays.map(day => {
+      let calories = 0;
+      const dailyMeals = schedule.filter(m => {
+        if (m.dayOfWeek === day) return true;
+        if (m.dayOfWeek === 'Todos') {
+           const hasOverride = schedule.some(om => om.dayOfWeek === day && om.name === m.name);
+           return !hasOverride;
+        }
+        return false;
+      });
+
+      dailyMeals.forEach(meal => {
+        if (meal.plate) {
+          meal.plate.forEach(item => {
+            const food = allFoods.find(f => f.id === item.foodId);
+            if (food) {
+              const weight = getFoodUnitWeight(food, item.unit) * (item.quantity || 0);
+              calories += (food.calories || 0) * (weight / 100);
+            }
+          });
+        }
+      });
+      return { day, calories };
+    });
+  }, [schedule, allFoods]);
+
+  const weeklyTotalCalories = weeklyData.reduce((acc, d) => acc + d.calories, 0);
+  const weeklyGoalTotal = dailyGoal * 7;
+  const weeklyBalance = weeklyTotalCalories - weeklyGoalTotal;
   
   // Data for Pie Chart
   const consumed = Math.round(totals.totalCalories);
@@ -135,6 +217,32 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
   if (totals.totalFat < 30 && totals.totalCalories > 500) { // Exemplo simples
     warnings.push({ type: 'warning', msg: 'Consumo de gorduras (lipídios) está muito baixo. Adicione azeite ou castanhas.' });
   }
+
+  const handleShare = () => {
+    const balanceText = weeklyBalance <= 0 
+      ? `*Diferencial: ${Math.round(weeklyBalance)} kcal (Vitória! 🎉)*`
+      : `*Diferencial: +${Math.round(weeklyBalance)} kcal (Excesso! 😟)*`;
+
+    const message = `
+*Relatório Nutricional - EvoluFit* 📊
+
+*Perfil:* ${profile.name}, ${profile.age} anos
+*Objetivo:* ${profile.weight}kg ➡️ ${profile.targetWeight}kg
+*Meta Diária:* ${Math.round(dailyGoal)} kcal
+
+*Balanço da Semana:*
+- Consumido: ${Math.round(weeklyTotalCalories)} kcal
+- Meta Semanal: ${Math.round(weeklyGoalTotal)} kcal
+- ${balanceText}
+
+*Detalhes Metabólicos:*
+- Gasto em Repouso (TMB): ${Math.round(bmr)} kcal
+- Gasto Total Estimado (TDEE): ${Math.round(tdee)} kcal
+    `.trim().replace(/^\s+/gm, '');
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   return (
     <div className="p-4 space-y-6 pb-24">
@@ -240,7 +348,7 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
             </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 mt-6">
           <div className="p-4 bg-gray-50 rounded-xl">
             <div className="flex items-center gap-2 mb-2">
               <Activity className="w-4 h-4 text-blue-500" />
@@ -272,6 +380,37 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
             </div>
             <div className="text-2xl font-bold text-gray-900">{Math.round(totals.totalFat)}g</div>
             <div className="text-xs text-gray-500">total</div>
+          </div>
+        </div>
+
+        {/* Gráfico Semanal e Balanço */}
+        <div className="mt-8 border-t border-gray-100 pt-6">
+          <div className="flex items-center gap-2 mb-4 justify-center">
+            <BarChart2 className="w-5 h-5 text-blue-500" />
+            <h3 className="text-sm font-bold text-gray-700">Performance da Semana</h3>
+          </div>
+          
+          <BarChart data={weeklyData} dailyGoal={dailyGoal} />
+
+          <div className="mt-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <h4 className="text-xs font-bold text-slate-500 uppercase mb-2 text-center">Balanço Semanal (Vitória vs Realizado)</h4>
+            <div className="flex justify-between items-center">
+              <div className="text-center">
+                <p className="text-xs text-slate-400">Meta Acumulada</p>
+                <p className="font-bold text-slate-700">{Math.round(weeklyGoalTotal)} kcal</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-slate-400">Consumido</p>
+                <p className="font-bold text-blue-600">{Math.round(weeklyTotalCalories)} kcal</p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-slate-400">Diferencial</p>
+                <p className={`font-black flex items-center gap-1 ${weeklyBalance > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                  {weeklyBalance > 0 ? <TrendingUp size={14}/> : <TrendingDown size={14}/>}
+                  {weeklyBalance > 0 ? '+' : ''}{Math.round(weeklyBalance)}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -320,6 +459,14 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
                 <CheckCircle size={14} /> <span>Plano equilibrado e seguro.</span>
               </div>
             )}
+
+            <button 
+              onClick={handleShare}
+              className="w-full mt-4 py-2.5 bg-emerald-500 border border-emerald-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-emerald-600 transition-colors shadow-md"
+            >
+              <Share2 size={14} />
+              Compartilhar no WhatsApp
+            </button>
 
             <button 
               onClick={onEditProfile}

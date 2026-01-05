@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, ChefHat, BrainCircuit, CalendarClock, RefreshCw, BookOpen, Download, ClipboardList } from 'lucide-react';
+import { LayoutGrid, ChefHat, BrainCircuit, CalendarClock, RefreshCw, BookOpen, Download, ClipboardList, FileDown } from 'lucide-react';
 
 const HeaderButton = ({ onClick, title, children }) => (
   <button onClick={onClick} className="flex flex-col items-center justify-center p-1 rounded-lg hover:bg-emerald-700 transition-colors w-14" title={title}>
@@ -7,7 +7,7 @@ const HeaderButton = ({ onClick, title, children }) => (
   </button>
 );
 
-export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRestartTour, onToggleManual, onInstallClick, showInstallButton, onToggleSummary }) => {
+export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRestartTour, onToggleManual, onInstallClick, showInstallButton, onToggleSummary, onExportPDF }) => {
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-white shadow-2xl relative overflow-hidden">
       <header className="bg-emerald-600 text-white p-4 pt-8 flex items-center justify-between shadow-md z-10">
@@ -17,6 +17,12 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
             <HeaderButton onClick={onInstallClick} title="Instalar App">
               <Download size={18} />
               <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5">Instalar</span>
+            </HeaderButton>
+          )}
+          {onExportPDF && (
+            <HeaderButton onClick={onExportPDF} title="Exportar para PDF">
+              <FileDown size={18} />
+              <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5">PDF</span>
             </HeaderButton>
           )}
           <HeaderButton onClick={onToggleSummary} title="Resumo da Agenda">
