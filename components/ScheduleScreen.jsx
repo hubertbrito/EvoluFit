@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Clock, AlertCircle, Zap, Wheat, Droplets, Calendar, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser, Edit, CalendarDays, Users, MapPin, CalendarCheck2, StickyNote, X, CheckCircle, Check, Trophy } from 'lucide-react';
+import { Clock, AlertCircle, Zap, Wheat, Droplets, Calendar, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser, Edit, CalendarDays, Users, MapPin, CalendarCheck2, StickyNote, X, CheckCircle, Check, Trophy, Undo2 } from 'lucide-react';
 import { UNIT_WEIGHTS, getFoodUnitWeight } from '../constants';
 import CustomSelect from './CustomSelect';
 
@@ -54,7 +54,7 @@ const DayCompleteModal = ({ onClose }) => (
   </div>
 );
 
-const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal, onClearMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep, waterIntake, onUpdateWater, waterGoal, onUpdateWaterGoal, triggerConfetti, onMealDone }) => {
+const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal, onClearMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep, waterIntake, onUpdateWater, waterGoal, onUpdateWaterGoal, triggerConfetti, onMealDone, movedMealId, profile }) => {
   const [now, setNow] = useState(new Date());
   const [activeDays, setActiveDays] = useState(() => {
     const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
@@ -202,6 +202,31 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
     return (doneCount / filteredMeals.length) * 100;
   }, [filteredMeals]);
 
+  // Lógica de Progresso de Calorias Consumidas
+  const caloriesProgress = useMemo(() => {
+    const consumedCalories = filteredMeals
+      .filter(m => m.isDone)
+      .reduce((total, meal) => total + calculateMealNutrients(meal.plate).calories, 0);
+    
+    // Usando a prop 'profile' diretamente
+    const { weight, height, age, gender, activityLevel, activityDays, targetWeight, weeks } = profile;
+    
+    let dailyGoal = 2000; // Default goal
+    if (weight && height && age && gender && activityLevel && targetWeight && weeks) {
+      let bmr = (10 * weight) + (6.25 * height) - (5 * age) + (gender === 'M' ? 5 : -161);
+      const intensityFactors = { 'Sedentário': 0, 'Leve': 0.035, 'Moderada': 0.05, 'Pesada': 0.075, 'Atleta': 0.1 };
+      const activityAddon = (intensityFactors[activityLevel] || 0) * (activityDays || 0);
+      const tdee = bmr * (1.2 + activityAddon);
+      const dailyAdjustment = ((weight - targetWeight) * 7700) / (weeks * 7);
+      dailyGoal = Math.max(1200, tdee - dailyAdjustment);
+    }
+    return {
+      consumed: Math.round(consumedCalories),
+      goal: Math.round(dailyGoal),
+      percentage: dailyGoal > 0 ? Math.min(100, (consumedCalories / dailyGoal) * 100) : 0,
+    };
+  }, [filteredMeals, profile, calculateMealNutrients]);
+
   const handleToggleDone = (meal) => {
     const newStatus = !meal.isDone;
     updateMeal(meal.id, { isDone: newStatus });
@@ -225,6 +250,16 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
 
   return (
     <div className="p-4 space-y-6 pb-28">
+      <style>{`
+        @keyframes highlight-move {
+          0% { box-shadow: 0 0 0 0px rgba(255, 165, 0, 0); }
+          50% { box-shadow: 0 0 15px 5px rgba(255, 165, 0, 0.7); }
+          100% { box-shadow: 0 0 0 0px rgba(255, 165, 0, 0); }
+        }
+        .highlight-move-animation {
+          animation: highlight-move 2s ease-out;
+        }
+      `}</style>
       {scheduleWarnings && scheduleWarnings.length > 0 && (
         <div className="bg-amber-100 p-4 rounded-2xl border-2 border-dashed border-amber-400 flex flex-col gap-3">
             <div className="flex items-center gap-2">
@@ -240,30 +275,40 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
         </div>
       )}
 
-      <div className="sticky top-0 z-10 bg-gray-50/95 backdrop-blur-sm -mx-4 px-4 pt-2 pb-4 shadow-md border-b-2 border-emerald-200">
-        <div className="grid grid-cols-4 gap-2">
-            {[...weekDays, specialDay].map(d => {
-                const isSpecial = d === specialDay;
-                const isActive = activeDays.includes(d);
-                
-                let btnClass = "h-8 rounded-lg text-[10px] font-bold uppercase transition-colors flex items-center justify-center text-center ";
-                
-                if (isSpecial) {
-                    btnClass += isActive 
-                        ? "bg-fuchsia-600 text-white shadow-md" 
-                        : "bg-white text-fuchsia-500 border-fuchsia-200 hover:bg-fuchsia-50";
-                } else {
-                    btnClass += isActive 
-                        ? "bg-emerald-500 text-white shadow-md" 
-                        : "bg-white text-gray-400 border border-gray-200 hover:bg-gray-50";
-                }
-
-                return (
-                    <button key={d} onClick={() => toggleDay(d)} className={btnClass}>
-                        {isSpecial ? "Datas Marcadas" : d.slice(0, 3)}
-                    </button>
-                );
-            })}
+      <div className="sticky top-0 z-10 bg-gray-50/95 backdrop-blur-sm -mx-4 px-4 pt-1 pb-3 shadow-sm border-b-2 border-gray-100">
+        <div className="flex flex-col gap-2">
+            {/* Primeira linha com 5 botões */}
+            <div className="grid grid-cols-5 gap-2">
+                {weekDays.slice(0, 5).map(d => {
+                    const isActive = activeDays.includes(d);
+                    const btnClass = `h-9 rounded-xl text-[10px] font-black uppercase transition-all flex items-center justify-center text-center border-2 ${
+                        isActive 
+                        ? "bg-emerald-100 border-emerald-300 text-emerald-800 shadow-md scale-105" 
+                        : "bg-white border-indigo-200 text-indigo-400 hover:bg-indigo-50 hover:border-indigo-400"
+                    }`;
+                    return <button key={d} onClick={() => toggleDay(d)} className={btnClass}>{d.slice(0, 3)}</button>;
+                })}
+            </div>
+            {/* Segunda linha com 3 botões */}
+            <div className="grid grid-cols-4 gap-2">
+                {weekDays.slice(5).map(d => {
+                    const isActive = activeDays.includes(d);
+                    const btnClass = `h-9 rounded-xl text-[10px] font-black uppercase transition-all flex items-center justify-center text-center border-2 ${
+                        isActive 
+                        ? "bg-emerald-100 border-emerald-300 text-emerald-800 shadow-md scale-105" 
+                        : "bg-white border-indigo-200 text-indigo-400 hover:bg-indigo-50 hover:border-indigo-400"
+                    }`;
+                    return <button key={d} onClick={() => toggleDay(d)} className={btnClass}>{d.slice(0, 3)}</button>;
+                })}
+                <button 
+                    onClick={() => toggleDay(specialDay)} 
+                    className={`col-span-2 h-9 rounded-xl text-[9px] leading-tight font-black uppercase transition-all flex items-center justify-center text-center border-2 ${
+                        activeDays.includes(specialDay) 
+                        ? "bg-blue-400/80 border-blue-500 text-white shadow-lg scale-105" 
+                        : "bg-white border-fuchsia-200 text-fuchsia-400 hover:bg-fuchsia-50 hover:border-fuchsia-400"
+                    }`}
+                >{specialDay}</button>
+            </div>
         </div>
       </div>
 
@@ -378,16 +423,33 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                     ? `Agenda de ${activeDays[0]}` 
                     : activeDays[0] === 'Datas Marcadas' ? 'Agenda de Datas Marcadas' : 'Agenda'}
                 </h2>
-                {/* Barra de Progresso do Dia */}
+                {/* Barras de Progresso */}
                 {activeDays.length === 1 && activeDays[0] !== 'Datas Marcadas' && filteredMeals.length > 0 && (
-                  <div className="mt-1 flex items-center gap-2">
-                    <div className="h-2 flex-1 bg-gray-100 rounded-full overflow-hidden max-w-[150px]">
-                      <div 
-                        className={`h-full transition-all duration-500 ${dayProgress === 100 ? 'bg-emerald-500' : 'bg-yellow-400'}`}
-                        style={{ width: `${dayProgress}%` }}
-                      ></div>
+                  <div className="mt-2 space-y-2">
+                    <div>
+                      <label className="text-[9px] font-bold text-gray-500">Conclusão de Refeições</label>
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 flex-1 bg-gray-200 rounded-full overflow-hidden max-w-[150px]">
+                          <div 
+                            className={`h-full transition-all duration-500 ${dayProgress === 100 ? 'bg-emerald-500' : 'bg-yellow-400'}`}
+                            style={{ width: `${dayProgress}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-400">{Math.round(dayProgress)}%</span>
+                      </div>
                     </div>
-                    <span className="text-[10px] font-bold text-gray-400">{Math.round(dayProgress)}%</span>
+                    <div>
+                      <label className="text-[9px] font-bold text-gray-500">Meta de Calorias</label>
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 flex-1 bg-gray-200 rounded-full overflow-hidden max-w-[150px]">
+                          <div 
+                            className={`h-full transition-all duration-500 ${caloriesProgress.percentage >= 100 ? 'bg-emerald-500' : 'bg-orange-400'}`}
+                            style={{ width: `${caloriesProgress.percentage}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-400">{caloriesProgress.consumed} / {caloriesProgress.goal} kcal</span>
+                      </div>
+                    </div>
                   </div>
                 )}
             </div>
@@ -411,6 +473,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
           const isCurrent = mealHour === currentHour && (meal.dayOfWeek === 'Todos' || meal.dayOfWeek === todayName);
           const isFixed = fixedMealNames.includes(meal.name);
           const nutrients = calculateMealNutrients(meal.plate);
+          const isMoved = meal.id === movedMealId;
 
           // Se a refeição tem um groupId, encontra todos os outros no mesmo grupo para exibir seus dias.
           // Caso contrário, mostra apenas o seu próprio dia. Isso torna a UI reativa às mudanças no grupo.
@@ -422,8 +485,10 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
 
             return (
             <div 
-                key={meal.id} 
-                className={`p-4 rounded-[2rem] border-2 transition-all relative overflow-hidden ${meal.isDone ? 'opacity-75 bg-gray-50 border-gray-200' : (isCurrent ? 'bg-orange-50 border-orange-400 shadow-xl ring-4 ring-orange-400/10' : 'bg-white border-indigo-50 shadow-sm hover:border-orange-300')}`}
+                key={meal.id}
+                className={`p-4 rounded-[2rem] border-2 transition-all relative overflow-hidden 
+                  ${isMoved ? 'highlight-move-animation' : ''} 
+                  ${meal.isDone ? 'opacity-75 bg-gray-50 border-gray-200' : (isCurrent ? 'bg-orange-50 border-orange-400 shadow-xl ring-4 ring-orange-400/10' : 'bg-white border-indigo-50 shadow-sm hover:border-orange-300')}`}
             >
               <div className="flex justify-between items-start mb-5 gap-3">
                 <label className="flex items-center space-x-2 cursor-pointer group shrink-0 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 p-1.5 rounded-xl transition-colors shadow-sm">
@@ -586,38 +651,52 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                     <span>{meal.isDone ? 'OK' : 'Pendente'}</span>
                  </div>
 
-                 {/* Action Button */}
-                 <button 
-                    onClick={() => handleToggleDone(meal)}
-                    className={`flex-1 py-2 rounded-xl font-bold text-xs shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${
-                      meal.isDone 
-                        ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
-                        : 'bg-white border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50'
-                    }`}
-                 >
-                    {meal.isDone ? 'Consumida' : 'Marcar Consumida'}
-                    {meal.isDone && <CheckCircle size={14} />}
-                 </button>
+                 {!meal.isDone ? (
+                   <button 
+                      onClick={() => {
+                          if (window.confirm('Deseja marcar esta refeição como consumida?')) {
+                            handleToggleDone(meal);
+                          }
+                      }}
+                      disabled={meal.plate.length === 0}
+                      className="flex-1 py-2 rounded-xl font-bold text-xs shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-white border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                   >
+                      Marcar Consumida
+                   </button>
+                 ) : (
+                   <button 
+                      onClick={() => {
+                        if (window.confirm('Deseja reverter o status desta refeição para "Pendente"?')) {
+                          handleToggleDone(meal);
+                        }
+                      }}
+                      className="flex-1 py-2 rounded-xl font-bold text-xs shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 bg-gray-100 text-gray-500 hover:bg-gray-200 border border-gray-200"
+                      title="Reverter status para pendente"
+                   >
+                      <Undo2 size={14} />
+                      Reverter
+                   </button>
+                 )}
               </div>
 
               <div className="flex justify-end items-center gap-2 mt-3 pt-2 border-t border-dashed border-indigo-50/50">
                   <span className="text-[10px] font-bold text-indigo-200 uppercase mr-auto">Ações</span>
                   
-                  <button onClick={() => onReorderMeal(meal.id, 'up', activeDays[0])} disabled={index === 0} className="p-2 bg-indigo-50 rounded-xl text-indigo-400 disabled:opacity-30 hover:bg-emerald-100 hover:text-emerald-600 transition-colors" title="Mover para cima">
+                  <button onClick={() => onReorderMeal(meal.id, 'up', activeDays[0])} disabled={index === 0} className="p-2 bg-emerald-50 rounded-xl text-emerald-600 disabled:opacity-30 hover:bg-emerald-100 transition-colors" title="Mover para cima">
                     <ArrowUp size={16} />
                   </button>
-                  <button onClick={() => onReorderMeal(meal.id, 'down', activeDays[0])} disabled={index === filteredMeals.length - 1} className="p-2 bg-indigo-50 rounded-xl text-indigo-400 disabled:opacity-30 hover:bg-emerald-100 hover:text-emerald-600 transition-colors" title="Mover para baixo">
+                  <button onClick={() => onReorderMeal(meal.id, 'down', activeDays[0])} disabled={index === filteredMeals.length - 1} className="p-2 bg-emerald-50 rounded-xl text-emerald-600 disabled:opacity-30 hover:bg-emerald-100 transition-colors" title="Mover para baixo">
                     <ArrowDown size={16} />
                   </button>
                   
                   <button 
                     onClick={() => onEditMeal(meal)}
                     disabled={meal.plate.length === 0}
-                    className="px-3 py-2 bg-blue-50 rounded-xl text-blue-600 disabled:opacity-30 hover:bg-blue-100 transition-colors flex items-center gap-1" 
+                    className="px-2.5 py-1.5 bg-blue-100 rounded-xl text-blue-600 disabled:opacity-30 hover:bg-blue-200 transition-colors flex items-center gap-0.5 text-[9px] font-bold" 
                     title="Editar Prato (Move para montagem)"
                   >
-                    <Edit size={16} />
-                    <span className="text-[10px] font-bold">Editar</span>
+                    <Edit size={11} />
+                    <span>Editar</span>
                   </button>
 
                   <button 
@@ -625,16 +704,16 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                       onClearMeal(meal, activeDays[0]);
                     }}
                     disabled={meal.plate.length === 0}
-                    className="px-3 py-2 bg-amber-50 rounded-xl text-amber-500 disabled:opacity-30 hover:bg-amber-100 transition-colors flex items-center gap-1" 
+                    className="px-2.5 py-1.5 bg-amber-100 rounded-xl text-amber-600 disabled:opacity-30 hover:bg-amber-200 transition-colors flex items-center gap-0.5 text-[9px] font-bold" 
                     title="Limpar Prato"
                   >
-                    <Eraser size={16} />
-                    <span className="text-[10px] font-bold">Limpar</span>
+                    <Eraser size={11} />
+                    <span>Limpar</span>
                   </button>
 
                   {!isFixed && (
                     <>
-                      <div className="w-px h-6 bg-gray-100 mx-1"></div>
+                      <div className="w-px h-6 bg-indigo-100 mx-1"></div>
                       <button 
                         onClick={() => {
                           onDeleteMeal(meal, activeDays[0]);

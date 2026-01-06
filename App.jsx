@@ -16,6 +16,7 @@ import SchedulePdfView from './components/SchedulePdfView';
 import { Layout } from './components/Layout';
 import CalorieAlertModal from './components/CalorieAlertModal';
 import GoalReachedModal from './components/GoalReachedModal';
+import TrialEndScreen from './components/TrialEndScreen';
 
 // Definindo localmente para não depender de arquivo de tipos externo
 const Category = { INDUSTRIALIZADOS: 'Industrializados' };
@@ -624,6 +625,8 @@ const App = () => {
   const [showCalorieAlert, setShowCalorieAlert] = useState(false);
   const [showGoalReached, setShowGoalReached] = useState(false);
   const [excessCalories, setExcessCalories] = useState(0);
+  const [movedMealId, setMovedMealId] = useState(null);
+  const [isTrialActive, setIsTrialActive] = useState(true);
   
   // Estado para controle de água (reseta diariamente)
   // Armazena o total em ML
@@ -691,6 +694,40 @@ const App = () => {
     const interval = setInterval(checkDayChange, 60000); // Checa a cada minuto
     window.addEventListener('focus', checkDayChange); // Checa ao focar a janela (ex: voltar do background no celular)
     return () => { clearInterval(interval); window.removeEventListener('focus', checkDayChange); };
+  }, []);
+
+  // --- Lógica de Controle de Acesso (Trial e Admin) ---
+  useEffect(() => {
+    const checkAccess = () => {
+      // Checa por acesso de admin na URL
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('admin') === 'true') {
+        localStorage.setItem('accessInfo', JSON.stringify({ type: 'admin' }));
+        setIsTrialActive(true); // Admin sempre tem acesso
+        // Limpa a URL para não ficar visível
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
+      }
+
+      const accessInfo = JSON.parse(localStorage.getItem('accessInfo'));
+
+      // Se for admin, não faz mais nada
+      if (accessInfo?.type === 'admin') {
+        setIsTrialActive(true);
+        return;
+      }
+
+      const firstAccess = localStorage.getItem('firstAccessTime');
+      if (!firstAccess) {
+        localStorage.setItem('firstAccessTime', new Date().getTime().toString());
+        setIsTrialActive(true);
+      } else {
+        const trialEndTime = parseInt(firstAccess, 10) + 72 * 60 * 60 * 1000; // 72 horas
+        setIsTrialActive(new Date().getTime() < trialEndTime);
+      }
+    };
+
+    checkAccess();
   }, []);
 
   // --- PWA Logic ---
@@ -867,6 +904,15 @@ const AlertAnimationOverlay = () => (
     return Math.max(1200, tdee - dailyAdjustment);
   };
 
+  // Calcula TMB para usar como piso de segurança
+  const getTMB = () => {
+    const { weight, height, age, gender } = userProfile;
+    if (!weight || !height || !age || !gender) return 1200; // Fallback de segurança
+    let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+    bmr += gender === 'M' ? 5 : -161;
+    return bmr;
+  };
+
   // Calcula calorias REALMENTE consumidas (refeições marcadas como 'isDone')
   const getConsumedCalories = () => {
     const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
@@ -904,16 +950,41 @@ const AlertAnimationOverlay = () => (
     const currentConsumed = getConsumedCalories();
     const totalAfterMeal = currentConsumed + mealCalories;
     const dailyGoal = getDailyGoal();
+    const tmb = getTMB();
+    const isLosingWeight = userProfile.targetWeight < userProfile.weight;
 
+    // 1. Lógica de Alerta de Excesso (sempre ativa)
     if (totalAfterMeal > dailyGoal * 1.05) {
       setExcessCalories(totalAfterMeal - dailyGoal);
       setShowCalorieAlert(true);
-    } else if (totalAfterMeal >= dailyGoal) {
-      setShowGoalReached(true);
-      triggerConfetti();
-      const msg = new SpeechSynthesisUtterance("Você atingiu sua meta diária EvoluFit. Parabéns!");
-      msg.lang = 'pt-BR';
-      window.speechSynthesis.speak(msg);
+      return; // Interrompe para não celebrar e alertar ao mesmo tempo
+    }
+
+    // 2. Lógica de Celebração
+    const allMealsForToday = mealSchedule.filter(m => (m.dayOfWeek === (new Date().toLocaleDateString('pt-BR', { weekday: 'long' })) || m.dayOfWeek === 'Todos') && m.plate.length > 0);
+    const doneMealsCount = mealSchedule.filter(m => m.isDone && (m.dayOfWeek === (new Date().toLocaleDateString('pt-BR', { weekday: 'long' })) || m.dayOfWeek === 'Todos')).length;
+    const isLastMeal = doneMealsCount + 1 >= allMealsForToday.length;
+
+    let shouldCelebrate = false;
+
+    if (isLosingWeight) {
+      // Objetivo: Emagrecer. Celebra se atingiu a meta OU se concluiu o dia acima do TMB.
+      if ((totalAfterMeal >= dailyGoal) || (isLastMeal && totalAfterMeal >= tmb)) {
+        shouldCelebrate = true;
+      }
+    } else {
+      // Objetivo: Manter ou Ganhar Peso. Celebra APENAS se atingiu a meta.
+      if (totalAfterMeal >= dailyGoal) {
+        shouldCelebrate = true;
+      }
+    }
+
+    if (shouldCelebrate) {
+        setShowGoalReached(true);
+        if (activeTab === 'schedule') triggerConfetti(); // Dispara confete apenas na tela de agenda
+        const msg = new SpeechSynthesisUtterance("Você atingiu sua meta diária EvoluFit. Parabéns!");
+        msg.lang = 'pt-BR';
+        window.speechSynthesis.speak(msg);
     }
   };
 
@@ -1057,6 +1128,29 @@ const AlertAnimationOverlay = () => (
     } catch (e) {
       console.error("Erro ao tocar som", e);
     }
+  };
+
+  const playReorderSound = () => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      const now = ctx.currentTime;
+      osc.type = 'triangle'; // Onda triangular para um som mais "áspero"
+      gain.gain.setValueAtTime(0.05, now);
+      osc.frequency.setValueAtTime(150, now); // Frequência mais grave
+      osc.frequency.linearRampToValueAtTime(100, now + 0.4); // Descida mais lenta
+      gain.gain.linearRampToValueAtTime(0, now + 0.4); // Fade out mais longo
+
+      osc.start(now);
+      osc.stop(now + 0.45);
+    } catch (e) { console.error("Erro ao tocar som de reordenação", e); }
   };
 
   const triggerAlert = (mealName, plate) => {
@@ -1318,6 +1412,13 @@ const AlertAnimationOverlay = () => (
       const [movedItem] = newSchedule.splice(index, 1);
       newSchedule.splice(targetIndex, 0, movedItem);
       
+      // Aciona o destaque visual
+      playReorderSound();
+      setMovedMealId(mealId);
+      setTimeout(() => {
+        setMovedMealId(null);
+      }, 1500); // Duração do destaque em ms
+
       return newSchedule;
     });
   };
@@ -1422,6 +1523,10 @@ const AlertAnimationOverlay = () => (
       onComplete={handleProfileUpdate} 
       onCancel={userProfile.name ? handleProfileCancel : undefined}
     />;
+  }
+
+  if (!isTrialActive) {
+    return <TrialEndScreen />;
   }
 
   return (
@@ -1596,14 +1701,16 @@ const AlertAnimationOverlay = () => (
           onClearMeal={handleClearMeal}
           onDeleteMeal={handleDeleteMeal}
           onReorderMeal={handleReorderMeal}
+          movedMealId={movedMealId}
           showTour={showTour}
           tourStep={tourStep}
           waterIntake={waterIntake}
           onUpdateWater={setWaterIntake}
           waterGoal={userProfile.waterGoal}
           onUpdateWaterGoal={(newGoal) => setUserProfile(prev => ({ ...prev, waterGoal: newGoal }))}
+          profile={userProfile}
           triggerConfetti={triggerConfetti}
-          onMealDone={handleMealDone}
+          onMealDone={(meal) => handleMealDone(meal, userProfile)}
         />
       )}
       {activeTab === 'brain' && (
