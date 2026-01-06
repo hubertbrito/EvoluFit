@@ -14,6 +14,8 @@ import ScheduleSummaryModal from './components/ScheduleSummaryModal';
 import SetupScreen from './components/SetupScreen';
 import SchedulePdfView from './components/SchedulePdfView';
 import { Layout } from './components/Layout';
+import CalorieAlertModal from './components/CalorieAlertModal';
+import GoalReachedModal from './components/GoalReachedModal';
 
 // Definindo localmente para não depender de arquivo de tipos externo
 const Category = { INDUSTRIALIZADOS: 'Industrializados' };
@@ -559,7 +561,8 @@ const App = () => {
   
   const [userProfile, setUserProfile] = useState(() => {
     const saved = localStorage.getItem('userProfile');
-    return saved ? JSON.parse(saved) : {
+    const parsed = saved ? JSON.parse(saved) : {};
+    return {
       name: '', 
       weight: '', 
       height: '', 
@@ -570,7 +573,10 @@ const App = () => {
       activityLevel: 'Sedentário',
       activityDays: 0,
       phone: '',
-      isSetupDone: false
+      waterGoal: '2500',
+      alarmSound: 'sine',
+      isSetupDone: false,
+      ...parsed
     };
   });
 
@@ -615,6 +621,77 @@ const App = () => {
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [editingMealInfo, setEditingMealInfo] = useState(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [showCalorieAlert, setShowCalorieAlert] = useState(false);
+  const [showGoalReached, setShowGoalReached] = useState(false);
+  const [excessCalories, setExcessCalories] = useState(0);
+  
+  // Estado para controle de água (reseta diariamente)
+  // Armazena o total em ML
+  const [waterIntake, setWaterIntake] = useState(() => {
+    const saved = localStorage.getItem('waterIntake');
+    const today = new Date().toLocaleDateString('pt-BR');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.date === today) {
+          // Migração: se o valor for pequeno (< 50), assume que era contagem de copos e converte para ml
+          return parsed.count < 50 ? parsed.count * 250 : parsed.count;
+        }
+      } catch (e) {
+        console.error("Erro ao carregar dados de água:", e);
+      }
+    }
+    return 0;
+  });
+
+  // Estado para histórico de água (persistido)
+  const [waterHistory, setWaterHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem('waterHistory');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('waterIntake', JSON.stringify({
+      date: new Date().toLocaleDateString('pt-BR'),
+      count: waterIntake
+    }));
+  }, [waterIntake]);
+
+  // Atualiza o histórico sempre que o consumo de hoje mudar
+  useEffect(() => {
+    const today = new Date().toLocaleDateString('pt-BR');
+    setWaterHistory(prev => {
+      const newHistory = { ...prev, [today]: waterIntake };
+      localStorage.setItem('waterHistory', JSON.stringify(newHistory));
+      return newHistory;
+    });
+  }, [waterIntake]);
+
+  // Monitora a virada do dia para resetar a água se o app estiver aberto
+  useEffect(() => {
+    const checkDayChange = () => {
+      const today = new Date().toLocaleDateString('pt-BR');
+      const saved = localStorage.getItem('waterIntake');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.date !== today) {
+            setWaterIntake(0);
+          }
+        } catch (e) {
+          // Ignora erro aqui, o useState já tratou ou tratará
+        }
+      }
+    };
+
+    const interval = setInterval(checkDayChange, 60000); // Checa a cada minuto
+    window.addEventListener('focus', checkDayChange); // Checa ao focar a janela (ex: voltar do background no celular)
+    return () => { clearInterval(interval); window.removeEventListener('focus', checkDayChange); };
+  }, []);
 
   // --- PWA Logic ---
   useEffect(() => {
@@ -790,6 +867,56 @@ const AlertAnimationOverlay = () => (
     return Math.max(1200, tdee - dailyAdjustment);
   };
 
+  // Calcula calorias REALMENTE consumidas (refeições marcadas como 'isDone')
+  const getConsumedCalories = () => {
+    const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
+    const today = daysMap[new Date().getDay()];
+    const allFoods = [...FOOD_DATABASE, ...customFoods];
+    
+    let total = 0;
+    mealSchedule.forEach(meal => {
+      // Considera apenas refeições de hoje que estão FEITAS
+      if ((meal.dayOfWeek === today || meal.dayOfWeek === 'Todos') && meal.isDone) {
+        meal.plate.forEach(item => {
+          const food = allFoods.find(f => f.id === item.foodId);
+          if (food) {
+            const weight = getFoodUnitWeight(food, item.unit) * item.quantity;
+            total += (food.calories / 100) * weight;
+          }
+        });
+      }
+    });
+    return total;
+  };
+
+  const handleMealDone = (meal) => {
+    // Calcula calorias desta refeição específica
+    const allFoods = [...FOOD_DATABASE, ...customFoods];
+    let mealCalories = 0;
+    meal.plate.forEach(item => {
+      const food = allFoods.find(f => f.id === item.foodId);
+      if (food) {
+        const weight = getFoodUnitWeight(food, item.unit) * item.quantity;
+        mealCalories += (food.calories / 100) * weight;
+      }
+    });
+
+    const currentConsumed = getConsumedCalories();
+    const totalAfterMeal = currentConsumed + mealCalories;
+    const dailyGoal = getDailyGoal();
+
+    if (totalAfterMeal > dailyGoal * 1.05) {
+      setExcessCalories(totalAfterMeal - dailyGoal);
+      setShowCalorieAlert(true);
+    } else if (totalAfterMeal >= dailyGoal) {
+      setShowGoalReached(true);
+      triggerConfetti();
+      const msg = new SpeechSynthesisUtterance("Você atingiu sua meta diária EvoluFit. Parabéns!");
+      msg.lang = 'pt-BR';
+      window.speechSynthesis.speak(msg);
+    }
+  };
+
   // Cálculo de Calorias de Hoje
   const getTodayCalories = () => {
     const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
@@ -811,6 +938,22 @@ const AlertAnimationOverlay = () => (
     return total;
   };
 
+  // Atualiza o Badge do App (PWA) com o número de refeições do dia
+  useEffect(() => {
+    if ('setAppBadge' in navigator) {
+      const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
+      const today = daysMap[new Date().getDay()];
+      // Conta refeições de hoje que têm itens no prato
+      const count = mealSchedule.filter(m => (m.dayOfWeek === today || m.dayOfWeek === 'Todos') && m.plate.length > 0).length;
+      
+      if (count > 0) {
+        navigator.setAppBadge(count).catch(e => console.error("Erro ao definir badge:", e));
+      } else {
+        navigator.clearAppBadge().catch(e => console.error("Erro ao limpar badge:", e));
+      }
+    }
+  }, [mealSchedule]);
+
   // Sistema de Alerta em Tempo Real
   useEffect(() => {
     const interval = setInterval(() => {
@@ -826,6 +969,7 @@ const AlertAnimationOverlay = () => (
       // Num app real, usaríamos um estado para não repetir o alerta a cada 30s
       if (currentCalories > dailyGoal && !window.hasAlertedCalories) {
         alert(`ATENÇÃO: Você ultrapassou sua meta de ${Math.round(dailyGoal)} kcal para hoje!`);
+        playLimitSound(); // Toca o som de alerta de limite
         if ('speechSynthesis' in window) {
           const msg = new SpeechSynthesisUtterance(`Atenção. Você ultrapassou sua meta calórica diária.`);
           msg.lang = 'pt-BR';
@@ -846,7 +990,37 @@ const AlertAnimationOverlay = () => (
       }));
     }, 30000);
     return () => clearInterval(interval);
-  }, [mealSchedule]);
+  }, [mealSchedule, userProfile.alarmSound]);
+
+  const playLimitSound = () => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      const now = ctx.currentTime;
+      
+      // Som de alerta (onda dente de serra para ser mais "áspero")
+      osc.type = 'sawtooth'; 
+      gain.gain.setValueAtTime(0, now);
+
+      // Padrão descendente rápido (Alerta)
+      gain.gain.linearRampToValueAtTime(0.1, now + 0.05);
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.exponentialRampToValueAtTime(200, now + 0.4);
+      gain.gain.linearRampToValueAtTime(0, now + 0.4);
+
+      osc.start(now);
+      osc.stop(now + 0.5);
+    } catch (e) {
+      console.error("Erro ao tocar som de limite", e);
+    }
+  };
 
   const playMealSound = (mealName) => {
     try {
@@ -863,7 +1037,7 @@ const AlertAnimationOverlay = () => (
       const name = mealName.toLowerCase();
 
       // Som suave tipo flauta/notificação
-      osc.type = 'sine'; // 'sine' é o tom mais puro e suave
+      osc.type = userProfile.alarmSound || 'sine';
       gain.gain.setValueAtTime(0, now);
 
       const playNote = (freq, startTime, duration) => {
@@ -1336,7 +1510,7 @@ const AlertAnimationOverlay = () => (
             });
 
             const days = isDateSpecific 
-              ? ['Avulso'] // Direciona para a aba "Avulso"
+              ? ['Datas Marcadas'] // Direciona para a aba "Datas Marcadas"
               : (Array.isArray(daysInput) ? daysInput : [daysInput]);
 
             // 2. Handle 'Todos' case for fixed meals
@@ -1361,7 +1535,7 @@ const AlertAnimationOverlay = () => (
     else {
         setMealSchedule(prev => {
             const days = isDateSpecific
-              ? ['Avulso'] // Direciona para a aba "Avulso"
+              ? ['Datas Marcadas'] // Direciona para a aba "Datas Marcadas"
               : (Array.isArray(daysInput) ? daysInput.filter(d => d !== 'Todos') : [daysInput]);
             let nextSchedule = [...prev];
             const isFullWeek = daysInput.length === 7 || (Array.isArray(daysInput) && daysInput[0] === 'Todos');
@@ -1424,6 +1598,12 @@ const AlertAnimationOverlay = () => (
           onReorderMeal={handleReorderMeal}
           showTour={showTour}
           tourStep={tourStep}
+          waterIntake={waterIntake}
+          onUpdateWater={setWaterIntake}
+          waterGoal={userProfile.waterGoal}
+          onUpdateWaterGoal={(newGoal) => setUserProfile(prev => ({ ...prev, waterGoal: newGoal }))}
+          triggerConfetti={triggerConfetti}
+          onMealDone={handleMealDone}
         />
       )}
       {activeTab === 'brain' && (
@@ -1432,6 +1612,7 @@ const AlertAnimationOverlay = () => (
           allFoods={allAvailableFoods} 
           profile={userProfile}
           onRestartTour={handleRestartTour}
+          waterHistory={waterHistory}
           onEditProfile={() => setUserProfile(prev => ({ ...prev, isSetupDone: false }))}
           onResetSchedule={handleResetSchedule}
         />
@@ -1497,6 +1678,8 @@ const AlertAnimationOverlay = () => (
           />
         </>
       )}
+      {showCalorieAlert && <CalorieAlertModal excessCalories={excessCalories} onClose={() => setShowCalorieAlert(false)} />}
+      {showGoalReached && <GoalReachedModal onClose={() => setShowGoalReached(false)} />}
     </>
   );
 };

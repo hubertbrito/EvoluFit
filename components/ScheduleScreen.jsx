@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Clock, AlertCircle, Zap, Wheat, Droplets, Calendar, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser, Edit, CalendarDays, Users, MapPin, CalendarCheck2, StickyNote } from 'lucide-react';
+import { Clock, AlertCircle, Zap, Wheat, Droplets, Calendar, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser, Edit, CalendarDays, Users, MapPin, CalendarCheck2, StickyNote, X, CheckCircle, Check, Trophy } from 'lucide-react';
 import { UNIT_WEIGHTS, getFoodUnitWeight } from '../constants';
+import CustomSelect from './CustomSelect';
 
 // Função auxiliar para formatar a quantidade e medida do alimento
 const formatFoodQuantity = (quantity, measure, foodName) => {
@@ -24,16 +25,83 @@ const dayColors = {
   Sábado: 'bg-indigo-100 text-indigo-800 border border-indigo-200',
   Domingo: 'bg-purple-100 text-purple-800 border border-purple-200',
   Todos: 'bg-slate-100 text-slate-800 border border-slate-200',
-  Avulso: 'bg-gray-100 text-gray-800 border border-gray-200',
+  'Datas Marcadas': 'bg-teal-100 text-teal-800 border border-teal-200',
 };
 
-const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal, onClearMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep }) => {
+const DayCompleteModal = ({ onClose }) => (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce text-center">
+      <div className="bg-emerald-500 p-6 flex justify-center">
+        <div className="bg-white p-4 rounded-full shadow-lg">
+          <Trophy size={48} className="text-emerald-500" />
+        </div>
+      </div>
+      <div className="p-6">
+        <h2 className="text-2xl font-black text-gray-800 mb-2">Dia Concluído!</h2>
+        <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+          Parabéns! Você seguiu seu plano perfeitamente hoje. <br/>
+          <span className="font-bold text-emerald-600">Esse é o caminho para a saúde!</span>
+          <br/>Continue assim amanhã.
+        </p>
+        <button 
+          onClick={onClose}
+          className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-md hover:bg-emerald-700 transition-transform active:scale-95"
+        >
+          Continuar Focado
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal, onClearMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep, waterIntake, onUpdateWater, waterGoal, onUpdateWaterGoal, triggerConfetti, onMealDone }) => {
   const [now, setNow] = useState(new Date());
   const [activeDays, setActiveDays] = useState(() => {
     const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
     return [daysMap[new Date().getDay()]];
   });
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showWaterModal, setShowWaterModal] = useState(false);
+  const [isEditingGoal, setIsEditingGoal] = useState(false);
+  const [tempGoal, setTempGoal] = useState(waterGoal);
+  const [hasCelebratedWater, setHasCelebratedWater] = useState(false);
+  const [showDayCompleteModal, setShowDayCompleteModal] = useState(false);
+
+  useEffect(() => {
+    setTempGoal(waterGoal);
+  }, [waterGoal]);
+
+  const handleSaveGoal = () => {
+    onUpdateWaterGoal(tempGoal);
+    setIsEditingGoal(false);
+  };
+
+  const goalMet = waterIntake >= waterGoal;
+
+  useEffect(() => {
+    if (goalMet && !hasCelebratedWater) {
+      triggerConfetti();
+      setHasCelebratedWater(true);
+    }
+  }, [goalMet, hasCelebratedWater, triggerConfetti]);
+
+  const waterGoalOptions = [
+    { value: '500', label: '500 ml' },
+    { value: '1500', label: '1,5 Litros' },
+    { value: '2000', label: '2 Litros' },
+    { value: '2500', label: '2,5 Litros' },
+    { value: '3000', label: '3 Litros' },
+    { value: '3500', label: '3,5 Litros' },
+    { value: '4000', label: '4 Litros' },
+    { value: '4500', label: '4,5 Litros' },
+    { value: '5000', label: '5 Litros' },
+    { value: '6000', label: '6 Litros' },
+    { value: '7000', label: '7 Litros' },
+    { value: '8000', label: '8 Litros' },
+    { value: '9000', label: '9 Litros' },
+  ];
+
+  const waterOptions = [150, 200, 250, 300, 350, 478, 500, 600, 750, 1000, 1500, 2000];
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 30000);
@@ -53,11 +121,13 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
     return () => main.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo', 'Avulso'];
+  const weekDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+  const specialDay = 'Datas Marcadas';
   const currentTimeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   const toggleDay = (day) => {
     setActiveDays([day]);
+    scrollToTop();
   };
 
   const fixedMealNames = [
@@ -97,10 +167,10 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
   const filteredMeals = useMemo(() => {
     const result = meals.filter(m => {
     // If 'Avulso' is selected, only show ad-hoc meals
-    if (activeDays.includes('Avulso')) {
+    if (activeDays.includes('Datas Marcadas')) {
       // Mostra apenas refeições que são explicitamente 'Avulso' E têm uma data específica.
       // Ordena por data.
-      return m.dayOfWeek === 'Avulso' && m.specificDate;
+      return m.dayOfWeek === 'Datas Marcadas' && m.specificDate;
     }
     
     // Se for um dos dias ativos, mostra
@@ -109,7 +179,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
     // Se for 'Todos' (template), mostra APENAS SE for relevante para algum dos dias ativos
     // e NÃO houver override (card específico) naquele dia
     if (m.dayOfWeek === 'Todos') {
-      if (activeDays.includes('Avulso')) return false; // Don't show templates on Avulso page
+      if (activeDays.includes('Datas Marcadas')) return false; // Don't show templates on Datas Marcadas page
       return activeDays.some(day => {
         const hasOverride = meals.some(om => om.dayOfWeek === day && om.name === m.name);
         return !hasOverride;
@@ -119,11 +189,39 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
     });
 
     // Ordena as refeições avulsas por data
-    if (activeDays.includes('Avulso')) {
+    if (activeDays.includes('Datas Marcadas')) {
       result.sort((a, b) => new Date(a.specificDate) - new Date(b.specificDate));
     }
     return result;
   }, [meals, activeDays]);
+
+  // Lógica de Progresso do Dia
+  const dayProgress = useMemo(() => {
+    if (filteredMeals.length === 0) return 0;
+    const doneCount = filteredMeals.filter(m => m.isDone).length;
+    return (doneCount / filteredMeals.length) * 100;
+  }, [filteredMeals]);
+
+  const handleToggleDone = (meal) => {
+    const newStatus = !meal.isDone;
+    updateMeal(meal.id, { isDone: newStatus });
+
+    if (newStatus && onMealDone) {
+      onMealDone(meal);
+    }
+
+    // Verifica se completou o dia com essa ação
+    if (newStatus) {
+      const otherMeals = filteredMeals.filter(m => m.id !== meal.id);
+      const allOthersDone = otherMeals.every(m => m.isDone);
+      
+      if (allOthersDone && otherMeals.length === filteredMeals.length - 1) {
+        // Se todas as outras estavam prontas e essa era a última
+        triggerConfetti();
+        setShowDayCompleteModal(true);
+      }
+    }
+  };
 
   return (
     <div className="p-4 space-y-6 pb-28">
@@ -142,17 +240,30 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
         </div>
       )}
 
-      <div className="sticky top-0 z-10 bg-gray-50/95 backdrop-blur-sm -mx-4 px-2 py-1.5 shadow-sm border-b border-gray-100">
-        <div className="flex flex-wrap gap-1.5 justify-center">
-          {days.map(d => (
-            <button 
-              key={d}
-              onClick={() => toggleDay(d)}
-              className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all transform hover:scale-105 border ${activeDays.includes(d) ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200' : 'bg-white text-indigo-400 border-indigo-100 hover:bg-indigo-50'}`}
-            >
-              {d}
-            </button>
-          ))}
+      <div className="sticky top-0 z-10 bg-gray-50/95 backdrop-blur-sm -mx-4 px-4 pt-2 pb-4 shadow-md border-b-2 border-emerald-200">
+        <div className="grid grid-cols-4 gap-2">
+            {[...weekDays, specialDay].map(d => {
+                const isSpecial = d === specialDay;
+                const isActive = activeDays.includes(d);
+                
+                let btnClass = "h-8 rounded-lg text-[10px] font-bold uppercase transition-colors flex items-center justify-center text-center ";
+                
+                if (isSpecial) {
+                    btnClass += isActive 
+                        ? "bg-fuchsia-600 text-white shadow-md" 
+                        : "bg-white text-fuchsia-500 border-fuchsia-200 hover:bg-fuchsia-50";
+                } else {
+                    btnClass += isActive 
+                        ? "bg-emerald-500 text-white shadow-md" 
+                        : "bg-white text-gray-400 border border-gray-200 hover:bg-gray-50";
+                }
+
+                return (
+                    <button key={d} onClick={() => toggleDay(d)} className={btnClass}>
+                        {isSpecial ? "Datas Marcadas" : d.slice(0, 3)}
+                    </button>
+                );
+            })}
         </div>
       </div>
 
@@ -163,13 +274,123 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
         </p>
       </div>
 
-      <div className="flex justify-between items-center">
-        <div>
-            <h2 className="text-2xl font-black text-gray-800 tracking-tighter">
-              {activeDays.length === 1 && activeDays[0] !== 'Avulso'
-                ? `Agenda de ${activeDays[0]}` 
-                : activeDays[0] === 'Avulso' ? 'Agenda Avulsa' : 'Agenda'}
-            </h2>
+      {/* Widget de Hidratação */}
+      <div className="bg-cyan-50 p-4 rounded-2xl border border-cyan-100 shadow-sm">
+        <div className="mb-2">
+            <h3 className="text-[10px] font-bold text-cyan-600 uppercase tracking-wider flex items-center gap-1">
+                <Info size={12} /> Controle de Consumo de Água
+            </h3>
+        </div>
+        <div className="flex justify-between items-center mb-3">
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 bg-white rounded-full text-cyan-500 shadow-sm"><Droplets size={14} /></div>
+            
+            {isEditingGoal ? (
+                <div className="flex items-center gap-2">
+                    <div className="w-28">
+                        <CustomSelect
+                            value={tempGoal}
+                            onChange={(val) => setTempGoal(val)}
+                            options={waterGoalOptions}
+                            placeholder="Meta"
+                            className="text-xs py-1 px-2"
+                        />
+                    </div>
+                    <button 
+                        onClick={handleSaveGoal} 
+                        className="px-2.5 py-1 text-[10px] font-bold bg-emerald-500 text-white rounded-lg shadow-sm hover:bg-emerald-600"
+                    >Salvar</button>
+                </div>
+            ) : (
+                <div className="group flex flex-col items-start cursor-pointer" onClick={() => setIsEditingGoal(true)} title="Clique para editar a meta">
+                    <span className="text-[8px] text-cyan-600 font-bold mb-0.5 leading-tight">Editar meta de<br/>consumo de agua/dia</span>
+                    <div className="flex items-center gap-2">
+                        <p className="font-bold text-cyan-900 text-xs">Meta: {waterGoal}ml</p>
+                        <Edit size={12} className="text-cyan-700 hover:text-cyan-900 transition-colors" />
+                    </div>
+                </div>
+            )}
+          </div>
+          <div className="text-right">
+             <p className="text-[10px] text-cyan-600 font-bold uppercase mb-0.5">Total Hoje</p>
+             <span className="font-black text-cyan-700 text-base">{waterIntake} ml</span>
+          </div>
+        </div>
+        <button 
+          onClick={() => setShowWaterModal(true)}
+          className="w-full py-1.5 bg-cyan-500 text-white rounded-xl font-bold text-xs shadow-md hover:bg-cyan-600 transition-colors flex items-center justify-center gap-2"
+        >
+          <Plus size={16} /> Registrar Consumo
+        </button>
+
+        {goalMet && (
+          <div className="mt-3 text-center bg-emerald-100 border border-emerald-200 text-emerald-800 p-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
+            <CheckCircle size={14} />
+            <span>Parabéns! Meta de hoje atingida!</span>
+          </div>
+        )}
+      </div>
+
+      {/* Modal de Registro de Água */}
+      {showWaterModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-bounce">
+            <div className="p-3 border-b bg-cyan-50 flex justify-between items-center">
+              <h3 className="font-bold text-cyan-800 flex items-center gap-2 text-base">
+                <Droplets size={20} /> Registrar Água
+              </h3>
+              <button onClick={() => setShowWaterModal(false)}><X size={20} className="text-cyan-600" /></button>
+            </div>
+            <div className="p-4">
+              <div className="text-center mb-4">
+                <p className="text-gray-500 text-xs uppercase font-bold mb-1">Total Hoje</p>
+                <p className="text-2xl font-black text-cyan-600">{waterIntake} <span className="text-sm text-gray-400">ml</span></p>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {waterOptions.map(amount => (
+                  <button 
+                    key={amount}
+                    onClick={() => onUpdateWater(waterIntake + amount)}
+                    className="py-2 rounded-xl border-2 border-cyan-100 text-cyan-700 font-bold text-xs hover:bg-cyan-50 hover:border-cyan-300 transition-all active:scale-95"
+                  >
+                    {amount >= 1000 ? `${amount/1000} L` : `${amount} ml`}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="p-4 border-t bg-gray-50">
+              <button 
+                onClick={() => setShowWaterModal(false)}
+                className="w-full py-2.5 bg-cyan-600 text-white rounded-xl font-bold text-sm shadow-md hover:bg-cyan-700 transition-transform active:scale-95"
+              >
+                Salvar Registro
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-between items-end">
+            <div className="flex-1">
+                <h2 className="text-2xl font-black text-gray-800 tracking-tighter">
+                {activeDays.length === 1 && activeDays[0] !== 'Datas Marcadas'
+                    ? `Agenda de ${activeDays[0]}` 
+                    : activeDays[0] === 'Datas Marcadas' ? 'Agenda de Datas Marcadas' : 'Agenda'}
+                </h2>
+                {/* Barra de Progresso do Dia */}
+                {activeDays.length === 1 && activeDays[0] !== 'Datas Marcadas' && filteredMeals.length > 0 && (
+                  <div className="mt-1 flex items-center gap-2">
+                    <div className="h-2 flex-1 bg-gray-100 rounded-full overflow-hidden max-w-[150px]">
+                      <div 
+                        className={`h-full transition-all duration-500 ${dayProgress === 100 ? 'bg-emerald-500' : 'bg-yellow-400'}`}
+                        style={{ width: `${dayProgress}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-400">{Math.round(dayProgress)}%</span>
+                  </div>
+                )}
+            </div>
             <p className="text-emerald-600 font-bold text-[10px] uppercase flex items-center mt-1">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping mr-2"></span>
               Agora: {currentTimeStr}
@@ -186,7 +407,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
         {filteredMeals.map((meal, index) => {
           const [mealHour] = meal.time.split(':');
           const [currentHour] = currentTimeStr.split(':');
-          const todayName = days[new Date().getDay()];
+          const todayName = weekDays[new Date().getDay() - 1] || 'Domingo';
           const isCurrent = mealHour === currentHour && (meal.dayOfWeek === 'Todos' || meal.dayOfWeek === todayName);
           const isFixed = fixedMealNames.includes(meal.name);
           const nutrients = calculateMealNutrients(meal.plate);
@@ -196,14 +417,13 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
           const scheduledDays = meal.plate.length === 0
             ? ['Todos'] // Se o prato está vazio, o card volta a representar o template padrão 'Todos os Dias'.
             : meal.groupId
-              ? meals.filter(m => m.groupId === meal.groupId).map(m => m.dayOfWeek).sort((a, b) => days.indexOf(a) - days.indexOf(b))
+              ? meals.filter(m => m.groupId === meal.groupId).map(m => m.dayOfWeek).sort((a, b) => weekDays.indexOf(a) - weekDays.indexOf(b))
               : [meal.dayOfWeek];
 
-
-          return (
+            return (
             <div 
                 key={meal.id} 
-                className={`p-4 rounded-[2rem] border-2 transition-all relative overflow-hidden ${isCurrent ? 'bg-orange-50 border-orange-400 shadow-xl ring-4 ring-orange-400/10' : 'bg-white border-indigo-50 shadow-sm hover:border-orange-300'}`}
+                className={`p-4 rounded-[2rem] border-2 transition-all relative overflow-hidden ${meal.isDone ? 'opacity-75 bg-gray-50 border-gray-200' : (isCurrent ? 'bg-orange-50 border-orange-400 shadow-xl ring-4 ring-orange-400/10' : 'bg-white border-indigo-50 shadow-sm hover:border-orange-300')}`}
             >
               <div className="flex justify-between items-start mb-5 gap-3">
                 <label className="flex items-center space-x-2 cursor-pointer group shrink-0 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 p-1.5 rounded-xl transition-colors shadow-sm">
@@ -301,7 +521,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                         {scheduledDays.map(day => (
                             <span 
                                 key={day} 
-                                className={`px-1.5 py-0.5 rounded text-[9px] font-black ${dayColors[day] || dayColors.Avulso}`}
+                                className={`px-1.5 py-0.5 rounded text-[9px] font-black ${dayColors[day] || dayColors['Datas Marcadas']}`}
                             >
                                 {day === 'Todos' ? 'TODOS OS DIAS' : day.substring(0, 3).toUpperCase()}
                             </span>
@@ -358,7 +578,29 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                 </div>
               )}
 
-              <div className="flex justify-end items-center gap-2 mt-4 pt-3 border-t border-indigo-50">
+              {/* Botões de Status da Refeição */}
+              <div className="mt-4 pt-3 border-t border-indigo-50 flex items-center justify-between gap-3">
+                 {/* Status Indicator */}
+                 <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors ${meal.isDone ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-yellow-50 text-yellow-600 border-yellow-200'}`}>
+                    {meal.isDone ? <Check size={14} /> : <Clock size={14} />}
+                    <span>{meal.isDone ? 'OK' : 'Pendente'}</span>
+                 </div>
+
+                 {/* Action Button */}
+                 <button 
+                    onClick={() => handleToggleDone(meal)}
+                    className={`flex-1 py-2 rounded-xl font-bold text-xs shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                      meal.isDone 
+                        ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
+                        : 'bg-white border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50'
+                    }`}
+                 >
+                    {meal.isDone ? 'Consumida' : 'Marcar Consumida'}
+                    {meal.isDone && <CheckCircle size={14} />}
+                 </button>
+              </div>
+
+              <div className="flex justify-end items-center gap-2 mt-3 pt-2 border-t border-dashed border-indigo-50/50">
                   <span className="text-[10px] font-bold text-indigo-200 uppercase mr-auto">Ações</span>
                   
                   <button onClick={() => onReorderMeal(meal.id, 'up', activeDays[0])} disabled={index === 0} className="p-2 bg-indigo-50 rounded-xl text-indigo-400 disabled:opacity-30 hover:bg-emerald-100 hover:text-emerald-600 transition-colors" title="Mover para cima">
@@ -411,7 +653,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
       </div>
 
       {/* O botão de adicionar refeição não faz sentido na aba "Avulso" */}
-      {!activeDays.includes('Avulso') && (
+      {!activeDays.includes('Datas Marcadas') && (
         <div data-tour-id="schedule-add-meal">
           <button
             onClick={onAddMeal}
@@ -449,6 +691,8 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
           <ArrowUp className="w-5 h-5" />
         </button>
       )}
+
+      {showDayCompleteModal && <DayCompleteModal onClose={() => setShowDayCompleteModal(false)} />}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Brain, Activity, Target, Zap, Calendar, AlertTriangle, Edit, CheckCircle, FileText, ArrowRight, RefreshCw, BarChart2, TrendingUp, TrendingDown, Share2 } from 'lucide-react';
+import { Brain, Activity, Target, Zap, Calendar, AlertTriangle, Edit, CheckCircle, FileText, ArrowRight, RefreshCw, BarChart2, TrendingUp, TrendingDown, Share2, Droplets } from 'lucide-react';
 import { getFoodUnitWeight } from '../constants';
 
 const PieChart = ({ data, size = 120, strokeWidth = 20 }) => {
@@ -75,7 +75,49 @@ const BarChart = ({ data, dailyGoal }) => {
   );
 };
 
-const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour, onResetSchedule }) => {
+const WaterHistoryChart = ({ history, goal }) => {
+  const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const today = new Date();
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() - (6 - i));
+    return d;
+  });
+
+  const data = last7Days.map(date => {
+    const dateStr = date.toLocaleDateString('pt-BR');
+    const value = history[dateStr] || 0;
+    return {
+      day: days[date.getDay()],
+      value,
+      isToday: date.toDateString() === today.toDateString()
+    };
+  });
+
+  const maxVal = Math.max(...data.map(d => d.value), goal, 100) * 1.1;
+
+  return (
+    <div className="flex items-end justify-between h-24 gap-2">
+      {data.map((d, i) => {
+        const height = Math.min(100, (d.value / maxVal) * 100);
+        const isGoalReached = d.value >= goal;
+        return (
+          <div key={i} className="flex flex-col items-center flex-1 h-full justify-end group">
+            <div className="w-full relative flex items-end justify-center bg-cyan-50 rounded-t-md overflow-hidden h-full">
+                <div 
+                  className={`w-full rounded-t-sm transition-all duration-500 ${isGoalReached ? 'bg-emerald-400' : (d.isToday ? 'bg-cyan-500' : 'bg-cyan-300')}`}
+                  style={{ height: `${height}%` }}
+                ></div>
+            </div>
+            <span className={`text-[9px] font-bold mt-1 ${d.isToday ? 'text-cyan-800' : 'text-cyan-400'}`}>{d.day}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour, onResetSchedule, waterHistory = {} }) => {
   const [filterDay, setFilterDay] = useState('Hoje');
   const days = ['Hoje', 'Semana Toda', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
@@ -412,6 +454,16 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Histórico de Hidratação */}
+        <div className="mt-8 border-t border-gray-100 pt-6">
+          <div className="flex items-center gap-2 mb-4 justify-center">
+            <Droplets className="w-5 h-5 text-cyan-500" />
+            <h3 className="text-sm font-bold text-gray-700">Histórico de Hidratação (7 dias)</h3>
+          </div>
+          
+          <WaterHistoryChart history={waterHistory} goal={profile.waterGoal || 2500} />
         </div>
 
         {/* Relatório Informativo Dinâmico (Dossiê) */}

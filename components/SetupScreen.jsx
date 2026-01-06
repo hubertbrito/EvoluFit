@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight, User, Activity, Info, ChevronDown, X } from 'lucide-react';
+import { ArrowRight, User, Activity, Info, ChevronDown, X, Volume2, Settings } from 'lucide-react';
 import CustomSelect from './CustomSelect';
 
 const SetupScreen = ({ userProfile, onComplete, onCancel }) => {
@@ -12,6 +12,8 @@ const SetupScreen = ({ userProfile, onComplete, onCancel }) => {
     height: userProfile.height || '',
     targetWeight: userProfile.targetWeight || '',
     weeks: userProfile.weeks || '',
+    waterGoal: userProfile.waterGoal || '2500',
+    alarmSound: userProfile.alarmSound || 'sine',
   });
   const [errors, setErrors] = useState({});
 
@@ -44,7 +46,7 @@ const SetupScreen = ({ userProfile, onComplete, onCancel }) => {
       setErrors(currentErrors);
       return;
     }
-    if (step < 3) setStep(step + 1);
+    if (step < 4) setStep(step + 1);
     else onComplete({ ...data, isSetupDone: true });
   };
 
@@ -66,6 +68,47 @@ const SetupScreen = ({ userProfile, onComplete, onCancel }) => {
     { value: 6, label: '6 dias' },
     { value: 7, label: '7 dias (Todos os dias)' },
   ];
+
+  const waterGoalOptions = Array.from({ length: 13 }, (_, i) => ({ value: (i + 4) * 500, label: `${(i + 4) * 500} ml` })); // 2000ml a 8000ml
+
+  const alarmOptions = [
+    { value: 'sine', label: 'Suave (Flauta)' },
+    { value: 'square', label: 'Retrô (Game)' },
+    { value: 'sawtooth', label: 'Intenso (Digital)' },
+    { value: 'triangle', label: 'Zen (Gota)' },
+  ];
+
+  const playPreview = (type) => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      const now = ctx.currentTime;
+      osc.type = type;
+      gain.gain.setValueAtTime(0, now);
+
+      const playNote = (freq, startTime, duration) => {
+        gain.gain.linearRampToValueAtTime(0.1, startTime + 0.01);
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.linearRampToValueAtTime(0, startTime + duration);
+      };
+
+      playNote(880, now, 0.15);
+      playNote(1046.50, now + 0.2, 0.15);
+      playNote(1318.51, now + 0.4, 0.2);
+
+      osc.start(now);
+      osc.stop(now + 0.7);
+    } catch (e) {
+      console.error("Erro ao tocar preview", e);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white p-6 flex flex-col justify-center">
@@ -95,7 +138,7 @@ const SetupScreen = ({ userProfile, onComplete, onCancel }) => {
             <div className="animate-fade-in-fast">
               <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex gap-3 items-start">
                 <Info className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                <p className="text-xs text-emerald-700"><strong>Passo 1/3:</strong> Comece nos dizendo quem é você. Esses dados identificam seu perfil no relatório.</p>
+                <p className="text-xs text-emerald-700"><strong>Passo 1/4:</strong> Comece nos dizendo quem é você. Esses dados identificam seu perfil no relatório.</p>
               </div>
 
               <div className="mt-6">
@@ -149,7 +192,7 @@ const SetupScreen = ({ userProfile, onComplete, onCancel }) => {
             <div className="animate-fade-in-fast">
               <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 flex gap-3 items-start">
                 <Activity className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                <p className="text-xs text-blue-700"><strong>Passo 2/3:</strong> Suas medidas corporais são essenciais para calcular sua <strong>Taxa Metabólica Basal (TMB)</strong>.</p>
+                <p className="text-xs text-blue-700"><strong>Passo 2/4:</strong> Suas medidas corporais são essenciais para calcular sua <strong>Taxa Metabólica Basal (TMB)</strong>.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mt-6">
@@ -194,9 +237,19 @@ const SetupScreen = ({ userProfile, onComplete, onCancel }) => {
             <div className="animate-fade-in-fast">
               <div className="bg-purple-50 p-3 rounded-xl border border-purple-100 flex gap-3 items-start mb-6">
                 <Activity className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
-                <p className="text-xs text-purple-700"><strong>Passo 3/3:</strong> Defina seu nível de atividade e o <strong>prazo da meta</strong>. Isso ajustará seu cálculo calórico diário.</p>
+                <p className="text-xs text-purple-700"><strong>Passo 3/4:</strong> Defina seu nível de atividade e o <strong>prazo da meta</strong>. Isso ajustará seu cálculo calórico diário.</p>
               </div>
 
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-purple-800 mb-1">Meta Diária de Água</label>
+                <CustomSelect
+                  value={data.waterGoal}
+                  onChange={(val) => handleChange('waterGoal', val)}
+                  options={waterGoalOptions}
+                  placeholder="Selecione"
+                  className="bg-purple-50/50 border-purple-200"
+                />
+              </div>
               <div className="mb-4">
                 <label className="block text-sm font-bold text-purple-800 mb-1">Frequência de Treinos</label>
                 <p className="text-xs text-gray-500 mb-2">Quantos dias por semana você pratica exercícios físicos?</p>
@@ -239,6 +292,40 @@ const SetupScreen = ({ userProfile, onComplete, onCancel }) => {
             </div>
           )}
 
+          {step === 4 && (
+            <div className="animate-fade-in-fast">
+              <div className="bg-orange-50 p-3 rounded-xl border border-orange-100 flex gap-3 items-start mb-6">
+                <Settings className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-orange-700"><strong>Passo 4/4:</strong> Personalize sua experiência. Escolha o som que vai te avisar na hora de comer.</p>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-orange-800 mb-1">Som do Alarme</label>
+                <div className="flex gap-2">
+                    <div className="flex-1">
+                        <CustomSelect
+                        value={data.alarmSound}
+                        onChange={(val) => {
+                            handleChange('alarmSound', val);
+                            playPreview(val);
+                        }}
+                        options={alarmOptions}
+                        placeholder="Selecione"
+                        className="bg-orange-50/50 border-orange-200"
+                        />
+                    </div>
+                    <button 
+                        onClick={() => playPreview(data.alarmSound)}
+                        className="p-3 bg-orange-100 text-orange-600 rounded-xl border border-orange-200 hover:bg-orange-200 transition-colors"
+                        title="Testar Som"
+                    >
+                        <Volume2 size={20} />
+                    </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-3">
             {step > 1 && (
               <button 
@@ -252,7 +339,7 @@ const SetupScreen = ({ userProfile, onComplete, onCancel }) => {
               onClick={handleNext}
               className="flex-1 bg-emerald-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 transition-colors"
             >
-              {step === 3 ? 'Concluir' : 'Próximo'} <ArrowRight className="w-5 h-5" />
+                {step === 4 ? 'Concluir' : 'Próximo'} <ArrowRight className="w-5 h-5" />
             </button>
           </div>
         </div>
