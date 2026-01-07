@@ -288,14 +288,14 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
 
   return (
     <div className="p-4 space-y-6 pb-24">
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-purple-100 rounded-xl">
               <Brain className="w-6 h-6 text-purple-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Cérebro</h2>
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Cérebro</h2>
               <p className="text-sm text-gray-500">Análise Inteligente</p>
             </div>
           </div>
@@ -306,20 +306,20 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
 
         {/* Dados Metabólicos */}
         <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+          <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-xl border border-gray-100 dark:border-gray-600">
             <p className="text-[10px] uppercase font-bold text-gray-400">TMB (Repouso)</p>
-            <p className="text-lg font-black text-gray-700">{Math.round(bmr)} <span className="text-xs font-normal">kcal</span></p>
+            <p className="text-lg font-black text-gray-700 dark:text-gray-100">{Math.round(bmr)} <span className="text-xs font-normal">kcal</span></p>
           </div>
-          <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800">
             <p className="text-[10px] uppercase font-bold text-emerald-600">Meta Diária</p>
-            <p className="text-lg font-black text-emerald-700">{Math.round(dailyGoal)} <span className="text-xs font-normal">kcal</span></p>
+            <p className="text-lg font-black text-emerald-700 dark:text-emerald-400">{Math.round(dailyGoal)} <span className="text-xs font-normal">kcal</span></p>
           </div>
         </div>
 
         {/* Filtro de Dias */}
         <div className="flex items-center gap-3 mb-4">
           <Calendar className="w-4 h-4 text-gray-400" />
-          <p className="text-sm font-bold text-gray-600">Visualizando: {filterDay}</p>
+          <p className="text-sm font-bold text-gray-600 dark:text-gray-300">Visualizando: {filterDay}</p>
         </div>
 
         <div className="mb-6 overflow-x-auto pb-2 no-scrollbar">
@@ -328,7 +328,7 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
               <button
                 key={d}
                 onClick={() => setFilterDay(d)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${filterDay === d ? 'bg-purple-500 text-white' : 'bg-gray-50 text-gray-500'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${filterDay === d ? 'bg-purple-500 text-white' : 'bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-300'}`}
               >
                 {d}
               </button>
@@ -339,10 +339,10 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
         {/* Barra de Progresso Calorias */}
         <div className="mb-6">
           <div className="flex justify-between text-sm mb-1">
-            <span className="font-bold text-gray-700">Progresso Calórico</span>
+            <span className="font-bold text-gray-700 dark:text-gray-300">Progresso Calórico</span>
             <span className="font-bold text-gray-500">{Math.round(totals.totalCalories)} / {Math.round(dailyGoal)}</span>
           </div>
-          <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
             <div 
               className={`h-full rounded-full transition-all duration-500 ${totals.totalCalories > dailyGoal ? 'bg-rose-500' : 'bg-emerald-500'}`} 
               style={{ width: `${caloriePercentage}%` }}
@@ -351,13 +351,13 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
         </div>
 
         {/* Gráfico de Pizza */}
-        <div className="mt-8 border-t border-gray-100 pt-6">
-            <h3 className="text-sm font-bold text-gray-700 mb-4 text-center">Distribuição Calórica do Dia</h3>
+        <div className="mt-8 border-t border-gray-100 dark:border-gray-700 pt-6">
+            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 text-center">Distribuição Calórica do Dia</h3>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8">
                 <div className="relative">
                     <PieChart data={pieChartData} size={140} strokeWidth={22} />
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-3xl font-black text-gray-800">{consumed}</span>
+                        <span className="text-3xl font-black text-gray-800 dark:text-gray-100">{consumed}</span>
                         <span className="text-xs text-gray-500 -mt-1">kcal</span>
                     </div>
                 </div>
@@ -365,7 +365,7 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
                         <div>
-                            <div className="font-bold text-gray-600">Consumido</div>
+                            <div className="font-bold text-gray-600 dark:text-gray-400">Consumido</div>
                             <div className="text-gray-500">{consumed} kcal</div>
                         </div>
                     </div>
@@ -373,7 +373,7 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-slate-200"></div>
                             <div>
-                                <div className="font-bold text-gray-600">Restante</div>
+                                <div className="font-bold text-gray-600 dark:text-gray-400">Restante</div>
                                 <div className="text-gray-500">{remaining} kcal</div>
                             </div>
                         </div>
@@ -391,55 +391,55 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
         </div>
 
         <div className="grid grid-cols-2 gap-4 mt-6">
-          <div className="p-4 bg-gray-50 rounded-xl">
+          <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
             <div className="flex items-center gap-2 mb-2">
               <Activity className="w-4 h-4 text-blue-500" />
-              <span className="text-sm font-medium text-gray-600">Calorias</span>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Calorias</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900">{Math.round(totals.totalCalories)}</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{Math.round(totals.totalCalories)}</div>
             <div className="text-xs text-gray-500">kcal</div>
           </div>
-          <div className="p-4 bg-gray-50 rounded-xl">
+          <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
             <div className="flex items-center gap-2 mb-2">
               <Target className="w-4 h-4 text-green-500" />
-              <span className="text-sm font-medium text-gray-600">Proteínas</span>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Proteínas</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900">{Math.round(totals.totalProtein)}g</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{Math.round(totals.totalProtein)}g</div>
             <div className="text-xs text-gray-500">total</div>
           </div>
-          <div className="p-4 bg-gray-50 rounded-xl">
+          <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
             <div className="flex items-center gap-2 mb-2">
               <Zap className="w-4 h-4 text-yellow-500" />
-              <span className="text-sm font-medium text-gray-600">Carbos</span>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Carbos</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900">{Math.round(totals.totalCarbs)}g</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{Math.round(totals.totalCarbs)}g</div>
             <div className="text-xs text-gray-500">total</div>
           </div>
-          <div className="p-4 bg-gray-50 rounded-xl">
+          <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
             <div className="flex items-center gap-2 mb-2">
               <Activity className="w-4 h-4 text-red-500" />
-              <span className="text-sm font-medium text-gray-600">Gorduras</span>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Gorduras</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900">{Math.round(totals.totalFat)}g</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{Math.round(totals.totalFat)}g</div>
             <div className="text-xs text-gray-500">total</div>
           </div>
         </div>
 
         {/* Gráfico Semanal e Balanço */}
-        <div className="mt-8 border-t border-gray-100 pt-6">
+        <div className="mt-8 border-t border-gray-100 dark:border-gray-700 pt-6">
           <div className="flex items-center gap-2 mb-4 justify-center">
             <BarChart2 className="w-5 h-5 text-blue-500" />
-            <h3 className="text-sm font-bold text-gray-700">Performance da Semana</h3>
+            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Performance da Semana</h3>
           </div>
           
           <BarChart data={weeklyData} dailyGoal={dailyGoal} />
 
-          <div className="mt-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <div className="mt-4 bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
             <h4 className="text-xs font-bold text-slate-500 uppercase mb-2 text-center">Balanço Semanal (Vitória vs Realizado)</h4>
             <div className="flex justify-between items-center">
               <div className="text-center">
                 <p className="text-xs text-slate-400">Meta Acumulada</p>
-                <p className="font-bold text-slate-700">{Math.round(weeklyGoalTotal)} kcal</p>
+                <p className="font-bold text-slate-700 dark:text-slate-300">{Math.round(weeklyGoalTotal)} kcal</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-slate-400">Consumido</p>
@@ -457,32 +457,32 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
         </div>
 
         {/* Histórico de Hidratação */}
-        <div className="mt-8 border-t border-gray-100 pt-6">
+        <div className="mt-8 border-t border-gray-100 dark:border-gray-700 pt-6">
           <div className="flex items-center gap-2 mb-4 justify-center">
             <Droplets className="w-5 h-5 text-cyan-500" />
-            <h3 className="text-sm font-bold text-gray-700">Histórico de Hidratação (7 dias)</h3>
+            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">Histórico de Hidratação (7 dias)</h3>
           </div>
           
           <WaterHistoryChart history={waterHistory} goal={profile.waterGoal || 2500} />
         </div>
 
         {/* Relatório Informativo Dinâmico (Dossiê) */}
-        <div className="mt-6 bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center gap-2 mb-4 border-b border-slate-200 pb-3">
+        <div className="mt-6 bg-slate-50 dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <div className="flex items-center gap-2 mb-4 border-b border-slate-200 dark:border-slate-700 pb-3">
             <FileText className="w-5 h-5 text-slate-600" />
-            <h3 className="font-bold text-slate-800">Relatório Nutricional</h3>
+            <h3 className="font-bold text-slate-800 dark:text-slate-200">Relatório Nutricional</h3>
           </div>
 
           <div className="space-y-4 text-sm text-slate-600">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs font-bold text-slate-400 uppercase">Perfil</p>
-                <p className="font-medium text-slate-900">{profile.name || 'Usuário'}, {profile.age} anos</p>
+                <p className="font-medium text-slate-900 dark:text-slate-100">{profile.name || 'Usuário'}, {profile.age} anos</p>
                 <p className="text-xs text-slate-500 mt-0.5">{profile.activityDays}x/sem - {profile.activityLevel}</p>
               </div>
               <div>
                 <p className="text-xs font-bold text-slate-400 uppercase">Objetivo</p>
-                <div className="flex items-center gap-1 font-medium text-slate-900">
+                <div className="flex items-center gap-1 font-medium text-slate-900 dark:text-slate-100">
                   {profile.weight}kg <ArrowRight size={12} /> {profile.targetWeight}kg
                 </div>
               </div>
@@ -490,7 +490,7 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
 
             <div>
               <p className="text-xs font-bold text-slate-400 uppercase mb-1">Metabolismo & Metas</p>
-              <ul className="space-y-1 text-xs bg-white p-3 rounded-xl border border-slate-100">
+              <ul className="space-y-1 text-xs bg-white dark:bg-slate-700 p-3 rounded-xl border border-slate-100 dark:border-slate-600 dark:text-slate-200">
                 <li>• TMB (Gasto em repouso): <strong>{Math.round(bmr)} kcal</strong></li>
                 <li>• Gasto Total Estimado: <strong>{Math.round(tdee)} kcal</strong></li>
                 <li>• Meta da Dieta: <strong>{Math.round(dailyGoal)} kcal/dia</strong></li>
@@ -498,7 +498,7 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
             </div>
 
             {warnings.length > 0 ? (
-              <div className="pt-2 border-t border-slate-200">
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
                 <p className="text-xs font-bold text-rose-500 uppercase mb-2 flex items-center gap-1"><AlertTriangle size={12} /> Alertas</p>
                 <div className="space-y-2">
                   {warnings.map((w, i) => (
@@ -507,7 +507,7 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
                 </div>
               </div>
             ) : (
-              <div className="pt-2 border-t border-slate-200 flex items-center gap-2 text-emerald-600 text-xs font-bold">
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center gap-2 text-emerald-600 text-xs font-bold">
                 <CheckCircle size={14} /> <span>Plano equilibrado e seguro.</span>
               </div>
             )}

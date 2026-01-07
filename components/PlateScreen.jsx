@@ -115,13 +115,13 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
           color: transparent;
         }
       `}</style>
-      <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-start gap-2">
+      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-100 dark:border-blue-800 flex items-start gap-2">
         <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-        <p className="text-xs text-blue-700"><strong>Montagem do Prato:</strong> Ajuste as quantidades e medidas de cada item. O cálculo de calorias é atualizado na hora. Ao final, agende para um dia e refeição específicos.</p>
+        <p className="text-xs text-blue-700 dark:text-blue-200"><strong>Montagem do Prato:</strong> Ajuste as quantidades e medidas de cada item. O cálculo de calorias é atualizado na hora. Ao final, agende para um dia e refeição específicos.</p>
       </div>
 
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black text-gray-800">Seu Prato</h2>
+        <h2 className="text-2xl font-black text-gray-800 dark:text-gray-100">Seu Prato</h2>
         <div className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-bold">
           {plate.length === 0 && showTour ? 128 : Math.round(calculateTotal())} kcal
         </div>
@@ -191,10 +191,10 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
             }
 
             return (
-              <div key={`${item.foodId}-${index}`} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+              <div key={`${item.foodId}-${index}`} className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <h3 className="font-bold text-gray-800">{food.name}</h3>
+                    <h3 className="font-bold text-gray-800 dark:text-gray-100">{food.name}</h3>
                     <p className="text-xs text-emerald-600 font-bold">{Math.round(itemCalories)} kcal <span className="text-gray-400 font-normal">({Math.round(itemWeight)}g)</span></p>
                   </div>
                   <button onClick={() => onRemove(item.foodId)} className="text-rose-400 p-1">
@@ -203,10 +203,10 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                 </div>
                 
                 <div className="flex gap-2 items-center">
-                  <div className="flex items-center border rounded-lg bg-white">
+                  <div className="flex items-center border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
                     <button 
                       onClick={() => onUpdate(item.foodId, { quantity: Math.max(0, (Number(item.quantity) || 0) - 1) })}
-                      className="p-2 hover:bg-gray-50 text-gray-500 border-r"
+                      className="p-2 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-300 border-r dark:border-gray-600"
                     >
                       <ChevronDown className="w-4 h-4" />
                     </button>
@@ -221,11 +221,11 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                         if (val === '' || numVal >= 0) onUpdate(item.foodId, { quantity: numVal });
                       }}
                       onBlur={(e) => { if (e.target.value === '') onUpdate(item.foodId, { quantity: 1 }); }}
-                      className="w-12 py-2 text-center font-bold border-none outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-12 py-2 text-center font-bold border-none outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-transparent text-gray-600 dark:text-gray-200"
                     />
                     <button 
                       onClick={() => onUpdate(item.foodId, { quantity: (Number(item.quantity) || 0) + 1 })}
-                      className="p-2 hover:bg-gray-50 text-gray-500 border-l"
+                      className="p-2 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-300 border-l dark:border-gray-600"
                     >
                       <ChevronUp className="w-4 h-4" />
                     </button>
@@ -234,7 +234,7 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                   <select 
                     value={item.unit}
                     onChange={(e) => onUpdate(item.foodId, { unit: e.target.value })}
-                    className="flex-1 p-2 border rounded-lg bg-white"
+                    className="flex-1 p-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-gray-200"
                   >
                     {availableUnits.map(u => <option key={u} value={u}>{u}</option>)}
                   </select>

@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { X, ShoppingCart, Share2, CheckSquare, Square, Copy, Filter, Check, Trash2, Layers } from 'lucide-react';
+import { X, ShoppingCart, Share2, CheckSquare, Square, Copy, Filter, Check, Trash2, Layers, ChevronDown, Undo2 } from 'lucide-react';
 import { getFoodUnitWeight } from '../constants';
 
-const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleCheck }) => {
+const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleCheck, hiddenItems = {}, onToggleHidden }) => {
   const [period, setPeriod] = useState('Semana'); // 'Semana', 'Hoje', 'Amanhã', 'Personalizado'
   const [selectedGroupKeys, setSelectedGroupKeys] = useState(new Set());
   const [groupByCategory, setGroupByCategory] = useState(true);
@@ -12,7 +12,19 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
   };
 
   const handleClearChecked = () => {
+    // Adiciona os itens marcados à lista de ocultos
+    const newHidden = { ...hiddenItems };
+    Object.keys(checkedItems).forEach(key => {
+        if (checkedItems[key]) newHidden[key] = true;
+    });
+    onToggleHidden(newHidden);
+    
+    // Limpa a seleção
     onToggleCheck({});
+  };
+
+  const handleRestoreHidden = () => {
+    onToggleHidden({});
   };
 
   // Agrupa as refeições para seleção (Lógica similar ao Resumo)
@@ -60,6 +72,7 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
     const todayIndex = new Date().getDay();
     const today = daysMap[todayIndex];
     const tomorrow = daysMap[(todayIndex + 1) % 7];
+    const weekDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
     // Filtra as refeições baseadas no período selecionado
     const relevantMeals = meals.filter(meal => {
@@ -75,6 +88,10 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
       if (period === 'Personalizado') {
         const key = meal.specificDate ? meal.id : (meal.groupId || meal.id);
         return selectedGroupKeys.has(key);
+      }
+
+      if (weekDays.includes(period)) {
+        return meal.dayOfWeek === period || isTemplate;
       }
 
       return false;
@@ -112,13 +129,17 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
     });
 
     // Converte objeto em array e ordena por categoria/nome
-    return Object.values(list).sort((a, b) => {
+    return Object.values(list)
+      .filter(item => !hiddenItems[item.name])
+      .sort((a, b) => {
         if (groupByCategory) {
-            if (a.category !== b.category) return a.category.localeCompare(b.category);
+            const catA = a.category || 'Outros';
+            const catB = b.category || 'Outros';
+            if (catA !== catB) return catA.localeCompare(catB);
         }
-        return a.name.localeCompare(b.name);
+        return (a.name || '').localeCompare(b.name || '');
     });
-  }, [meals, allFoods, period, selectedGroupKeys, groupByCategory]);
+  }, [meals, allFoods, period, selectedGroupKeys, groupByCategory, hiddenItems]);
 
   const hasCheckedItems = useMemo(() => Object.values(checkedItems).some(v => v), [checkedItems]);
 
@@ -162,16 +183,32 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
         </div>
 
         {/* Filtros */}
-        <div className="p-3 bg-gray-50 border-b flex gap-2 overflow-x-auto">
+        <div className="p-3 bg-gray-50 border-b flex gap-2 overflow-x-auto items-center">
             {['Semana', 'Hoje', 'Amanhã', 'Personalizado'].map(p => (
                 <button
                     key={p}
                     onClick={() => setPeriod(p)}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${period === p ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200'}`}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap shrink-0 ${period === p ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200'}`}
                 >
                     {p}
                 </button>
             ))}
+            
+            <div className="relative shrink-0">
+                <select
+                    value={['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].includes(period) ? period : ''}
+                    onChange={(e) => setPeriod(e.target.value)}
+                    className={`appearance-none pl-4 pr-8 py-1.5 rounded-lg text-xs font-bold transition-colors border outline-none cursor-pointer ${['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].includes(period) ? 'bg-emerald-500 text-white border-emerald-500 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                >
+                    <option value="" disabled>Dia Específico</option>
+                    {['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].map(day => (
+                        <option key={day} value={day} className="text-gray-800 bg-white">{day}</option>
+                    ))}
+                </select>
+                <div className={`absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none ${['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].includes(period) ? 'text-white' : 'text-gray-500'}`}>
+                    <ChevronDown size={14} />
+                </div>
+            </div>
         </div>
         
         {/* Seleção de Grupos (Apenas no modo Personalizado) */}
@@ -277,6 +314,11 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
           {hasCheckedItems && (
             <button onClick={handleClearChecked} className="py-2.5 px-4 bg-rose-100 text-rose-600 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-rose-200" title="Limpar itens marcados">
               <Trash2 size={16} />
+            </button>
+          )}
+          {!hasCheckedItems && hasHiddenItems && (
+            <button onClick={handleRestoreHidden} className="py-2.5 px-4 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-200" title="Restaurar itens excluídos">
+              <Undo2 size={16} />
             </button>
           )}
           <button onClick={handleCopy} className="flex-1 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-100">

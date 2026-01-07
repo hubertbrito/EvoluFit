@@ -275,7 +275,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
         </div>
       )}
 
-      <div className="sticky top-0 z-10 bg-gray-50/95 backdrop-blur-sm -mx-4 px-4 pt-1 pb-3 shadow-sm border-b-2 border-gray-100">
+      <div className="sticky top-0 z-10 bg-gray-50/95 dark:bg-gray-900/95 backdrop-blur-sm -mx-4 px-4 pt-1 pb-3 shadow-sm border-b-2 border-gray-100 dark:border-gray-800">
         <div className="flex flex-col gap-2">
             {/* Primeira linha com 5 botões */}
             <div className="grid grid-cols-5 gap-2">
@@ -283,8 +283,8 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                     const isActive = activeDays.includes(d);
                     const btnClass = `h-9 rounded-xl text-[10px] font-black uppercase transition-all flex items-center justify-center text-center border-2 ${
                         isActive 
-                        ? "bg-emerald-100 border-emerald-300 text-emerald-800 shadow-md scale-105" 
-                        : "bg-white border-indigo-200 text-indigo-400 hover:bg-indigo-50 hover:border-indigo-400"
+                        ? "bg-emerald-100 dark:bg-emerald-900 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-100 shadow-md scale-105" 
+                        : "bg-white dark:bg-gray-800 border-indigo-200 dark:border-gray-700 text-indigo-400 dark:text-gray-400 hover:bg-indigo-50 dark:hover:bg-gray-700 hover:border-indigo-400"
                     }`;
                     return <button key={d} onClick={() => toggleDay(d)} className={btnClass}>{d.slice(0, 3)}</button>;
                 })}
@@ -295,8 +295,8 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                     const isActive = activeDays.includes(d);
                     const btnClass = `h-9 rounded-xl text-[10px] font-black uppercase transition-all flex items-center justify-center text-center border-2 ${
                         isActive 
-                        ? "bg-emerald-100 border-emerald-300 text-emerald-800 shadow-md scale-105" 
-                        : "bg-white border-indigo-200 text-indigo-400 hover:bg-indigo-50 hover:border-indigo-400"
+                        ? "bg-emerald-100 dark:bg-emerald-900 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-100 shadow-md scale-105" 
+                        : "bg-white dark:bg-gray-800 border-indigo-200 dark:border-gray-700 text-indigo-400 dark:text-gray-400 hover:bg-indigo-50 dark:hover:bg-gray-700 hover:border-indigo-400"
                     }`;
                     return <button key={d} onClick={() => toggleDay(d)} className={btnClass}>{d.slice(0, 3)}</button>;
                 })}
@@ -305,22 +305,22 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                     className={`col-span-2 h-9 rounded-xl text-[9px] leading-tight font-black uppercase transition-all flex items-center justify-center text-center border-2 ${
                         activeDays.includes(specialDay) 
                         ? "bg-blue-400/80 border-blue-500 text-white shadow-lg scale-105" 
-                        : "bg-white border-fuchsia-200 text-fuchsia-400 hover:bg-fuchsia-50 hover:border-fuchsia-400"
+                        : "bg-white dark:bg-gray-800 border-fuchsia-200 dark:border-fuchsia-900 text-fuchsia-400 dark:text-fuchsia-300 hover:bg-fuchsia-50 dark:hover:bg-fuchsia-900/30 hover:border-fuchsia-400"
                     }`}
                 >{specialDay}</button>
             </div>
         </div>
       </div>
 
-      <div className="bg-blue-100 p-3 rounded-xl border border-blue-200 flex items-start gap-2 shadow-sm">
+      <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-xl border border-blue-200 dark:border-blue-800 flex items-start gap-2 shadow-sm">
         <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-        <p className="text-xs text-blue-800">
+        <p className="text-xs text-blue-800 dark:text-blue-200">
           <strong>Dica:</strong> Renomeie, reordene ou exclua refeições. Clique em "+ Adicionar" para criar novos horários no dia selecionado.
         </p>
       </div>
 
       {/* Widget de Hidratação */}
-      <div className="bg-cyan-50 p-4 rounded-2xl border border-cyan-100 shadow-sm">
+      <div className="bg-cyan-50 dark:bg-cyan-900/10 p-4 rounded-2xl border border-cyan-100 dark:border-cyan-800 shadow-sm">
         <div className="mb-2">
             <h3 className="text-[10px] font-bold text-cyan-600 uppercase tracking-wider flex items-center gap-1">
                 <Info size={12} /> Controle de Consumo de Água
@@ -328,7 +328,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
         </div>
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-3">
-            <div className="p-1.5 bg-white rounded-full text-cyan-500 shadow-sm"><Droplets size={14} /></div>
+            <div className="p-1.5 bg-white dark:bg-cyan-900 rounded-full text-cyan-500 shadow-sm"><Droplets size={14} /></div>
             
             {isEditingGoal ? (
                 <div className="flex items-center gap-2">
@@ -350,7 +350,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                 <div className="group flex flex-col items-start cursor-pointer" onClick={() => setIsEditingGoal(true)} title="Clique para editar a meta">
                     <span className="text-[8px] text-cyan-600 font-bold mb-0.5 leading-tight">Editar meta de<br/>consumo de agua/dia</span>
                     <div className="flex items-center gap-2">
-                        <p className="font-bold text-cyan-900 text-xs">Meta: {waterGoal}ml</p>
+                        <p className="font-bold text-cyan-900 dark:text-cyan-100 text-xs">Meta: {waterGoal}ml</p>
                         <Edit size={12} className="text-cyan-700 hover:text-cyan-900 transition-colors" />
                     </div>
                 </div>
@@ -358,7 +358,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
           </div>
           <div className="text-right">
              <p className="text-[10px] text-cyan-600 font-bold uppercase mb-0.5">Total Hoje</p>
-             <span className="font-black text-cyan-700 text-base">{waterIntake} ml</span>
+             <span className="font-black text-cyan-700 dark:text-cyan-300 text-base">{waterIntake} ml</span>
           </div>
         </div>
         <button 
@@ -418,7 +418,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-end">
             <div className="flex-1">
-                <h2 className="text-2xl font-black text-gray-800 tracking-tighter">
+                <h2 className="text-2xl font-black text-gray-800 dark:text-gray-100 tracking-tighter">
                 {activeDays.length === 1 && activeDays[0] !== 'Datas Marcadas'
                     ? `Agenda de ${activeDays[0]}` 
                     : activeDays[0] === 'Datas Marcadas' ? 'Agenda de Datas Marcadas' : 'Agenda'}
@@ -488,25 +488,25 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                 key={meal.id}
                 className={`p-4 rounded-[2rem] border-2 transition-all relative overflow-hidden 
                   ${isMoved ? 'highlight-move-animation' : ''} 
-                  ${meal.isDone ? 'opacity-75 bg-gray-50 border-gray-200' : (isCurrent ? 'bg-orange-50 border-orange-400 shadow-xl ring-4 ring-orange-400/10' : 'bg-white border-indigo-50 shadow-sm hover:border-orange-300')}`}
+                  ${meal.isDone ? 'opacity-75 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700' : (isCurrent ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-400 shadow-xl ring-4 ring-orange-400/10' : 'bg-white dark:bg-gray-800 border-indigo-50 dark:border-gray-700 shadow-sm hover:border-orange-300')}`}
             >
               <div className="flex justify-between items-start mb-5 gap-3">
-                <label className="flex items-center space-x-2 cursor-pointer group shrink-0 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 p-1.5 rounded-xl transition-colors shadow-sm">
-                    <div className={`p-1.5 rounded-lg transition-colors ${isCurrent ? 'bg-orange-600 text-white shadow-md' : 'bg-white text-indigo-600 shadow-sm'}`}>
+                <label className="flex items-center space-x-2 cursor-pointer group shrink-0 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 p-1.5 rounded-xl transition-colors shadow-sm">
+                    <div className={`p-1.5 rounded-lg transition-colors ${isCurrent ? 'bg-orange-600 text-white shadow-md' : 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-300 shadow-sm'}`}>
                         <Clock size={14} />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-indigo-800 uppercase leading-none mb-0.5">Mudar Hora</span>
+                      <span className="text-[10px] font-black text-indigo-800 dark:text-indigo-300 uppercase leading-none mb-0.5">Mudar Hora</span>
                       <input 
                           type="time" 
                           value={meal.time}
                           onChange={(e) => updateMeal(meal.id, { time: e.target.value })}
-                          className="font-black text-base bg-transparent border-none outline-none focus:ring-0 p-0 text-indigo-950 leading-none cursor-pointer appearance-none block"
+                          className="font-black text-base bg-transparent border-none outline-none focus:ring-0 p-0 text-indigo-950 dark:text-indigo-100 leading-none cursor-pointer appearance-none block"
                       />
                     </div>
                 </label>
                 <div className="flex flex-col items-end min-w-0 flex-1">
-                  <label className="text-xs font-black text-indigo-500 uppercase mr-1 w-full text-right truncate">Nome da Refeição</label>
+                  <label className="text-xs font-black text-indigo-500 dark:text-indigo-400 uppercase mr-1 w-full text-right truncate">Nome da Refeição</label>
                   <input
                     type="text"
                     value={meal.name}
@@ -523,16 +523,16 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                         updateMeal(meal.id, { name: val });
                     }}
                     placeholder="Ex: Chá das três"
-                    className="text-right font-black text-indigo-950 text-sm uppercase tracking-tight bg-transparent border-none outline-none focus:ring-0 p-0 w-full min-w-[50px] max-w-full placeholder:text-indigo-300 placeholder:italic placeholder:font-normal placeholder:text-sm"
+                    className="text-right font-black text-indigo-950 dark:text-indigo-100 text-sm uppercase tracking-tight bg-transparent border-none outline-none focus:ring-0 p-0 w-full min-w-[50px] max-w-full placeholder:text-indigo-300 dark:placeholder:text-indigo-700 placeholder:italic placeholder:font-normal placeholder:text-sm"
                   />
                   {nutrients.calories > 0 && (
-                    <span className="text-orange-800 font-black text-sm tracking-tighter mt-1">{Math.round(nutrients.calories)} kcal</span>
+                    <span className="text-orange-800 dark:text-orange-300 font-black text-sm tracking-tighter mt-1">{Math.round(nutrients.calories)} kcal</span>
                   )}
                 </div>
               </div>
 
               {meal.plate.length > 0 ? (
-                <div className="space-y-4 pt-4 border-t border-gray-100/50">
+                <div className="space-y-4 pt-4 border-t border-gray-100/50 dark:border-gray-700/50">
                     {/* Conteúdo do prato simplificado para JS */}
                     <div className="flex flex-wrap gap-2">
                         {meal.plate.map((p, i) => {
@@ -552,7 +552,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                                             }
                                         }
                                     }}
-                                    className="bg-white border border-indigo-200 px-3 py-1.5 rounded-xl text-xs font-black text-indigo-700 shadow-sm hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 transition-colors flex items-center gap-1 group"
+                                    className="bg-white dark:bg-gray-700 border border-indigo-200 dark:border-gray-600 px-3 py-1.5 rounded-xl text-xs font-black text-indigo-700 dark:text-indigo-300 shadow-sm hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 transition-colors flex items-center gap-1 group"
                                     title="Clique para remover item"
                                 >
                                     {food ? formatFoodQuantity(p.quantity, p.unit, food.name) : 'Item desconhecido'}
@@ -562,21 +562,21 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                         })}
                     </div>
                     
-                    <div className="bg-orange-50 rounded-3xl p-3 flex justify-around items-center border border-orange-100 shadow-inner">
+                    <div className="bg-orange-50 dark:bg-orange-900/20 rounded-3xl p-3 flex justify-around items-center border border-orange-100 dark:border-orange-800 shadow-inner">
                       <div className="flex flex-col items-center">
                         <Zap size={10} className="text-emerald-600 mb-0.5" />
-                        <span className="text-xs font-black text-indigo-500 uppercase">Prot</span>
-                        <span className="text-sm font-black text-emerald-800">{Math.round(nutrients.protein)}g</span>
+                        <span className="text-xs font-black text-indigo-500 dark:text-indigo-400 uppercase">Prot</span>
+                        <span className="text-sm font-black text-emerald-800 dark:text-emerald-300">{Math.round(nutrients.protein)}g</span>
                       </div>
                       <div className="flex flex-col items-center">
                         <Wheat size={10} className="text-amber-600 mb-0.5" />
-                        <span className="text-xs font-black text-indigo-500 uppercase">Carb</span>
-                        <span className="text-sm font-black text-amber-800">{Math.round(nutrients.carbs)}g</span>
+                        <span className="text-xs font-black text-indigo-500 dark:text-indigo-400 uppercase">Carb</span>
+                        <span className="text-sm font-black text-amber-800 dark:text-amber-300">{Math.round(nutrients.carbs)}g</span>
                       </div>
                       <div className="flex flex-col items-center">
                         <Droplets size={10} className="text-blue-600 mb-0.5" />
-                        <span className="text-xs font-black text-indigo-500 uppercase">Gord</span>
-                        <span className="text-sm font-black text-blue-800">{Math.round(nutrients.fat)}g</span>
+                        <span className="text-xs font-black text-indigo-500 dark:text-indigo-400 uppercase">Gord</span>
+                        <span className="text-sm font-black text-blue-800 dark:text-blue-300">{Math.round(nutrients.fat)}g</span>
                       </div>
                     </div>
 
@@ -604,7 +604,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
 
                     {/* --- FASE 3: Exibição das Anotações Sociais --- */}
                     {(meal.withWhom || meal.eventLocation || meal.description) && (
-                      <div className="mt-3 pt-3 border-t border-indigo-200/50 text-sm text-indigo-900 space-y-1.5">
+                      <div className="mt-3 pt-3 border-t border-indigo-200/50 dark:border-indigo-800/50 text-sm text-indigo-900 dark:text-indigo-200 space-y-1.5">
                         {meal.withWhom && (
                           <div className="flex items-center gap-2">
                             <Users size={14} className="text-indigo-500 shrink-0" />
@@ -627,7 +627,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                     )}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center gap-2 text-sm font-bold text-indigo-400 uppercase italic py-3 bg-indigo-50/50 rounded-2xl border border-dashed border-indigo-200">
+                <div className="flex flex-col items-center justify-center gap-2 text-sm font-bold text-indigo-400 dark:text-indigo-500 uppercase italic py-3 bg-indigo-50/50 dark:bg-indigo-900/20 rounded-2xl border border-dashed border-indigo-200 dark:border-indigo-800">
                     <div className="flex items-center gap-2">
                         <AlertCircle size={14}/>
                         <span>Vazio</span>
@@ -643,9 +643,9 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
               )}
 
               {/* Botões de Status da Refeição */}
-              <div className="mt-4 pt-3 border-t border-indigo-50 flex items-center justify-between gap-3">
+              <div className="mt-4 pt-3 border-t border-indigo-50 dark:border-indigo-900/50 flex items-center justify-between gap-3">
                  {/* Status Indicator */}
-                 <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-bold transition-colors ${meal.isDone ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-yellow-50 text-yellow-700 border-yellow-300'}`}>
+                 <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-bold transition-colors ${meal.isDone ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800' : 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-300 dark:border-yellow-800'}`}>
                     {meal.isDone ? <Check size={14} /> : <Clock size={14} />}
                     <span>{meal.isDone ? 'OK' : 'Pendente'}</span>
                  </div>
@@ -658,7 +658,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                           }
                       }}
                       disabled={meal.plate.length === 0}
-                      className="flex-1 py-2 rounded-xl font-bold text-sm shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-white border-2 border-emerald-500 text-emerald-700 hover:bg-emerald-50"
+                      className="flex-1 py-2 rounded-xl font-bold text-sm shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-700 border-2 border-emerald-500 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
                    >
                       Marcar Consumida
                    </button>
@@ -669,7 +669,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                           handleToggleDone(meal);
                         }
                       }}
-                      className="flex-1 py-2 rounded-xl font-bold text-sm shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300"
+                      className="flex-1 py-2 rounded-xl font-bold text-sm shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600"
                       title="Reverter status para pendente"
                    >
                       <Undo2 size={14} />
@@ -678,20 +678,20 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                  )}
               </div>
 
-              <div className="flex justify-end items-center gap-2 mt-3 pt-2 border-t border-dashed border-indigo-50/50">
-                  <span className="text-xs font-bold text-indigo-400 uppercase mr-auto">Ações</span>
+              <div className="flex justify-end items-center gap-2 mt-3 pt-2 border-t border-dashed border-indigo-50/50 dark:border-indigo-800/50">
+                  <span className="text-xs font-bold text-indigo-400 dark:text-indigo-500 uppercase mr-auto">Ações</span>
                   
-                  <button onClick={() => onReorderMeal(meal.id, 'up', activeDays[0])} disabled={index === 0} className="p-2 bg-emerald-50 rounded-xl text-emerald-600 disabled:opacity-30 hover:bg-emerald-100 transition-colors" title="Mover para cima">
+                  <button onClick={() => onReorderMeal(meal.id, 'up', activeDays[0])} disabled={index === 0} className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl text-emerald-600 dark:text-emerald-400 disabled:opacity-30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors" title="Mover para cima">
                     <ArrowUp size={16} />
                   </button>
-                  <button onClick={() => onReorderMeal(meal.id, 'down', activeDays[0])} disabled={index === filteredMeals.length - 1} className="p-2 bg-emerald-50 rounded-xl text-emerald-600 disabled:opacity-30 hover:bg-emerald-100 transition-colors" title="Mover para baixo">
+                  <button onClick={() => onReorderMeal(meal.id, 'down', activeDays[0])} disabled={index === filteredMeals.length - 1} className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl text-emerald-600 dark:text-emerald-400 disabled:opacity-30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors" title="Mover para baixo">
                     <ArrowDown size={16} />
                   </button>
                   
                   <button 
                     onClick={() => onEditMeal(meal)}
                     disabled={meal.plate.length === 0}
-                    className="px-2.5 py-1.5 bg-blue-100 rounded-xl text-blue-700 disabled:opacity-30 hover:bg-blue-200 transition-colors flex items-center gap-0.5 text-[10px] font-bold" 
+                    className="px-2.5 py-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-700 dark:text-blue-300 disabled:opacity-30 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-0.5 text-[10px] font-bold" 
                     title="Editar Prato (Move para montagem)"
                   >
                     <Edit size={11} />
@@ -703,7 +703,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                       onClearMeal(meal, activeDays[0]);
                     }}
                     disabled={meal.plate.length === 0}
-                    className="px-2.5 py-1.5 bg-amber-100 rounded-xl text-amber-700 disabled:opacity-30 hover:bg-amber-200 transition-colors flex items-center gap-0.5 text-[10px] font-bold" 
+                    className="px-2.5 py-1.5 bg-amber-100 dark:bg-amber-900/30 rounded-xl text-amber-700 dark:text-amber-300 disabled:opacity-30 hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors flex items-center gap-0.5 text-[10px] font-bold" 
                     title="Limpar Prato"
                   >
                     <Eraser size={11} />
@@ -717,7 +717,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                         onClick={() => {
                           onDeleteMeal(meal, activeDays[0]);
                         }} 
-                        className="p-2 bg-rose-50 rounded-xl text-rose-500 hover:bg-rose-100 transition-colors" 
+                        className="p-2 bg-rose-50 dark:bg-rose-900/20 rounded-xl text-rose-500 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors" 
                         title="Excluir Refeição"
                       >
                         <Trash2 size={16} />
@@ -742,18 +742,18 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
         </div>
       )}
       
-      <div className="mt-8 px-2 space-y-5 text-gray-600">
-        <h3 className="text-sm font-black text-gray-800 border-b pb-2 uppercase">Como criar uma nova refeição:</h3>
+      <div className="mt-8 px-2 space-y-5 text-gray-600 dark:text-gray-400">
+        <h3 className="text-sm font-black text-gray-800 dark:text-gray-200 border-b dark:border-gray-700 pb-2 uppercase">Como criar uma nova refeição:</h3>
         
         <div>
-            <p className="text-xs font-bold text-indigo-600 mb-1">PASSO 1</p>
+            <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1">PASSO 1</p>
             <p className="text-sm leading-snug">
                 Clique no botão acima para abrir o menu de criação.
             </p>
         </div>
         
         <div>
-            <p className="text-xs font-bold text-indigo-600 mb-1">PASSO 2</p>
+            <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1">PASSO 2</p>
             <p className="text-sm leading-snug">
                 Selecione os dias desejados (ex: Segunda, Quarta e Sexta) e confirme para criar o card.
             </p>

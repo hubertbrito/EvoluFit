@@ -639,6 +639,7 @@ const App = () => {
   const [newlyAddedFoodName, setNewlyAddedFoodName] = useState('');
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [shoppingListCheckedItems, setShoppingListCheckedItems] = useState({});
+  const [shoppingListHiddenItems, setShoppingListHiddenItems] = useState({});
   const [showShoppingList, setShowShoppingList] = useState(false);
   const [editingMealInfo, setEditingMealInfo] = useState(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -1793,6 +1794,8 @@ const AlertAnimationOverlay = () => (
         onClose={() => setShowShoppingList(false)} 
         checkedItems={shoppingListCheckedItems}
         onToggleCheck={setShoppingListCheckedItems}
+        hiddenItems={shoppingListHiddenItems}
+        onToggleHidden={setShoppingListHiddenItems}
       />}
       {showFoodAddedModal && <FoodAddedModal 
         foodName={newlyAddedFoodName} 

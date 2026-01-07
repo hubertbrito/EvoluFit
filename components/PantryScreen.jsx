@@ -139,16 +139,16 @@ const PantryScreen = ({
           animation: pulse-highlight 2s ease-out 5; /* 2s x 5 = 10s de destaque */
         }
       `}</style>
-      <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-start gap-2">
+      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-100 dark:border-blue-800 flex items-start gap-2">
         <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-        <p className="text-xs text-blue-700"><strong>Dispensa:</strong> Busque ou use a voz para <strong>adicionar novos itens</strong> que você tem em casa. Depois, toque em um alimento para <strong>selecioná-lo</strong> (borda verde) e montar seu Prato.</p>
+        <p className="text-xs text-blue-700 dark:text-blue-300"><strong>Dispensa:</strong> Busque ou use a voz para <strong>adicionar novos itens</strong> que você tem em casa. Depois, toque em um alimento para <strong>selecioná-lo</strong> (borda verde) e montar seu Prato.</p>
       </div>
 
       {/* Sticky Menu Container */}
-      <div className="sticky top-0 z-20 bg-gray-50 -mx-4 px-4 py-2 space-y-3 shadow-sm">
+      <div className="sticky top-0 z-20 bg-gray-50 dark:bg-gray-900 -mx-4 px-4 py-2 space-y-3 shadow-sm">
         {/* Header / Search */}
         <div className="space-y-2">
-          <label className="text-xs font-medium text-gray-600 block ml-1">
+          <label className="text-xs font-medium text-gray-600 dark:text-gray-300 block ml-1">
             Busque um alimento ou digite para cadastrar um novo:
           </label>
           <div className="flex gap-2" data-tour-id="pantry-search">
@@ -157,7 +157,7 @@ const PantryScreen = ({
               <input 
                 type="text" 
                 placeholder="Digite o nome do alimento..." 
-                className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-emerald-200 bg-emerald-50/50 shadow-sm focus:outline-none focus:border-emerald-500 focus:ring-0 placeholder:text-emerald-600/60 text-emerald-900 font-medium"
+                className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-gray-700 bg-emerald-50/50 dark:bg-gray-800 shadow-sm focus:outline-none focus:border-emerald-500 focus:ring-0 placeholder:text-emerald-600/60 dark:placeholder:text-gray-500 text-emerald-900 dark:text-gray-100 font-medium"
                 value={searchTerm}
                 onChange={(e) => onSearchTermChange(e.target.value)}
               />
@@ -175,16 +175,16 @@ const PantryScreen = ({
         </div>
 
         {/* Toggle View Mode */}
-        <div className="flex bg-gray-100 p-1 rounded-xl">
+        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
           <button 
               onClick={() => setViewMode('categories')}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'categories' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400'}`}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'categories' ? 'bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-gray-400 dark:text-gray-500'}`}
           >
               Por Categorias
           </button>
           <button 
               onClick={() => setViewMode('diets')}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${viewMode === 'diets' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-400'}`}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${viewMode === 'diets' ? 'bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-gray-400 dark:text-gray-500'}`}
           >
               <Filter className="w-3 h-3" />
               Por Dietas
@@ -208,7 +208,7 @@ const PantryScreen = ({
                 className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors 
                     ${isActive 
                       ? (isDispensa ? 'bg-blue-600 text-white shadow-md' : 'bg-emerald-500 text-white shadow-md') 
-                      : (isDispensa ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'bg-white text-gray-500 border border-gray-200')}`}
+                      : (isDispensa ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700')}`}
               >
                 {isDispensa ? 'Sua Dispensa' : item}
               </button>
@@ -217,7 +217,7 @@ const PantryScreen = ({
         </div>
       </div>
 
-      <div key={resultCountText} className="text-sm font-bold text-emerald-700 ml-1 animate-fade-in">
+      <div key={resultCountText} className="text-sm font-bold text-emerald-700 dark:text-emerald-400 ml-1 animate-fade-in">
         {resultCountText}
       </div>
 
@@ -225,7 +225,7 @@ const PantryScreen = ({
       {searchTerm && displayedFoods.length === 0 && (
         <button
           onClick={handleManualAdd}
-          className="w-full py-3 bg-emerald-50 text-emerald-600 rounded-xl border border-dashed border-emerald-200 font-bold text-sm flex items-center justify-center gap-2"
+          className="w-full py-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl border border-dashed border-emerald-200 dark:border-emerald-800 font-bold text-sm flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Adicionar "{searchTerm}"
@@ -249,7 +249,7 @@ const PantryScreen = ({
 
           const itemClasses = [
             'p-4 rounded-2xl shadow-sm border flex items-center justify-between cursor-pointer transition-all',
-            isSelected ? 'bg-emerald-50 border-emerald-500 ring-1 ring-emerald-500' : 'bg-white border-gray-100',
+            isSelected ? 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 ring-1 ring-emerald-500' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700',
             isVoiceAdded ? 'highlight-voice-add' : ''
           ].filter(Boolean).join(' ');
 
@@ -263,9 +263,9 @@ const PantryScreen = ({
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{food.emoji || '🍽️'}</span>
                 <div>
-                  <h3 className="font-bold text-gray-800">{food.name}</h3>
+                  <h3 className="font-bold text-gray-800 dark:text-gray-100">{food.name}</h3>
                   {isSelected && plateItem.quantity && (
-                    <p className="text-xs text-emerald-700 font-medium mt-0.5">
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium mt-0.5">
                       {formatFoodQuantity(plateItem.quantity, plateItem.measure, food.name)}
                     </p>
                   )}
@@ -277,7 +277,7 @@ const PantryScreen = ({
                   <>
                     <button 
                       onClick={(e) => { e.stopPropagation(); onAddToPlate(food.id); }}
-                      className={`p-2 rounded-lg transition-colors ${isSelected ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}
+                      className={`p-2 rounded-lg transition-colors ${isSelected ? 'bg-emerald-500 text-white' : 'bg-emerald-50 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900'}`}
                       title={isSelected ? "Remover do Prato" : "Adicionar ao Prato"}
                     >
                       <Utensils className="w-4 h-4" />
@@ -293,7 +293,7 @@ const PantryScreen = ({
                 ) : (
                   <button 
                     onClick={(e) => { e.stopPropagation(); onToggle(food.id); }}
-                    className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                    className="p-2 bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-300 rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
                     title="Adicionar à Dispensa"
                   >
                     <Plus className="w-4 h-4" />
