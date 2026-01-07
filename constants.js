@@ -586,6 +586,7 @@ export const FOOD_DATABASE = RAW_FOOD_DATABASE.map(food => ({
 
 // Função auxiliar para inferir medidas baseadas no nome (usada ao criar novos alimentos)
 export const inferFoodMeasures = (name) => {
+  if (!name || typeof name !== 'string') return null;
   const n = name.toLowerCase();
   if (n.includes('arroz')) return { 'Colher de Sopa': 25, 'Escumadeira': 90, 'Xícara': 150, 'Prato Raso': 300 };
   if (n.includes('feijão') || n.includes('feijao')) return { 'Concha Pequena': 90, 'Concha Média': 150, 'Colher de Sopa': 20 };
@@ -618,7 +619,7 @@ export const getFoodUnitWeight = (foodInput, unit) => {
   }
 
   // 2. Se não tiver no objeto, tenta inferir pelo nome (Fallback Inteligente)
-  const name = food ? food.name : (typeof foodInput === 'string' ? foodInput : '');
+  const name = (food && food.name) ? food.name : (typeof foodInput === 'string' ? foodInput : '');
   const inferred = inferFoodMeasures(name);
   if (inferred && inferred[unit]) {
     return inferred[unit];

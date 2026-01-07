@@ -29,10 +29,6 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
             <ClipboardList size={18} />
             <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5 text-center leading-none">Agendadas</span>
           </HeaderButton>
-          <HeaderButton onClick={onToggleShoppingList} title="Lista de Compras">
-            <ShoppingCart size={18} />
-            <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5">Lista</span>
-          </HeaderButton>
           <HeaderButton onClick={onRestartTour} title="Reiniciar Tour">
             <RefreshCw size={18} />
             <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5">Tour</span>

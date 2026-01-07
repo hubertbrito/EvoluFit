@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { X, ShoppingCart, Share2, CheckSquare, Square, Copy, Filter, Check, Trash2, Layers, ChevronDown, Undo2 } from 'lucide-react';
-import { getFoodUnitWeight } from '../constants';
 
-const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleCheck, hiddenItems = {}, onToggleHidden }) => {
+const ShoppingListModal = ({ meals, allFoods = [], onClose, checkedItems = {}, onToggleCheck, hiddenItems = {}, onToggleHidden }) => {
   const [period, setPeriod] = useState('Semana'); // 'Semana', 'Hoje', 'Amanhã', 'Personalizado'
   const [selectedGroupKeys, setSelectedGroupKeys] = useState(new Set());
   const [groupByCategory, setGroupByCategory] = useState(true);
@@ -31,6 +30,7 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
   const mealGroups = useMemo(() => {
     const groups = {};
     meals.forEach(meal => {
+        if (!meal) return;
         if (!meal.plate || meal.plate.length === 0) return;
         // Chave única para agrupar: ID do grupo ou ID da refeição (se avulsa/data específica)
         const key = meal.specificDate ? meal.id : (meal.groupId || meal.id);
@@ -47,7 +47,7 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
         groups[key].days.push(meal.dayOfWeek);
     });
     
-    return Object.values(groups).sort((a, b) => a.time.localeCompare(b.time));
+    return Object.values(groups).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
   }, [meals]);
 
   const toggleGroup = (key) => {
@@ -76,6 +76,8 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
 
     // Filtra as refeições baseadas no período selecionado
     const relevantMeals = meals.filter(meal => {
+      if (!meal) return false;
+
       if (period === 'Semana') return true; // Considera tudo (incluindo 'Todos')
       
       const isTemplate = meal.dayOfWeek === 'Todos';
@@ -95,42 +97,32 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
       }
 
       return false;
-    }, [period, selectedGroupKeys]); // Dependência extra para atualizar quando a seleção mudar
+    });
 
     // Itera sobre as refeições e soma os ingredientes
     relevantMeals.forEach(meal => {
-      // Se for template ('Todos'), multiplica por 7 na visão semanal, ou 1 na diária
-      // Nota: Simplificação. Idealmente verificaríamos overrides, mas para lista de compras, 
-      // assumir o template como base é seguro para garantir que não falte comida.
-      const multiplier = (meal.dayOfWeek === 'Todos' && (period === 'Semana' || period === 'Personalizado')) ? 7 : 1;
-
+      if (!meal) return;
       if (meal.plate) {
         meal.plate.forEach(item => {
-          const food = allFoods.find(f => String(f.id) === String(item.foodId));
-          if (!food) return;
+          if (!item) return;
+          const food = allFoods.find(f => f && String(f.id) === String(item.foodId));
+          if (!food || !food.name) return;
 
           if (!list[food.id]) {
             list[food.id] = {
               name: food.name,
               emoji: food.emoji,
               category: food.category,
-              totalWeight: 0,
               originalItems: []
             };
           }
-
-          // Calcula peso estimado em gramas/ml
-          const unitWeight = getFoodUnitWeight(food, item.unit);
-          const totalItemWeight = (unitWeight * item.quantity) * multiplier;
-          
-          list[food.id].totalWeight += totalItemWeight;
         });
       }
     });
 
     // Converte objeto em array e ordena por categoria/nome
     return Object.values(list)
-      .filter(item => !hiddenItems[item.name])
+      .filter(item => item && !hiddenItems[item.name])
       .sort((a, b) => {
         if (groupByCategory) {
             const catA = a.category || 'Outros';
@@ -145,19 +137,14 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
 
   const handleShare = () => {
     const text = `🛒 *Lista de Compras - EvoluFit*\nPeríodo: ${period}\n\n` + 
-      shoppingList.map(item => {
-        const weightStr = item.totalWeight >= 1000 
-          ? `${(item.totalWeight/1000).toFixed(1)}kg` 
-          : `${Math.round(item.totalWeight)}g`;
-        return `${item.emoji || ''} ${item.name}: aprox. ${weightStr}`;
-      }).join('\n');
+      shoppingList.map(item => `${item.emoji || ''} ${item.name}`).join('\n');
     
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
 
   const handleCopy = () => {
-    const text = shoppingList.map(item => `${item.name}: ${Math.round(item.totalWeight)}g`).join('\n');
+    const text = shoppingList.map(item => `${item.name}`).join('\n');
     navigator.clipboard.writeText(text);
     alert('Lista copiada para a área de transferência!');
   };
@@ -170,7 +157,7 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
         @keyframes scale-bounce { 0% { transform: scale(0.95); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         .animate-scale-bounce { animation: scale-bounce 0.4s ease-out; }
       `}</style>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden animate-scale-bounce">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden animate-scale-bounce">
         {/* Header */}
         <div className="p-4 border-b bg-emerald-600 text-white flex justify-between items-center">
           <h2 className="text-lg font-bold flex items-center gap-2">
@@ -183,12 +170,12 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
         </div>
 
         {/* Filtros */}
-        <div className="p-3 bg-gray-50 border-b flex gap-2 overflow-x-auto items-center">
+        <div className="p-3 bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700 flex gap-2 overflow-x-auto items-center">
             {['Semana', 'Hoje', 'Amanhã', 'Personalizado'].map(p => (
                 <button
                     key={p}
                     onClick={() => setPeriod(p)}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap shrink-0 ${period === p ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200'}`}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap shrink-0 ${period === p ? 'bg-emerald-500 text-white shadow-md' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600'}`}
                 >
                     {p}
                 </button>
@@ -198,7 +185,7 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
                 <select
                     value={['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].includes(period) ? period : ''}
                     onChange={(e) => setPeriod(e.target.value)}
-                    className={`appearance-none pl-4 pr-8 py-1.5 rounded-lg text-xs font-bold transition-colors border outline-none cursor-pointer ${['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].includes(period) ? 'bg-emerald-500 text-white border-emerald-500 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                    className={`appearance-none pl-4 pr-8 py-1.5 rounded-lg text-xs font-bold transition-colors border outline-none cursor-pointer ${['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].includes(period) ? 'bg-emerald-500 text-white border-emerald-500 shadow-md' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'}`}
                 >
                     <option value="" disabled>Dia Específico</option>
                     {['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].map(day => (
@@ -213,9 +200,9 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
         
         {/* Seleção de Grupos (Apenas no modo Personalizado) */}
         {period === 'Personalizado' && (
-            <div className="bg-blue-50 p-3 border-b border-blue-100 max-h-40 overflow-y-auto">
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 border-b border-blue-100 dark:border-blue-800 max-h-40 overflow-y-auto">
                 <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-bold text-blue-800 flex items-center gap-1">
+                    <span className="text-xs font-bold text-blue-800 dark:text-blue-300 flex items-center gap-1">
                         <Filter size={12} /> Selecione as Refeições:
                     </span>
                     <button onClick={selectAllGroups} className="text-[10px] font-bold text-blue-600 underline">
@@ -227,14 +214,14 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
                         <button 
                             key={group.key}
                             onClick={() => toggleGroup(group.key)}
-                            className={`w-full flex items-center gap-2 p-2 rounded-lg text-left transition-colors ${selectedGroupKeys.has(group.key) ? 'bg-white border border-blue-200 shadow-sm' : 'hover:bg-blue-100/50'}`}
+                            className={`w-full flex items-center gap-2 p-2 rounded-lg text-left transition-colors ${selectedGroupKeys.has(group.key) ? 'bg-white dark:bg-gray-700 border border-blue-200 dark:border-blue-700 shadow-sm' : 'hover:bg-blue-100/50 dark:hover:bg-blue-900/30'}`}
                         >
-                            <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${selectedGroupKeys.has(group.key) ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-400 bg-white'}`}>
+                            <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${selectedGroupKeys.has(group.key) ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-400 dark:border-gray-500 bg-white dark:bg-gray-600'}`}>
                                 {selectedGroupKeys.has(group.key) && <Check size={10} strokeWidth={4} />}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-baseline">
-                                    <span className="text-xs font-bold text-gray-700 truncate">{group.name}</span>
+                                    <span className="text-xs font-bold text-gray-700 dark:text-gray-200 truncate">{group.name}</span>
                                     <span className="text-[10px] text-gray-500 ml-1">{group.time}</span>
                                 </div>
                                 <div className="text-[10px] text-gray-500 truncate">
@@ -249,10 +236,10 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
         )}
 
         {/* Opções de Visualização */}
-        <div className="px-4 py-2 bg-white border-b flex items-center justify-between">
+        <div className="px-4 py-2 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex items-center justify-between">
             <button 
                 onClick={() => setGroupByCategory(!groupByCategory)}
-                className={`flex items-center gap-2 text-xs font-bold transition-colors ${groupByCategory ? 'text-emerald-600' : 'text-gray-400'}`}
+                className={`flex items-center gap-2 text-xs font-bold transition-colors ${groupByCategory ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'}`}
             >
                 <Layers size={14} />
                 {groupByCategory ? 'Agrupado por Categoria' : 'Lista Simples (A-Z)'}
@@ -267,33 +254,28 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
           {shoppingList.length > 0 ? (
             shoppingList.map((item, index) => {
                 const isChecked = checkedItems[item.name];
-                const weightDisplay = item.totalWeight >= 1000 
-                    ? `${(item.totalWeight/1000).toFixed(1).replace('.', ',')} kg` 
-                    : `${Math.round(item.totalWeight)} g`;
                 
-                const showHeader = groupByCategory && (index === 0 || item.category !== shoppingList[index - 1].category);
+                const prevItem = shoppingList[index - 1];
+                const showHeader = groupByCategory && (index === 0 || (prevItem && item.category !== prevItem.category));
 
                 return (
                     <React.Fragment key={index}>
                         {showHeader && (
-                            <div className="sticky top-0 z-10 bg-gray-50/95 backdrop-blur-sm px-2 py-1.5 text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-100 mt-3 mb-1 first:mt-0 rounded-md">
+                            <div className="sticky top-0 z-10 bg-gray-50/95 dark:bg-gray-900/95 backdrop-blur-sm px-2 py-1.5 text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 mt-3 mb-1 first:mt-0 rounded-md">
                                 {item.category || 'Outros'}
                             </div>
                         )}
                         <div 
                         onClick={() => toggleCheck(item.name)}
-                        className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${isChecked ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-gray-100 hover:border-emerald-200 shadow-sm'}`}
+                        className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${isChecked ? 'bg-gray-50 dark:bg-gray-700 border-gray-100 dark:border-gray-600 opacity-60' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-700 shadow-sm'}`}
                     >
                         <div className="flex items-center gap-3">
                             <div className={`text-emerald-500 ${isChecked ? 'text-gray-300' : ''}`}>
                                 {isChecked ? <CheckSquare size={20} /> : <Square size={20} />}
                             </div>
                             <div>
-                                <p className={`font-bold text-sm ${isChecked ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                                <p className={`font-bold text-sm ${isChecked ? 'text-gray-400 line-through' : 'text-gray-800 dark:text-gray-200'}`}>
                                     {item.emoji} {item.name}
-                                </p>
-                                <p className="text-xs text-gray-500 font-medium">
-                                    Estimado: {weightDisplay}
                                 </p>
                             </div>
                         </div>
@@ -310,18 +292,18 @@ const ShoppingListModal = ({ meals, allFoods, onClose, checkedItems, onToggleChe
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t bg-gray-50 flex gap-2">
+        <div className="p-4 border-t bg-gray-50 dark:bg-gray-900 dark:border-gray-700 flex gap-2">
           {hasCheckedItems && (
-            <button onClick={handleClearChecked} className="py-2.5 px-4 bg-rose-100 text-rose-600 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-rose-200" title="Limpar itens marcados">
+            <button onClick={handleClearChecked} className="py-2.5 px-4 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-rose-200 dark:hover:bg-rose-900/50" title="Limpar itens marcados">
               <Trash2 size={16} />
             </button>
           )}
           {!hasCheckedItems && hasHiddenItems && (
-            <button onClick={handleRestoreHidden} className="py-2.5 px-4 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-200" title="Restaurar itens excluídos">
+            <button onClick={handleRestoreHidden} className="py-2.5 px-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-600" title="Restaurar itens excluídos">
               <Undo2 size={16} />
             </button>
           )}
-          <button onClick={handleCopy} className="flex-1 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-100">
+          <button onClick={handleCopy} className="flex-1 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-600">
             <Copy size={16} /> Copiar
           </button>
           <button onClick={handleShare} className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 shadow-md">

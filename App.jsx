@@ -11,7 +11,7 @@ import BrainScreen from './components/BrainScreen';
 import ScheduleScreen from './components/ScheduleScreen';
 import FoodAddedModal from './components/FoodAddedModal';
 import ScheduleSummaryModal from './components/ScheduleSummaryModal';
-import ShoppingListModal from './components/ShoppingListModal';
+// import ShoppingListModal from './components/ShoppingListModal';
 import SetupScreen from './components/SetupScreen';
 import SchedulePdfView from './components/SchedulePdfView';
 import { Layout } from './components/Layout';
@@ -601,7 +601,8 @@ const App = () => {
 
   const [customFoods, setCustomFoods] = useState(() => {
     const saved = localStorage.getItem('customFoods');
-    return saved ? JSON.parse(saved) : [];
+    const parsed = saved ? JSON.parse(saved) : [];
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
   });
 
   const [pantryItems, setPantryItems] = useState(() => {
@@ -1788,7 +1789,7 @@ const AlertAnimationOverlay = () => (
         />
       }
       {showSummaryModal && <ScheduleSummaryModal meals={mealSchedule} onClose={() => setShowSummaryModal(false)} />}
-      {showShoppingList && <ShoppingListModal 
+      {/* {showShoppingList && <ShoppingListModal 
         meals={mealSchedule} 
         allFoods={allAvailableFoods} 
         onClose={() => setShowShoppingList(false)} 
@@ -1796,7 +1797,7 @@ const AlertAnimationOverlay = () => (
         onToggleCheck={setShoppingListCheckedItems}
         hiddenItems={shoppingListHiddenItems}
         onToggleHidden={setShoppingListHiddenItems}
-      />}
+      />} */}
       {showFoodAddedModal && <FoodAddedModal 
         foodName={newlyAddedFoodName} 
         onClose={() => {
