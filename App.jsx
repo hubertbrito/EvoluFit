@@ -11,6 +11,7 @@ import BrainScreen from './components/BrainScreen';
 import ScheduleScreen from './components/ScheduleScreen';
 import FoodAddedModal from './components/FoodAddedModal';
 import ScheduleSummaryModal from './components/ScheduleSummaryModal';
+import ShoppingListModal from './components/ShoppingListModal';
 import SetupScreen from './components/SetupScreen';
 import SchedulePdfView from './components/SchedulePdfView';
 import { Layout } from './components/Layout';
@@ -560,6 +561,23 @@ const ResetScheduleModal = ({ onClose, onConfirm }) => {
 const App = () => {
   const [activeTab, setActiveTab] = useState('pantry');
   
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined' && localStorage.theme) {
+      return localStorage.theme;
+    }
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    const isDark = theme === 'dark';
+    root.classList.toggle('dark', isDark);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+  
   const [userProfile, setUserProfile] = useState(() => {
     const saved = localStorage.getItem('userProfile');
     const parsed = saved ? JSON.parse(saved) : {};
@@ -620,6 +638,8 @@ const App = () => {
   const [voiceAddedFoodId, setVoiceAddedFoodId] = useState(null);
   const [newlyAddedFoodName, setNewlyAddedFoodName] = useState('');
   const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [shoppingListCheckedItems, setShoppingListCheckedItems] = useState({});
+  const [showShoppingList, setShowShoppingList] = useState(false);
   const [editingMealInfo, setEditingMealInfo] = useState(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [showCalorieAlert, setShowCalorieAlert] = useState(false);
@@ -1522,6 +1542,8 @@ const AlertAnimationOverlay = () => (
       userProfile={userProfile} 
       onComplete={handleProfileUpdate} 
       onCancel={userProfile.name ? handleProfileCancel : undefined}
+      currentTheme={theme}
+      onThemeChange={setTheme}
     />;
   }
 
@@ -1540,7 +1562,10 @@ const AlertAnimationOverlay = () => (
         onInstallClick={handleInstallClick}
         showInstallButton={!!installPrompt}
         onToggleSummary={() => setShowSummaryModal(true)}
+        onToggleShoppingList={() => setShowShoppingList(true)}
         onExportPDF={handleExportPDF}
+        currentTheme={theme}
+        onThemeChange={setTheme}
       >
       {activeTab === 'pantry' && (
         <PantryScreen 
@@ -1762,6 +1787,13 @@ const AlertAnimationOverlay = () => (
         />
       }
       {showSummaryModal && <ScheduleSummaryModal meals={mealSchedule} onClose={() => setShowSummaryModal(false)} />}
+      {showShoppingList && <ShoppingListModal 
+        meals={mealSchedule} 
+        allFoods={allAvailableFoods} 
+        onClose={() => setShowShoppingList(false)} 
+        checkedItems={shoppingListCheckedItems}
+        onToggleCheck={setShoppingListCheckedItems}
+      />}
       {showFoodAddedModal && <FoodAddedModal 
         foodName={newlyAddedFoodName} 
         onClose={() => {

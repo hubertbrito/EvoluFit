@@ -1,18 +1,18 @@
 import React from 'react';
-import { LayoutGrid, ChefHat, BrainCircuit, CalendarClock, RefreshCw, BookOpen, Download, ClipboardList, FileDown } from 'lucide-react';
+import { LayoutGrid, ChefHat, BrainCircuit, CalendarClock, RefreshCw, BookOpen, Download, ClipboardList, FileDown, Sun, Moon, ShoppingCart } from 'lucide-react';
 
 const HeaderButton = ({ onClick, title, children }) => (
-  <button onClick={onClick} className="flex flex-col items-center justify-center p-1 rounded-lg hover:bg-emerald-700 transition-colors w-14" title={title}>
+  <button onClick={onClick} className="flex flex-col items-center justify-center p-1 rounded-lg hover:bg-emerald-700 transition-colors w-11" title={title}>
     {children}
   </button>
 );
 
-export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRestartTour, onToggleManual, onInstallClick, showInstallButton, onToggleSummary, onExportPDF }) => {
+export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRestartTour, onToggleManual, onInstallClick, showInstallButton, onToggleSummary, onToggleShoppingList, onExportPDF, currentTheme, onThemeChange }) => {
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-white shadow-2xl relative overflow-hidden">
       <header className="bg-emerald-600 text-white p-4 pt-8 flex items-center justify-between shadow-md z-10">
         <span className="font-bold text-xl tracking-tighter">EvoluFit</span>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {showInstallButton && (
             <HeaderButton onClick={onInstallClick} title="Instalar App">
               <Download size={18} />
@@ -29,9 +29,17 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
             <ClipboardList size={18} />
             <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5">Resumo</span>
           </HeaderButton>
+          <HeaderButton onClick={onToggleShoppingList} title="Lista de Compras">
+            <ShoppingCart size={18} />
+            <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5">Lista</span>
+          </HeaderButton>
           <HeaderButton onClick={onRestartTour} title="Reiniciar Tour">
             <RefreshCw size={18} />
             <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5">Tour</span>
+          </HeaderButton>
+          <HeaderButton onClick={() => onThemeChange(currentTheme === 'dark' ? 'light' : 'dark')} title="Alternar Tema">
+            {currentTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5">Tema</span>
           </HeaderButton>
           <HeaderButton onClick={onToggleManual} title="Manual de Uso">
             <BookOpen size={18} />

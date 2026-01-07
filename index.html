@@ -3,14 +3,27 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
     <title>EvoluFit - Nutrição Inteligente</title>
+
+    <!-- Inicialização do Modo Escuro (Evita FOUC) -->
+    <script>
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    </script>
 
     <!-- PWA Manifest and Icons -->
     <meta name="theme-color" content="#10b981">
+    <link rel="manifest" href="/manifest.json">
 
-    <!-- Apple Touch Icon (for iOS) -->
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <!-- Suporte para Ícone no iOS (Fix) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="EvoluFit">
+    <link rel="apple-touch-icon" href="/icons/apple-icon-180.png">
 
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
@@ -32,7 +45,7 @@
         .animate-pulse-blue { animation: pulse-blue 2s infinite; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900 overflow-x-hidden">
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 overflow-x-hidden">
     <div id="root"></div>
     <script type="module" src="/index.jsx"></script>
 </body>

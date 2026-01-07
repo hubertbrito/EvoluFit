@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight, User, Activity, Info, ChevronDown, X, Volume2, Settings } from 'lucide-react';
+import { ArrowRight, User, Activity, Info, ChevronDown, X, Volume2, Settings, Sun, Moon } from 'lucide-react';
 import CustomSelect from './CustomSelect';
 
-const SetupScreen = ({ userProfile, onComplete, onCancel }) => {
+const SetupScreen = ({ userProfile, onComplete, onCancel, currentTheme, onThemeChange }) => {
   const [step, setStep] = useState(1);
   // Garante que os campos numéricos com select customizado comecem vazios
   const [data, setData] = useState({
@@ -297,6 +297,26 @@ const SetupScreen = ({ userProfile, onComplete, onCancel }) => {
               <div className="bg-orange-50 p-3 rounded-xl border border-orange-100 flex gap-3 items-start mb-6">
                 <Settings className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
                 <p className="text-xs text-orange-700"><strong>Passo 4/4:</strong> Personalize sua experiência. Escolha o som que vai te avisar na hora de comer.</p>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-orange-800 mb-1">Aparência do App</label>
+                <div className="flex bg-orange-100 p-1 rounded-xl">
+                    <button 
+                        onClick={() => onThemeChange('light')}
+                        className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${currentTheme === 'light' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500'}`}
+                    >
+                        <Sun size={16} />
+                        Claro
+                    </button>
+                    <button 
+                        onClick={() => onThemeChange('dark')}
+                        className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${currentTheme === 'dark' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-500'}`}
+                    >
+                        <Moon size={16} />
+                        Escuro
+                    </button>
+                </div>
               </div>
 
               <div className="mb-4">
