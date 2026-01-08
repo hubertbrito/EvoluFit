@@ -27,13 +27,13 @@ export const populateDB = async () => {
   const db = await dbPromise;
   const count = await db.count(STORE_NAME);
 
-  // Se o banco já tem itens, não faz nada.
-  if (count > 0) {
-    console.log('IndexedDB já populado.');
+  // Se o banco já tem a mesma quantidade de itens, não faz nada.
+  if (count === RAW_FOOD_DATABASE.length) {
+    console.log('IndexedDB já está atualizado.');
     return;
   }
 
-  console.log('Populando IndexedDB pela primeira vez...');
+  console.log('Atualizando IndexedDB com novos alimentos...');
   const tx = db.transaction(STORE_NAME, 'readwrite');
   
   // Adiciona uma versão normalizada do nome para buscas case-insensitive e sem acentos.
@@ -42,9 +42,10 @@ export const populateDB = async () => {
     name_normalized: (food.name || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   }));
 
-  await Promise.all(foodsToStore.map(food => tx.store.add(food)));
+  // Usa 'put' em vez de 'add' para garantir que itens existentes sejam atualizados e novos sejam inseridos
+  await Promise.all(foodsToStore.map(food => tx.store.put(food)));
   await tx.done;
-  console.log('IndexedDB populado com sucesso!');
+  console.log('IndexedDB atualizado com sucesso!');
 };
 
 /**

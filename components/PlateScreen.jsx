@@ -369,7 +369,7 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                         value={customWithWhom}
                         onChange={(e) => setCustomWithWhom(e.target.value)}
                         placeholder="Digite com quem..."
-                        className="w-full p-2.5 border-2 border-cyan-300 rounded-lg bg-white mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                        className="w-full p-2.5 border-2 border-cyan-300 rounded-lg bg-white mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 text-gray-900"
                       />
                     )}
                   </div>
@@ -389,7 +389,7 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                         value={customEventLocation}
                         onChange={(e) => setCustomEventLocation(e.target.value)}
                         placeholder="Digite o local/evento..."
-                        className="w-full p-2.5 border-2 border-fuchsia-300 rounded-lg bg-white mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-400"
+                        className="w-full p-2.5 border-2 border-fuchsia-300 rounded-lg bg-white mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-400 text-gray-900"
                       />
                     )}
                   </div>
@@ -402,7 +402,7 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                         onChange={(e) => setDescription(e.target.value)}
                         maxLength={80}
                         placeholder="Ex: Levar a sobremesa..."
-                        className="w-full p-2.5 pl-9 border-2 border-indigo-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-400"
+                        className="w-full p-2.5 pl-9 border-2 border-indigo-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-400 text-gray-900"
                       />
                       <StickyNote className="w-4 h-4 text-indigo-300 absolute left-2.5 top-3" />
                     </div>

@@ -481,6 +481,109 @@ export const RAW_FOOD_DATABASE = [
   { id: '713', name: 'Milk-shake (Ovomaltine)', emoji: '🥤', category: 'Doces', calories: 450, protein: 10, carbs: 70, fat: 15, fiber: 2, measures: { 'Copo': 400 } },
   { id: '714', name: 'Chocolate Quente', emoji: '☕', category: 'Bebidas', calories: 200, protein: 5, carbs: 25, fat: 8, fiber: 1, measures: { 'Xícara': 200 } },
   { id: '715', name: 'Cappuccino', emoji: '☕', category: 'Bebidas', calories: 80, protein: 4, carbs: 8, fat: 3, fiber: 0, measures: { 'Xícara': 150 } },
+
+  // --- NOVOS ALIMENTOS (FASE 2 - Corriqueiros e Regionais) ---
+  { id: '716', name: 'Açúcar Cristal', emoji: '💎', category: 'Doces', calories: 400, protein: 0, carbs: 100, fat: 0, fiber: 0, measures: { 'Colher de Sopa': 15, 'Colher de Chá': 5 } },
+  { id: '717', name: 'Açúcar Refinado', emoji: '🍚', category: 'Doces', calories: 400, protein: 0, carbs: 100, fat: 0, fiber: 0, measures: { 'Colher de Sopa': 15, 'Colher de Chá': 5 } },
+  { id: '718', name: 'Açúcar Demerara', emoji: '🟫', category: 'Doces', calories: 396, protein: 0, carbs: 99, fat: 0, fiber: 0, measures: { 'Colher de Sopa': 15, 'Colher de Chá': 5 } },
+  { id: '719', name: 'Café com Açúcar', emoji: '☕', category: 'Bebidas', calories: 40, protein: 0.1, carbs: 10, fat: 0, fiber: 0, measures: { 'Xícara de Café': 50, 'Xícara de Chá': 150, 'Copo Americano': 190 } },
+  { id: '720', name: 'Biscoito Cream Cracker', emoji: '🍪', category: 'Industrializados', calories: 430, protein: 10, carbs: 68, fat: 14, fiber: 3, measures: { 'Unidade': 6, 'Pacote Individual': 25 } },
+  { id: '721', name: 'Biscoito Maria', emoji: '🍪', category: 'Industrializados', calories: 440, protein: 8, carbs: 75, fat: 12, fiber: 2, measures: { 'Unidade': 5 } },
+  { id: '722', name: 'Pão de Leite', emoji: '🍞', category: 'Carboidratos', calories: 300, protein: 9, carbs: 55, fat: 5, fiber: 2, measures: { 'Unidade': 50 } },
+  { id: '723', name: 'Bisnaguinha', emoji: '🍞', category: 'Carboidratos', calories: 300, protein: 8, carbs: 56, fat: 5, fiber: 2, measures: { 'Unidade': 20 } },
+  { id: '724', name: 'Margarina (com sal)', emoji: '🧈', category: 'Gorduras', calories: 720, protein: 0, carbs: 0, fat: 80, fiber: 0, measures: { 'Ponta de Faca': 5, 'Colher de Chá': 10, 'Colher de Sopa': 20 } },
+  { id: '725', name: 'Queijo Coalho', emoji: '🧀', category: 'Laticínios', calories: 320, protein: 24, carbs: 2, fat: 25, fiber: 0, measures: { 'Espeto': 60, 'Fatia': 30 } },
+  { id: '726', name: 'Queijo do Reino', emoji: '🧀', category: 'Laticínios', calories: 360, protein: 25, carbs: 2, fat: 28, fiber: 0, measures: { 'Fatia': 30 } },
+  { id: '727', name: 'Leite em Pó Integral', emoji: '🥛', category: 'Laticínios', calories: 500, protein: 26, carbs: 38, fat: 27, fiber: 0, measures: { 'Colher de Sopa': 15 } },
+  { id: '728', name: 'Leite em Pó Desnatado', emoji: '🥛', category: 'Laticínios', calories: 360, protein: 36, carbs: 52, fat: 1, fiber: 0, measures: { 'Colher de Sopa': 15 } },
+  { id: '729', name: 'Achocolatado Líquido', emoji: '🧃', category: 'Bebidas', calories: 85, protein: 2, carbs: 14, fat: 2, fiber: 0, measures: { 'Caixinha': 200 } },
+  { id: '730', name: 'Suco de Soja (Ades)', emoji: '🧃', category: 'Bebidas', calories: 40, protein: 2, carbs: 7, fat: 1, fiber: 0, measures: { 'Copo': 200, 'Caixinha': 200 } },
+  { id: '731', name: 'Refrigerante de Guaraná', emoji: '🥤', category: 'Bebidas', calories: 40, protein: 0, carbs: 10, fat: 0, fiber: 0, measures: { 'Lata': 350, 'Copo': 200 } },
+  { id: '732', name: 'Água Tônica', emoji: '🥤', category: 'Bebidas', calories: 35, protein: 0, carbs: 9, fat: 0, fiber: 0, measures: { 'Lata': 350, 'Copo': 200 } },
+  { id: '733', name: 'Chá Gelado (Industrializado)', emoji: '🍹', category: 'Bebidas', calories: 30, protein: 0, carbs: 8, fat: 0, fiber: 0, measures: { 'Copo': 200, 'Lata': 350 } },
+  { id: '734', name: 'Pão Doce (Creme)', emoji: '🥯', category: 'Carboidratos', calories: 320, protein: 6, carbs: 55, fat: 8, fiber: 1, measures: { 'Unidade': 80 } },
+  { id: '735', name: 'Sonho de Padaria', emoji: '🥯', category: 'Doces', calories: 350, protein: 6, carbs: 45, fat: 15, fiber: 1, measures: { 'Unidade': 80 } },
+  { id: '736', name: 'Bolo de Laranja', emoji: '🍰', category: 'Doces', calories: 330, protein: 5, carbs: 50, fat: 12, fiber: 1, measures: { 'Fatia': 60 } },
+  { id: '737', name: 'Bolo de Coco', emoji: '🍰', category: 'Doces', calories: 350, protein: 5, carbs: 48, fat: 15, fiber: 1, measures: { 'Fatia': 60 } },
+  { id: '738', name: 'Torta de Limão', emoji: '🥧', category: 'Doces', calories: 380, protein: 5, carbs: 50, fat: 18, fiber: 1, measures: { 'Fatia': 100 } },
+  { id: '739', name: 'Cheesecake', emoji: '🍰', category: 'Doces', calories: 320, protein: 6, carbs: 30, fat: 20, fiber: 0, measures: { 'Fatia': 100 } },
+  { id: '740', name: 'Petit Gâteau', emoji: '🧁', category: 'Doces', calories: 380, protein: 5, carbs: 45, fat: 20, fiber: 1, measures: { 'Unidade': 80 } },
+  { id: '741', name: 'Brownie', emoji: '🍫', category: 'Doces', calories: 450, protein: 5, carbs: 55, fat: 25, fiber: 2, measures: { 'Pedaço': 60 } },
+  { id: '742', name: 'Pipoca Doce', emoji: '🍿', category: 'Doces', calories: 450, protein: 4, carbs: 75, fat: 15, fiber: 4, measures: { 'Saco Pequeno': 50, 'Xícara': 20 } },
+  { id: '743', name: 'Amendoim Japonês', emoji: '🥜', category: 'Industrializados', calories: 500, protein: 15, carbs: 40, fat: 30, fiber: 5, measures: { 'Punhado': 30, 'Pacote Pequeno': 50 } },
+  { id: '744', name: 'Bala de Coco', emoji: '🍬', category: 'Doces', calories: 400, protein: 0, carbs: 98, fat: 1, fiber: 0, measures: { 'Unidade': 5 } },
+  { id: '745', name: 'Chiclete', emoji: '🍬', category: 'Doces', calories: 300, protein: 0, carbs: 75, fat: 0, fiber: 0, measures: { 'Unidade': 5 } },
+  { id: '746', name: 'Pirulito', emoji: '🍭', category: 'Doces', calories: 380, protein: 0, carbs: 95, fat: 0, fiber: 0, measures: { 'Unidade': 15 } },
+  { id: '747', name: 'Geladinho de Fruta', emoji: '🧊', category: 'Doces', calories: 60, protein: 0, carbs: 15, fat: 0, fiber: 0, measures: { 'Unidade': 80 } },
+  { id: '748', name: 'Geladinho de Leite', emoji: '🧊', category: 'Doces', calories: 150, protein: 3, carbs: 20, fat: 6, fiber: 0, measures: { 'Unidade': 80 } },
+  { id: '749', name: 'Carne de Sol Cozida', emoji: '🥩', category: 'Proteínas', calories: 250, protein: 28, carbs: 0, fat: 15, fiber: 0, measures: { 'Bife': 100, 'Pedaço': 50 } },
+  { id: '750', name: 'Charque', emoji: '🥩', category: 'Proteínas', calories: 300, protein: 30, carbs: 0, fat: 20, fiber: 0, measures: { 'Pedaço': 50 } },
+  { id: '751', name: 'Presunto de Peru', emoji: '🥓', category: 'Proteínas', calories: 100, protein: 18, carbs: 1, fat: 3, fiber: 0, measures: { 'Fatia': 20 } },
+  { id: '752', name: 'Mortadela Defumada', emoji: '🥓', category: 'Proteínas', calories: 300, protein: 14, carbs: 2, fat: 26, fiber: 0, measures: { 'Fatia': 20 } },
+  { id: '753', name: 'Copa', emoji: '🥓', category: 'Proteínas', calories: 400, protein: 28, carbs: 0, fat: 32, fiber: 0, measures: { 'Fatia': 10 } },
+  { id: '754', name: 'Lombo Canadense', emoji: '🥓', category: 'Proteínas', calories: 150, protein: 22, carbs: 1, fat: 6, fiber: 0, measures: { 'Fatia': 20 } },
+  { id: '755', name: 'Chester Assado', emoji: '🍗', category: 'Proteínas', calories: 180, protein: 20, carbs: 0, fat: 10, fiber: 0, measures: { 'Fatia': 50 } },
+  { id: '756', name: 'Tender Assado', emoji: '🍖', category: 'Proteínas', calories: 200, protein: 18, carbs: 2, fat: 14, fiber: 0, measures: { 'Fatia': 50 } },
+  { id: '757', name: 'Sardinha Frita', emoji: '🐟', category: 'Proteínas', calories: 250, protein: 25, carbs: 0, fat: 16, fiber: 0, measures: { 'Unidade': 40 } },
+  { id: '758', name: 'Lambari Frito', emoji: '🐟', category: 'Proteínas', calories: 300, protein: 20, carbs: 5, fat: 22, fiber: 0, measures: { 'Porção': 100 } },
+  { id: '759', name: 'Sarapatel', emoji: '🍲', category: 'Industrializados', calories: 200, protein: 18, carbs: 5, fat: 12, fiber: 1, measures: { 'Concha': 150 } },
+  { id: '760', name: 'Rabada', emoji: '🍲', category: 'Proteínas', calories: 250, protein: 20, carbs: 2, fat: 18, fiber: 0, measures: { 'Pedaço': 100 } },
+  { id: '761', name: 'Mocotó', emoji: '🍲', category: 'Industrializados', calories: 220, protein: 15, carbs: 8, fat: 14, fiber: 1, measures: { 'Concha': 150 } },
+  { id: '762', name: 'Buchada de Bode', emoji: '🍲', category: 'Industrializados', calories: 200, protein: 18, carbs: 5, fat: 12, fiber: 1, measures: { 'Concha': 150 } },
+  { id: '763', name: 'Arroz com Pequi', emoji: '🍚', category: 'Carboidratos', calories: 200, protein: 4, carbs: 25, fat: 10, fiber: 2, measures: { 'Escumadeira': 100 } },
+  { id: '764', name: 'Pato no Tucupi', emoji: '🍗', category: 'Industrializados', calories: 220, protein: 20, carbs: 5, fat: 14, fiber: 1, measures: { 'Pedaço': 150 } },
+  { id: '765', name: 'Tacacá', emoji: '🍲', category: 'Industrializados', calories: 80, protein: 5, carbs: 10, fat: 2, fiber: 1, measures: { 'Cuia': 300 } },
+  { id: '766', name: 'Pão de Batata', emoji: '🥯', category: 'Carboidratos', calories: 270, protein: 6, carbs: 45, fat: 8, fiber: 2, measures: { 'Unidade Média': 50, 'Unidade Grande': 80 } },
+  { id: '767', name: 'Pão de Mandioca', emoji: '🥯', category: 'Carboidratos', calories: 280, protein: 5, carbs: 48, fat: 7, fiber: 2, measures: { 'Unidade Média': 50 } },
+  { id: '768', name: 'Pão de Milho', emoji: '🍞', category: 'Carboidratos', calories: 290, protein: 6, carbs: 50, fat: 6, fiber: 3, measures: { 'Fatia': 30, 'Unidade': 50 } },
+  { id: '769', name: 'Broa de Milho (Caxambu)', emoji: '🌽', category: 'Carboidratos', calories: 330, protein: 5, carbs: 55, fat: 10, fiber: 3, measures: { 'Unidade': 60 } },
+  { id: '770', name: 'Rosca Doce', emoji: '🥯', category: 'Carboidratos', calories: 310, protein: 6, carbs: 52, fat: 8, fiber: 2, measures: { 'Fatia': 50 } },
+  { id: '771', name: 'Bolo de Milho', emoji: '🍰', category: 'Doces', calories: 310, protein: 4, carbs: 45, fat: 12, fiber: 1, measures: { 'Fatia': 60 } },
+  { id: '772', name: 'Bolo de Aipim (Mandioca)', emoji: '🍰', category: 'Doces', calories: 320, protein: 3, carbs: 48, fat: 13, fiber: 1, measures: { 'Fatia': 80 } },
+  { id: '773', name: 'Bolo de Cenoura com Chocolate', emoji: '🍰', category: 'Doces', calories: 380, protein: 4, carbs: 55, fat: 16, fiber: 1, measures: { 'Fatia': 80 } },
+  { id: '774', name: 'Empadão de Frango', emoji: '🥧', category: 'Industrializados', calories: 280, protein: 10, carbs: 28, fat: 14, fiber: 1, measures: { 'Fatia': 120, 'Pedaço': 150 } },
+  { id: '775', name: 'Quibe Assado', emoji: '🧆', category: 'Industrializados', calories: 200, protein: 12, carbs: 18, fat: 8, fiber: 3, measures: { 'Unidade': 80, 'Pedaço': 100 } },
+  { id: '776', name: 'Esfiha de Queijo', emoji: '🥟', category: 'Industrializados', calories: 280, protein: 9, carbs: 32, fat: 12, fiber: 1, measures: { 'Unidade': 80 } },
+  { id: '777', name: 'Risoles de Presunto e Queijo', emoji: '🥟', category: 'Industrializados', calories: 320, protein: 8, carbs: 30, fat: 18, fiber: 1, measures: { 'Unidade': 60 } },
+  { id: '778', name: 'Bolinho de Chuva', emoji: '🍩', category: 'Doces', calories: 350, protein: 4, carbs: 55, fat: 12, fiber: 1, measures: { 'Unidade': 30 } },
+  { id: '779', name: 'Bolinho de Bacalhau', emoji: '🧆', category: 'Industrializados', calories: 260, protein: 10, carbs: 25, fat: 14, fiber: 1, measures: { 'Unidade': 30 } },
+  { id: '780', name: 'Bolinho de Arroz', emoji: '🧆', category: 'Industrializados', calories: 250, protein: 5, carbs: 35, fat: 10, fiber: 1, measures: { 'Unidade': 30 } },
+  { id: '781', name: 'Polenta Frita', emoji: '🍟', category: 'Industrializados', calories: 200, protein: 2, carbs: 25, fat: 10, fiber: 1, measures: { 'Unidade/Tira': 30, 'Porção': 100 } },
+  { id: '782', name: 'Mandioca Frita', emoji: '🍟', category: 'Industrializados', calories: 260, protein: 1, carbs: 38, fat: 12, fiber: 2, measures: { 'Pedaço': 30, 'Porção': 100 } },
+  { id: '783', name: 'Batata Rústica (Assada)', emoji: '🥔', category: 'Carboidratos', calories: 150, protein: 2, carbs: 25, fat: 5, fiber: 3, measures: { 'Pedaço': 30, 'Porção': 120 } },
+  { id: '784', name: 'Salada de Frutas', emoji: '🥗', category: 'Frutas', calories: 60, protein: 1, carbs: 15, fat: 0.2, fiber: 2, measures: { 'Taça': 150, 'Concha': 100 } },
+  { id: '785', name: 'Arroz à Grega', emoji: '🍚', category: 'Carboidratos', calories: 150, protein: 3, carbs: 30, fat: 2, fiber: 2, measures: { 'Colher de Sopa': 25, 'Escumadeira': 90 } },
+  { id: '786', name: 'Feijão Tropeiro', emoji: '🥘', category: 'Leguminosas', calories: 220, protein: 10, carbs: 25, fat: 10, fiber: 6, measures: { 'Colher de Sopa': 30, 'Concha': 120 } },
+  { id: '787', name: 'Farofa de Bacon', emoji: '🥓', category: 'Carboidratos', calories: 450, protein: 8, carbs: 50, fat: 25, fiber: 4, measures: { 'Colher de Sopa': 20 } },
+  { id: '788', name: 'Omelete de Queijo e Presunto', emoji: '🍳', category: 'Proteínas', calories: 220, protein: 16, carbs: 2, fat: 16, fiber: 0, measures: { 'Unidade (2 ovos)': 120 } },
+  { id: '789', name: 'Panqueca de Carne', emoji: '🥞', category: 'Industrializados', calories: 200, protein: 10, carbs: 20, fat: 8, fiber: 1, measures: { 'Unidade': 80 } },
+  { id: '790', name: 'Nhoque ao Sugo', emoji: '🍝', category: 'Carboidratos', calories: 160, protein: 4, carbs: 30, fat: 2, fiber: 2, measures: { 'Colher de Servir': 50, 'Prato Raso': 250 } },
+  { id: '791', name: 'Ravioli de Carne', emoji: '🍝', category: 'Carboidratos', calories: 220, protein: 8, carbs: 35, fat: 5, fiber: 2, measures: { 'Colher de Servir': 50, 'Prato Raso': 250 } },
+  { id: '792', name: 'Capeletti de Frango', emoji: '🍝', category: 'Carboidratos', calories: 230, protein: 9, carbs: 35, fat: 6, fiber: 2, measures: { 'Colher de Servir': 50, 'Prato Raso': 250 } },
+  { id: '793', name: 'Frango a Passarinho', emoji: '🍗', category: 'Proteínas', calories: 260, protein: 20, carbs: 0, fat: 18, fiber: 0, measures: { 'Pedaço': 50, 'Porção': 200 } },
+  { id: '794', name: 'Frango Empanado', emoji: '🍗', category: 'Proteínas', calories: 280, protein: 18, carbs: 15, fat: 16, fiber: 1, measures: { 'Filé': 120 } },
+  { id: '795', name: 'Bife à Milanesa', emoji: '🥩', category: 'Proteínas', calories: 290, protein: 20, carbs: 18, fat: 15, fiber: 1, measures: { 'Bife Médio': 120 } },
+  { id: '796', name: 'Peixe Frito', emoji: '🐟', category: 'Proteínas', calories: 250, protein: 20, carbs: 5, fat: 16, fiber: 0, measures: { 'Filé': 100, 'Posta': 120 } },
+  { id: '797', name: 'Camarão Alho e Óleo', emoji: '🦐', category: 'Proteínas', calories: 200, protein: 22, carbs: 1, fat: 12, fiber: 0, measures: { 'Porção': 100, 'Colher de Sopa': 30 } },
+  { id: '798', name: 'Casquinha de Siri', emoji: '🦀', category: 'Proteínas', calories: 200, protein: 12, carbs: 15, fat: 10, fiber: 1, measures: { 'Unidade': 100 } },
+  { id: '799', name: 'Caruru', emoji: '🍲', category: 'Industrializados', calories: 180, protein: 6, carbs: 12, fat: 12, fiber: 3, measures: { 'Concha': 150, 'Colher de Sopa': 30 } },
+  { id: '800', name: 'Pamonha Salgada', emoji: '🌽', category: 'Carboidratos', calories: 180, protein: 4, carbs: 25, fat: 8, fiber: 3, measures: { 'Unidade': 150 } },
+  { id: '801', name: 'Biscoito de Polvilho', emoji: '🥨', category: 'Carboidratos', calories: 450, protein: 1, carbs: 80, fat: 15, fiber: 0, measures: { 'Unidade': 5, 'Pacote': 50 } },
+  { id: '802', name: 'Sequilhos', emoji: '🍪', category: 'Doces', calories: 400, protein: 2, carbs: 75, fat: 10, fiber: 0, measures: { 'Unidade': 5 } },
+  { id: '803', name: 'Biscoito Wafer', emoji: '🍪', category: 'Doces', calories: 500, protein: 5, carbs: 65, fat: 25, fiber: 1, measures: { 'Unidade': 8 } },
+  { id: '804', name: 'Torrada Integral', emoji: '🍞', category: 'Carboidratos', calories: 350, protein: 12, carbs: 60, fat: 6, fiber: 8, measures: { 'Unidade': 10 } },
+  { id: '805', name: 'Manteiga de Garrafa', emoji: '🧈', category: 'Gorduras', calories: 900, protein: 0, carbs: 0, fat: 100, fiber: 0, measures: { 'Colher de Sopa': 13, 'Colher de Chá': 5 } },
+  { id: '806', name: 'Blanquet de Peru', emoji: '🥓', category: 'Proteínas', calories: 100, protein: 18, carbs: 2, fat: 2, fiber: 0, measures: { 'Fatia': 15 } },
+  { id: '807', name: 'Almôndega ao Molho', emoji: '🥩', category: 'Proteínas', calories: 180, protein: 15, carbs: 8, fat: 10, fiber: 1, measures: { 'Unidade': 40 } },
+  { id: '808', name: 'Molho Bolonhesa', emoji: '🍝', category: 'Industrializados', calories: 150, protein: 10, carbs: 8, fat: 9, fiber: 1, measures: { 'Concha': 100, 'Colher de Sopa': 30 } },
+  { id: '809', name: 'Chantilly', emoji: '🧁', category: 'Doces', calories: 300, protein: 2, carbs: 20, fat: 25, fiber: 0, measures: { 'Colher de Sopa': 15 } },
+  { id: '810', name: 'Doce de Abóbora', emoji: '🎃', category: 'Doces', calories: 250, protein: 1, carbs: 60, fat: 0, fiber: 2, measures: { 'Colher de Sopa': 30, 'Pedaço': 40 } },
+  { id: '811', name: 'Doce de Banana', emoji: '🍌', category: 'Doces', calories: 260, protein: 1, carbs: 65, fat: 0, fiber: 2, measures: { 'Colher de Sopa': 30 } },
+  { id: '812', name: 'Rapadura', emoji: '🟫', category: 'Doces', calories: 380, protein: 0, carbs: 95, fat: 0, fiber: 0, measures: { 'Pedaço Pequeno': 30 } },
+  { id: '813', name: 'Bananada', emoji: '🍌', category: 'Doces', calories: 300, protein: 1, carbs: 75, fat: 0, fiber: 3, measures: { 'Unidade': 25 } },
+  { id: '814', name: 'Pé de Moça', emoji: '🥜', category: 'Doces', calories: 450, protein: 10, carbs: 50, fat: 25, fiber: 3, measures: { 'Unidade': 30 } },
+  { id: '815', name: 'Creme de Papaya com Cassis', emoji: '🥭', category: 'Doces', calories: 180, protein: 2, carbs: 25, fat: 8, fiber: 2, measures: { 'Taça': 150 } },
+  { id: '816', name: 'Saputi', emoji: '🟤', category: 'Frutas', calories: 83, protein: 0.4, carbs: 20, fat: 1.1, fiber: 5.3, measures: { 'Unidade': 80, 'Fatia': 20 } },
 ];
 
 // Peso base em gramas para cada unidade (Estimativa média para cálculo)
@@ -504,15 +607,20 @@ export const UNIT_WEIGHTS = {
   'Fatia Fina': 20,
   'Fatia Média': 35,
   'Fatia Grossa': 50,
+  'Fatia': 30,
   'Porção Pequena': 80,
   'Porção Média': 150,
   'Porção Grande': 250,
+  'Porção': 100,
   'Concha Pequena': 90,
   'Concha Média': 150,
   'Concha Grande': 220,
+  'Concha': 150,
   'Prato Pequeno': 300,
   'Prato Médio': 500,
   'Prato Grande': 700,
+  'Prato Raso': 350,
+  'Prato Fundo': 450,
   '50g': 50,
   '100g': 100,
   '150g': 150,
@@ -520,7 +628,38 @@ export const UNIT_WEIGHTS = {
   '250g': 250,
   '300g': 300,
   '400g': 400,
-  '500g': 500
+  '500g': 500,
+  'Pedaço': 100,
+  'Pedaço Pequeno': 30,
+  'Pedaço Médio': 60,
+  'Pedaço Grande': 120,
+  'Filé': 120,
+  'Filé Pequeno': 80,
+  'Filé Médio': 120,
+  'Filé Grande': 180,
+  'Posta': 150,
+  'Escumadeira': 90,
+  'Taça': 150,
+  'Copo': 200,
+  'Copo Americano': 190,
+  'Pacote': 50,
+  'Pacote Pequeno': 30,
+  'Tira': 30,
+  'Rodela': 20,
+  'Dente': 3,
+  'Folha': 10,
+  'Ramo': 10,
+  'Bago': 15,
+  'Espeto': 60,
+  'Cuia': 250,
+  'Lata': 350,
+  'Garrafa': 500,
+  'Bisnaga': 30,
+  'Bola': 60,
+  'Pegador': 100,
+  'Scoop': 30,
+  'Cubo': 10,
+  'Rodela Média': 30
 };
 
 export const MEASURE_UNITS = Object.keys(UNIT_WEIGHTS);
@@ -534,7 +673,7 @@ const calculateDiets = (food) => {
   const n = name.toLowerCase();
 
   // Vegana
-  const animalCategories = ['Proteínas', 'Laticínios', 'Industrializados', 'Doces'];
+  const animalCategories = ['Proteínas', 'Laticínios', 'Industrializados', 'Doces', 'Meus Alimentos'];
   const animalNames = ['carne', 'frango', 'peixe', 'ovo', 'queijo', 'leite', 'manteiga', 'presunto', 'bacon', 'linguiça', 'mel', 'whey', 'chocolate ao leite', 'pizza', 'hambúrguer', 'nuggets', 'sushi', 'lasanha', 'coxinha', 'pastel', 'empada', 'kibe', 'pão de queijo'];
   const isAnimal = (animalCategories.includes(category) || animalNames.some(an => n.includes(an))) && 
                    !n.includes('soja') && !n.includes('tofu') && !n.includes('amêndoas') && !n.includes('coco') && !n.includes('vegano');
@@ -588,18 +727,35 @@ export const FOOD_DATABASE = RAW_FOOD_DATABASE.map(food => ({
 export const inferFoodMeasures = (name) => {
   if (!name || typeof name !== 'string') return null;
   const n = name.toLowerCase();
-  if (n.includes('arroz')) return { 'Colher de Sopa': 25, 'Escumadeira': 90, 'Xícara': 150, 'Prato Raso': 300 };
-  if (n.includes('feijão') || n.includes('feijao')) return { 'Concha Pequena': 90, 'Concha Média': 150, 'Colher de Sopa': 20 };
-  if (n.includes('frango') && (n.includes('grelhado') || n.includes('filé'))) return { 'Filé Pequeno': 80, 'Filé Médio': 120, 'Filé Grande': 180 };
-  if (n.includes('frango') && (n.includes('desfiado') || n.includes('picado'))) return { 'Colher de Sopa': 25, 'Xícara': 120 };
+  
+  if (n.includes('arroz') || n.includes('risoto')) return { 'Colher de Sopa': 25, 'Escumadeira': 90, 'Xícara': 150, 'Prato Raso': 300 };
+  if (n.includes('feijão') || n.includes('feijao') || n.includes('lentilha') || n.includes('grão')) return { 'Concha Pequena': 90, 'Concha Média': 150, 'Colher de Sopa': 20 };
+  if (n.includes('macarrão') || n.includes('massa') || n.includes('espaguete')) return { 'Pegador': 100, 'Escumadeira': 80, 'Prato Raso': 250 };
+  
+  if (n.includes('frango') || n.includes('carne') || n.includes('peixe') || n.includes('bife') || n.includes('hambúrguer')) {
+      if (n.includes('desfiado') || n.includes('moída') || n.includes('picado') || n.includes('cubos')) return { 'Colher de Sopa': 25, 'Xícara': 120, 'Concha Média': 150 };
+      return { 'Filé Pequeno': 80, 'Filé Médio': 120, 'Filé Grande': 180, 'Pedaço': 100, 'Unidade': 100 };
+  }
+  
   if (n.includes('ovo')) return { 'Unidade': 50, 'Unidade Grande': 60, 'Unidade Pequena': 45 };
-  if (n.includes('banana')) return { 'Unidade Pequena': 60, 'Unidade Média': 90, 'Unidade Grande': 120 };
-  if (n.includes('alface') || n.includes('salada') || n.includes('folha') || n.includes('rúcula') || n.includes('agrião')) return { 'Porção Pequena': 40, 'Porção Média': 80, 'Prato Raso': 150 };
-  if (n.includes('melancia') || n.includes('mamão') || n.includes('abacaxi') || n.includes('bolo') || n.includes('torta') || n.includes('pizza')) return { 'Fatia Fina': 100, 'Fatia Média': 200, 'Fatia Grossa': 300 };
+  
+  if (n.includes('pão') || n.includes('torrada') || n.includes('bolo') || n.includes('torta')) return { 'Fatia': 30, 'Unidade': 50, 'Pedaço': 60 };
+  if (n.includes('biscoito') || n.includes('bolacha')) return { 'Unidade': 8, 'Pacote': 30 };
+  
+  if (n.includes('queijo') || n.includes('presunto') || n.includes('mussarela')) return { 'Fatia': 15, 'Fatia Grossa': 30, 'Pedaço': 30, 'Colher de Sopa': 20 };
+  
+  if (n.includes('leite') || n.includes('suco') || n.includes('refrigerante') || n.includes('café') || n.includes('chá') || n.includes('água') || n.includes('agua') || n.includes('vitamina') || n.includes('iogurte') || n.includes('bebida')) return { 'Copo Americano': 190, 'Copo Grande': 300, 'Xícara': 240, '100ml': 100 };
+  
+  if (n.includes('fruta') || n.includes('banana') || n.includes('maçã') || n.includes('laranja')) return { 'Unidade': 100, 'Unidade Média': 100, 'Pedaço': 80 };
+  
+  if (n.includes('doce') || n.includes('chocolate') || n.includes('bombom') || n.includes('bala')) return { 'Unidade': 20, 'Pedaço': 20 };
+  
+  if (n.includes('salada') || n.includes('legumes') || n.includes('verdura') || n.includes('alface')) return { 'Prato Raso': 150, 'Pires': 80, 'Colher de Sopa': 20, 'Folha': 10 };
+  
   if (n.includes('sopa') || n.includes('caldo') || n.includes('creme')) return { 'Concha Pequena': 100, 'Concha Média': 150, 'Concha Grande': 250, 'Prato Fundo': 300, 'Tigela': 350 };
-  if (n.includes('pão') || n.includes('torrada')) return { 'Fatia': 25, 'Unidade': 50 };
-  if (n.includes('queijo') || n.includes('presunto')) return { 'Fatia': 15, 'Fatia Grossa': 30 };
-  if (n.includes('leite') || n.includes('suco') || n.includes('refrigerante') || n.includes('café') || n.includes('chá') || n.includes('água') || n.includes('agua')) return { 'Copo Americano': 190, 'Copo Grande': 300, 'Xícara': 240, '100ml': 100 };
+  
+  if (n.includes('pizza')) return { 'Fatia': 120, 'Pedaço': 120 };
+  
   return null;
 };
 
@@ -640,33 +796,96 @@ export const inferNutrients = (name) => {
     'carne': '15',    // Carne Moída (Refogada)
     'peixe': '345',   // Tilápia Grelhada
     'salmão': '346',  // Salmão Grelhado
+    'salmao': '346',
     'atum': '347',    // Atum (Lata/Água)
     'sardinha': '348',// Sardinha (Lata/Óleo)
     'ovo': '17',      // Ovo Cozido
+    'omelete': '788',
     'queijo': '35',   // Queijo Mussarela
     'leite': '34',    // Leite Integral
     'iogurte': '36',  // Iogurte Natural
     'arroz': '1',     // Arroz Branco
     'macarrão': '3',  // Macarrão Cozido
+    'macarrao': '3',
+    'massa': '3',
+    'espaguete': '3',
     'pão': '5',       // Pão de Forma
+    'pao': '5',
     'batata': '314',  // Batata Inglesa Cozida
+    'purê': '322',
+    'pure': '322',
+    'frita': '444',
     'mandioca': '316',// Mandioca Cozida
+    'aipim': '316',
     'feijão': '10',   // Feijão Carioca
+    'feijao': '10',
     'lentilha': '12', // Lentilha Cozida
     'grão de bico': '13',
+    'grao de bico': '13',
     'alface': '21',
     'tomate': '22',
     'cenoura': '23',
     'brócolis': '24',
+    'brocolis': '24',
     'banana': '26',
     'maçã': '27',
+    'maca': '27',
     'laranja': '28',
     'mamão': '29',
+    'mamao': '29',
     'abacate': '387',
     'azeite': '409',
-    'castanha': '412', // Castanha de Caju
+    'castanha': '412',
     'amendoim': '416',
     'bolo': '48', // Bolo de Chocolate
+    'torta': '49',
+    'chocolate': '47',
+    'pizza': '53',
+    'hambúrguer': '442',
+    'hamburguer': '442',
+    'burger': '442',
+    'lanche': '442',
+    'sanduíche': '707',
+    'sanduiche': '707',
+    'misto': '707',
+    'suco': '41',
+    'refrigerante': '42',
+    'refri': '42',
+    'coca': '42',
+    'cerveja': '43',
+    'chopp': '43',
+    'vinho': '44',
+    'drink': '428',
+    'vodka': '45',
+    'whisky': '46',
+    'gin': '427',
+    'café': '38',
+    'cafe': '38',
+    'chá': '39',
+    'cha': '39',
+    'tapioca': '9',
+    'cuscuz': '8',
+    'pipoca': '320',
+    'açaí': '391',
+    'acai': '391',
+    'pastel': '436',
+    'coxinha': '50',
+    'salgado': '50',
+    'biscoito': '52',
+    'bolacha': '52',
+    'cookie': '52',
+    'sorvete': '433',
+    'doce': '432',
+    'brigadeiro': '432',
+    'salada': '25',
+    'sopa': '668',
+    'caldo': '670',
+    'creme': '667',
+    'molho': '553',
+    'whey': '352',
+    'proteína': '352',
+    'proteina': '352',
+    'tamarindo': '649', // Mapeado para Tâmara (similar em caloria/carbo)
   };
 
   const foundKeyword = Object.keys(inferenceMap).find(keyword => n.includes(keyword));
@@ -680,6 +899,18 @@ export const inferNutrients = (name) => {
         fat: baseFood.fat, fiber: baseFood.fiber, emoji: baseFood.emoji, category: baseFood.category,
       };
     }
+  }
+
+  // Fallback: Busca dinâmica no banco de dados
+  // Procura se o nome digitado contém o nome de algum alimento do banco (ex: "Bolo de Fubá Cremoso" contém "Bolo de Fubá")
+  // Filtramos nomes muito curtos (> 3 chars) para evitar falsos positivos (ex: "Sal" dentro de "Salada")
+  const dbMatch = RAW_FOOD_DATABASE.find(f => f.name.length > 3 && n.includes(f.name.toLowerCase()));
+  
+  if (dbMatch) {
+      return {
+        calories: dbMatch.calories, protein: dbMatch.protein, carbs: dbMatch.carbs,
+        fat: dbMatch.fat, fiber: dbMatch.fiber, emoji: dbMatch.emoji, category: dbMatch.category,
+      };
   }
 
   return null; // Retorna null se nenhuma correspondência for encontrada

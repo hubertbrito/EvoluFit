@@ -207,49 +207,50 @@ const ManualScreen = ({ onClose, onReset, onInstallClick, showInstallButton }) =
       
       <div className="p-6 overflow-y-auto space-y-6 text-xs text-gray-600 leading-relaxed">
         <div className="space-y-2">
-          <h3 className="font-bold text-emerald-700 text-base">Funcionalidades Principais</h3>
-          <ul className="list-disc list-inside space-y-2 pl-1">
-            <li>
-              <strong>Dispensa e Prato:</strong> Busque alimentos por texto ou voz 🎤, filtre por categorias ou dietas, e adicione-os à sua dispensa. Toque em um item para movê-lo para o "Prato", onde você ajusta quantidades e vê as calorias em tempo real.
-            </li>
-            <li>
-              <strong>Agenda Inteligente:</strong> Agende pratos para dias e refeições específicas. Crie refeições personalizadas (ex: "Ceia"), reordene, edite, limpe ou exclua cards. As refeições agendadas em grupo se mantêm conectadas.
-            </li>
-            <li>
-              <strong>Cérebro e Metas:</strong> Acompanhe seu progresso calórico, veja a distribuição de macronutrientes e receba um relatório completo sobre seu metabolismo e metas com base no seu perfil.
-            </li>
-            <li>
-              <strong>Resumo da Agenda:</strong> No topo da tela, clique no ícone de "Resumo" (📋) para ter uma visão geral e compacta de todas as refeições que você já agendou.
-            </li>
+          <h3 className="font-bold text-emerald-700 text-base">Funcionalidades Detalhadas</h3>
+          <ul className="list-disc list-inside space-y-2 pl-1 grid grid-cols-1 gap-1">
+            <li><strong>1. Dispensa e Busca:</strong> Encontre alimentos por nome ou comando de voz 🎤.</li>
+            <li><strong>2. Filtros Inteligentes:</strong> Filtre por categorias ou dietas (Low Carb, Vegana, etc).</li>
+            <li><strong>3. Montagem de Prato:</strong> Adicione itens e ajuste medidas caseiras com cálculo automático.</li>
+            <li><strong>4. Agendamento:</strong> Defina se o prato é para dias específicos ou para a semana toda.</li>
+            <li><strong>5. Agenda Interativa:</strong> Arraste e solte cards para reordenar. Marque como "Feito".</li>
+            <li><strong>6. Edição e Duplicação:</strong> Edite pratos criados ou duplique refeições para outros dias.</li>
+            <li><strong>7. Contexto Social:</strong> Registre onde e com quem você vai comer (ex: "Jantar com amigos").</li>
+            <li><strong>8. Lista de Compras:</strong> Gere uma lista automática baseada no seu planejamento.</li>
+            <li><strong>9. Resumo da Agenda:</strong> Visualize um resumo compacto de todas as refeições.</li>
+            <li><strong>10. Controle de Água:</strong> Registre consumo e acompanhe a meta diária com histórico.</li>
+            <li><strong>11. Cérebro e Metas:</strong> Relatório do seu metabolismo (TMB), gasto calórico e progresso.</li>
+            <li><strong>12. Alertas:</strong> Receba avisos visuais e sonoros na hora de comer (com app aberto).</li>
+            <li><strong>13. Modo Escuro:</strong> Alterne entre tema claro e escuro para conforto visual.</li>
+            <li><strong>14. Exportar PDF:</strong> Salve ou imprima seu planejamento alimentar.</li>
+            <li><strong>15. Offline:</strong> Funciona sem internet após o primeiro acesso (exceto busca por voz).</li>
+            <li><strong>16. Reset e Ajustes:</strong> Redefina sua agenda ou atualize seu perfil a qualquer momento.</li>
           </ul>
         </div>
 
         <div className="space-y-3 bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <h3 className="font-bold text-blue-800 text-base">Uso Offline e Limitações</h3>
-          <p className="text-blue-700">
-            O EvoluFit foi projetado para funcionar offline! Após o primeiro uso com internet, você pode acessá-lo a qualquer momento, mesmo sem conexão.
-          </p>
-          <ul className="list-disc list-inside space-y-1 pl-1 text-blue-700">
-              <li><strong>O que funciona offline:</strong> Quase tudo! Visualizar e editar sua agenda, montar pratos, fazer cálculos, acessar a dispensa e o banco de dados de alimentos.</li>
-              <li className="font-bold">
-                O que pode falhar offline:
-              </li>
-              <ul className="list-['-_'] list-inside pl-4 space-y-1">
-                  <li><strong>Busca por Voz (Microfone):</strong> Este recurso depende do seu navegador e sistema operacional, e frequentemente precisa de internet para funcionar. Em modo offline, prefira digitar o nome do alimento.</li>
-                  <li><strong>Alertas de Refeição:</strong> Para que o alarme funcione, o app precisa estar aberto em uma aba do navegador (mesmo em segundo plano). Se o navegador for fechado, os alertas não serão disparados.</li>
-              </ul>
-          </ul>
-        </div>
+          <h3 className="font-bold text-blue-800 text-base">Instalação e Atualização</h3>
+          
+          <div className="space-y-2">
+            <p className="font-bold text-blue-900">Como Instalar:</p>
+            <p className="text-blue-700">
+              O EvoluFit funciona como um aplicativo nativo. Não é necessário baixar de uma loja.
+            </p>
+            <ul className="list-disc list-inside pl-2 space-y-1 text-blue-700">
+              <li><strong>Android (Chrome):</strong> Toque nos três pontinhos (⋮) no canto superior direito e selecione "Adicionar à tela inicial" ou "Instalar aplicativo".</li>
+              <li><strong>iOS (Safari):</strong> Toque no ícone de Compartilhamento (quadrado com seta) e selecione "Adicionar à Tela de Início".</li>
+            </ul>
+          </div>
 
-        <div className="space-y-2">
-          <h3 className="font-bold text-emerald-700 text-base">Instalar o Aplicativo</h3>
-          <p>
-            Para uma experiência de aplicativo nativo (mais rápido e com ícone na sua tela inicial), instale o EvoluFit. Procure pelo botão <Download size={14} className="inline-block -mt-1" /> no topo da tela ou siga os passos do seu navegador:
-          </p>
-          <ul className="list-disc list-inside pl-2 space-y-1">
-            <li><strong>Android (Chrome):</strong> Toque nos três pontinhos (⋮) e selecione "Instalar aplicativo" ou "Adicionar à tela inicial".</li>
-            <li><strong>iOS (Safari):</strong> Toque no ícone de Compartilhamento (quadrado com seta) e selecione "Adicionar à Tela de Início".</li>
-          </ul>
+          <div className="space-y-2 pt-2 border-t border-blue-200">
+            <p className="font-bold text-blue-900">Como Atualizar:</p>
+            <p className="text-blue-700">
+              Para receber novas funcionalidades (como a Lista de Compras ou Modo Escuro), você não precisa reinstalar.
+            </p>
+            <p className="text-blue-700">
+              <strong>O segredo é:</strong> Acesse o EvoluFit pelo navegador (site) conectado à internet ocasionalmente. Isso baixa a versão mais recente automaticamente. Na próxima vez que abrir o app instalado, ele já estará atualizado.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -268,9 +269,13 @@ const ManualScreen = ({ onClose, onReset, onInstallClick, showInstallButton }) =
   </div>
 );
 
-const AddMealModal = ({ onClose, onConfirm, title, buttonLabel, mealToEdit }) => {
-  const [selectedDays, setSelectedDays] = useState([]);
+const AddMealModal = ({ onClose, onConfirm, title, buttonLabel, mealToEdit, context }) => {
+  const [selectedDays, setSelectedDays] = useState(
+    context && context !== 'Datas Marcadas' && context !== 'Todos' ? [context] : []
+  );
   const [time, setTime] = useState(mealToEdit ? mealToEdit.time : '14:00');
+  const [specificDate, setSpecificDate] = useState('');
+  const [repeatCount, setRepeatCount] = useState(1);
   const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
   const toggleDay = (day) => {
@@ -280,8 +285,13 @@ const AddMealModal = ({ onClose, onConfirm, title, buttonLabel, mealToEdit }) =>
   };
 
   const handleConfirm = () => {
-    if (selectedDays.length === 0) return alert('Selecione pelo menos um dia.');
-    onConfirm(selectedDays, time);
+    if (context === 'Datas Marcadas') {
+        if (!specificDate) return alert('Selecione uma data.');
+        onConfirm(['Datas Marcadas'], time, specificDate, repeatCount);
+    } else {
+        if (selectedDays.length === 0) return alert('Selecione pelo menos um dia.');
+        onConfirm(selectedDays, time);
+    }
     onClose();
   };
 
@@ -310,22 +320,60 @@ const AddMealModal = ({ onClose, onConfirm, title, buttonLabel, mealToEdit }) =>
                   type="time" 
                   value={time} 
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full p-2 border rounded-lg bg-white"
+                  className="w-full p-2 border rounded-lg bg-white text-gray-900"
               />
             </div>
           )}
-          <p className="text-sm text-gray-600 mb-4">Selecione os dias para esta refeição:</p>
-          <div className="flex gap-2 mb-4">
-            <button onClick={() => setSelectedDays(days)} className="flex-1 p-2 rounded-lg text-xs font-bold border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100">Todos os Dias</button>
-            <button onClick={() => setSelectedDays([])} className="flex-1 p-2 rounded-lg text-xs font-bold border border-gray-200 text-gray-500 hover:bg-gray-50">Limpar</button>
-          </div>
-          <div className="grid grid-cols-4 gap-2">
-            {days.map(day => (
-              <button key={day} onClick={() => toggleDay(day)} className={`p-2 rounded-lg text-xs font-bold transition-colors ${selectedDays.includes(day) ? 'bg-emerald-600 text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
-                {day.slice(0, 3)}
-              </button>
-            ))}
-          </div>
+          
+          {context === 'Datas Marcadas' ? (
+            <>
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-gray-700 mb-1">Data Inicial</label>
+                <input 
+                    type="date" 
+                    value={specificDate} 
+                    onChange={(e) => setSpecificDate(e.target.value)}
+                    className="w-full p-2 border rounded-lg bg-white text-gray-900"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-gray-700 mb-1">Repetir por (dias)</label>
+                <div className="flex items-center gap-3">
+                    <input 
+                        type="number" 
+                        min="1" 
+                        max="30"
+                        value={repeatCount} 
+                        onChange={(e) => setRepeatCount(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-20 p-2 border rounded-lg bg-white text-center font-bold text-emerald-600"
+                    />
+                    <span className="text-xs text-gray-500">
+                        {repeatCount > 1 ? `Criar refeições até ${(() => {
+                            if (!specificDate) return '...';
+                            const d = new Date(specificDate + 'T00:00:00');
+                            d.setDate(d.getDate() + repeatCount - 1);
+                            return d.toLocaleDateString('pt-BR');
+                        })()}` : 'Apenas nesta data'}
+                    </span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-gray-600 mb-4">Selecione os dias para esta refeição:</p>
+              <div className="flex gap-2 mb-4">
+                <button onClick={() => setSelectedDays(days)} className="flex-1 p-2 rounded-lg text-xs font-bold border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100">Todos os Dias</button>
+                <button onClick={() => setSelectedDays([])} className="flex-1 p-2 rounded-lg text-xs font-bold border border-gray-200 text-gray-500 hover:bg-gray-50">Limpar</button>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {days.map(day => (
+                  <button key={day} onClick={() => toggleDay(day)} className={`p-2 rounded-lg text-xs font-bold transition-colors ${selectedDays.includes(day) ? 'bg-emerald-600 text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                    {day.slice(0, 3)}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
         <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
           <button onClick={onClose} className="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button>
@@ -421,6 +469,73 @@ const DeleteMealModal = ({ onClose, onConfirm, onDuplicate, meal, contextDay }) 
   );
 };
 
+const WhatsNewModal = ({ onClose, onOpenManual }) => {
+  const features = [
+    "📅 Arraste e Solte na Agenda: Reorganize suas refeições facilmente.",
+    "📤 Compartilhar Cardápio: Envie seu planejamento do dia pelo WhatsApp.",
+    "💡 Sugestão de Alimentos: Não achou algo? Sugira diretamente pelo app.",
+    "🍎 Categoria 'Meus Alimentos': Seus itens personalizados agora têm casa própria.",
+    "💧 Histórico de Água: Acompanhe sua hidratação nos últimos 7 dias.",
+    "🗑️ Lixeira Inteligente: Exclua itens da dispensa ou alimentos personalizados."
+  ];
+  
+  const newFoods = [
+    "Saputi", "Tamarindo", "Pão de Batata", "Bolo de Milho", "Salgados de Festa", "Pratos Feitos", "E mais 50 itens!"
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-bounce">
+        <div className="p-4 border-b bg-emerald-50 flex justify-between items-center">
+          <h3 className="font-bold text-emerald-800 flex items-center gap-2">
+            ✨ Novidades da Atualização
+          </h3>
+          <button onClick={onClose} className="p-1 hover:bg-emerald-100 rounded-full transition-colors text-emerald-600">
+            <X size={20} />
+          </button>
+        </div>
+        <div className="p-6 overflow-y-auto max-h-[60vh]">
+          <div className="mb-4">
+            <h4 className="font-bold text-emerald-700 mb-2 text-sm uppercase">Novas Funcionalidades</h4>
+            <ul className="list-disc list-inside text-xs text-gray-600 space-y-1.5">
+              {features.map((f, i) => <li key={i}>{f}</li>)}
+            </ul>
+          </div>
+          
+          <div className="mb-4">
+            <h4 className="font-bold text-emerald-700 mb-2 text-sm uppercase">Novos Alimentos</h4>
+            <div className="flex flex-wrap gap-2">
+              {newFoods.map((f, i) => (
+                <span key={i} className="px-2 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-md border border-emerald-100">
+                  {f}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 text-xs text-blue-800 leading-relaxed">
+            <strong>Dica:</strong> Consulte o <strong>Manual de Uso</strong> para aprender a usar todas essas novidades detalhadamente.
+          </div>
+        </div>
+        <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
+          <button 
+            onClick={() => { onClose(); onOpenManual(); }}
+            className="px-4 py-2 text-emerald-600 font-bold text-xs hover:bg-emerald-50 rounded-lg transition-colors"
+          >
+            Ver Manual
+          </button>
+          <button 
+            onClick={onClose} 
+            className="px-6 py-2 bg-emerald-600 text-white rounded-lg font-bold text-xs hover:bg-emerald-700 transition-transform active:scale-95 shadow-md"
+          >
+            Entendi
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Confetti = () => {
   const confettiCount = 100;
   const colors = ['#fde047', '#f87171', '#4ade80', '#60a5fa', '#a78bfa'];
@@ -509,6 +624,95 @@ const ClearMealModal = ({ onClose, onConfirm, meal, contextDay, groupMembers }) 
           <button onClick={onClose} className="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button>
           <button onClick={handleConfirm} className="px-6 py-2 bg-amber-500 text-white rounded-lg font-bold text-sm shadow-md hover:bg-amber-600">Limpar</button>
         </div>
+      </div>
+    </div>
+  );
+};
+
+const CloneDayModal = ({ sourceDay, onClose, onConfirm, mealSchedule }) => {
+  const [targetType, setTargetType] = useState('weekday'); // 'weekday' | 'date'
+  const [targetDay, setTargetDay] = useState('Segunda');
+  const [targetDate, setTargetDate] = useState('');
+  const [conflictCount, setConflictCount] = useState(null);
+
+  const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+
+  const handleNext = () => {
+    const dayToCheck = targetType === 'weekday' ? targetDay : 'Datas Marcadas';
+    const dateToCheck = targetType === 'date' ? targetDate : null;
+
+    if (targetType === 'date' && !targetDate) return alert('Selecione uma data.');
+    if (targetType === 'weekday' && targetDay === sourceDay) return alert('O dia de destino deve ser diferente da origem.');
+
+    // Verifica se já existem refeições ESPECÍFICAS no destino (ignorando 'Todos')
+    const existing = mealSchedule.filter(m => {
+        if (m.dayOfWeek !== dayToCheck) return false;
+        if (dayToCheck === 'Datas Marcadas') return m.specificDate === dateToCheck;
+        return true;
+    });
+
+    if (existing.length > 0) {
+        setConflictCount(existing.length);
+    } else {
+        onConfirm(dayToCheck, dateToCheck, 'replace');
+        onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-bounce">
+        <div className="p-4 border-b bg-indigo-50 flex justify-between items-center">
+          <h3 className="font-bold text-indigo-800 flex items-center gap-2">
+            <Copy size={20} /> Clonar Dia: {sourceDay}
+          </h3>
+          <button onClick={onClose}><X size={20} className="text-indigo-600" /></button>
+        </div>
+        
+        <div className="p-6">
+          {!conflictCount ? (
+            <>
+              <p className="text-sm text-gray-600 mb-4">Para onde deseja copiar as refeições de <strong>{sourceDay}</strong>?</p>
+              
+              <div className="flex gap-2 mb-4">
+                <button onClick={() => setTargetType('weekday')} className={`flex-1 py-2 rounded-lg text-xs font-bold border ${targetType === 'weekday' ? 'bg-indigo-500 text-white border-indigo-500' : 'bg-white text-gray-500 border-gray-200'}`}>Dia da Semana</button>
+                <button onClick={() => setTargetType('date')} className={`flex-1 py-2 rounded-lg text-xs font-bold border ${targetType === 'date' ? 'bg-indigo-500 text-white border-indigo-500' : 'bg-white text-gray-500 border-gray-200'}`}>Data Específica</button>
+              </div>
+
+              {targetType === 'weekday' ? (
+                <div className="grid grid-cols-3 gap-2">
+                  {days.map(day => (
+                    <button 
+                      key={day} 
+                      onClick={() => setTargetDay(day)} 
+                      disabled={day === sourceDay}
+                      className={`p-2 rounded-lg text-xs font-bold transition-colors ${targetDay === day ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'} ${day === sourceDay ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} className="w-full p-3 border rounded-xl bg-gray-50 text-gray-900" />
+              )}
+            </>
+          ) : (
+            <div className="text-center">
+              <div className="bg-amber-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                <AlertTriangle className="text-amber-600" size={24} />
+              </div>
+              <h4 className="font-bold text-gray-800 mb-2">Conflito Encontrado</h4>
+              <p className="text-sm text-gray-600 mb-6">
+                O dia de destino já possui <strong>{conflictCount} refeições</strong> agendadas. O que deseja fazer?
+              </p>
+              <div className="flex flex-col gap-2">
+                <button onClick={() => { onConfirm(targetType === 'weekday' ? targetDay : 'Datas Marcadas', targetDate, 'replace'); onClose(); }} className="w-full py-3 bg-rose-500 text-white rounded-xl font-bold text-sm hover:bg-rose-600">Substituir (Apagar existentes)</button>
+                <button onClick={() => { onConfirm(targetType === 'weekday' ? targetDay : 'Datas Marcadas', targetDate, 'append'); onClose(); }} className="w-full py-3 bg-indigo-500 text-white rounded-xl font-bold text-sm hover:bg-indigo-600">Adicionar (Manter existentes)</button>
+              </div>
+            </div>
+          )}
+        </div>
+        {!conflictCount && <div className="p-4 border-t bg-gray-50 flex justify-end gap-2"><button onClick={onClose} className="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button><button onClick={handleNext} className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm shadow-md hover:bg-indigo-700">Continuar</button></div>}
       </div>
     </div>
   );
@@ -630,6 +834,7 @@ const App = () => {
   const [mealToDuplicate, setMealToDuplicate] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [mealToClear, setMealToClear] = useState(null);
   const [clearContextDay, setClearContextDay] = useState(null);
   const [initialPlateDays, setInitialPlateDays] = useState([]);
@@ -649,6 +854,11 @@ const App = () => {
   const [excessCalories, setExcessCalories] = useState(0);
   const [movedMealId, setMovedMealId] = useState(null);
   const [isTrialActive, setIsTrialActive] = useState(true);
+  const CURRENT_NEWS_VERSION = 1; // Increment this number to show the modal again to users
+  const [addMealContext, setAddMealContext] = useState(null);
+  const [exportMode, setExportMode] = useState('weekly');
+  const [showCloneModal, setShowCloneModal] = useState(false);
+  const [cloneSourceDay, setCloneSourceDay] = useState(null);
   
   // Estado para controle de água (reseta diariamente)
   // Armazena o total em ML
@@ -780,6 +990,20 @@ const App = () => {
     if (!installPrompt) return;
     await installPrompt.prompt();
     setInstallPrompt(null);
+  };
+
+  // Check for updates news
+  useEffect(() => {
+    const lastSeenVersion = localStorage.getItem('whatsNewVersion');
+    if (!lastSeenVersion || parseInt(lastSeenVersion, 10) < CURRENT_NEWS_VERSION) {
+      const timer = setTimeout(() => setShowWhatsNew(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleCloseWhatsNew = () => {
+    setShowWhatsNew(false);
+    localStorage.setItem('whatsNewVersion', CURRENT_NEWS_VERSION.toString());
   };
 
   // Efeito para limpar o destaque do item adicionado por voz após um tempo
@@ -1239,7 +1463,7 @@ const AlertAnimationOverlay = () => (
     const inferred = inferNutrients(name);
     const baseNutrients = inferred || {
       calories: 120, protein: 4, carbs: 20, fat: 3, fiber: 1,
-      emoji: '🍽️', category: Category.INDUSTRIALIZADOS
+      emoji: '🍽️', category: 'Meus Alimentos'
     };
 
     const newFood = {
@@ -1272,21 +1496,49 @@ const AlertAnimationOverlay = () => (
     recognition.start();
   };
 
-  const handleAddMeal = (daysInput, time) => {
+  const handleAddMeal = (daysInput, time, specificDate, repeatCount = 1) => {
     const days = Array.isArray(daysInput) ? daysInput : [daysInput];
-    const groupId = days.length > 1 ? `group-${Date.now()}` : null;
+    const isRepeatingDate = days[0] === 'Datas Marcadas' && repeatCount > 1;
+    const groupId = (days.length > 1 || isRepeatingDate) ? `group-${Date.now()}` : null;
 
-    const newMeals = days.map((day, index) => ({
-      id: `m-${Date.now()}-${index}`,
-      name: 'Nova Refeição',
-      time: time || '14:00',
-      plate: [],
-      isDone: false,
-      dayOfWeek: day,
-      groupId: groupId,
-    }));
+    let newMeals = [];
 
-    setMealSchedule(prev => [...prev, ...newMeals]);
+    if (isRepeatingDate) {
+        const startDate = new Date(specificDate + 'T00:00:00');
+        for (let i = 0; i < repeatCount; i++) {
+            const currentDate = new Date(startDate);
+            currentDate.setDate(startDate.getDate() + i);
+            // Formata YYYY-MM-DD manualmente para evitar problemas de fuso horário
+            const year = currentDate.getFullYear();
+            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const day = String(currentDate.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+
+            newMeals.push({
+                id: `m-${Date.now()}-${i}`,
+                name: 'Nova Refeição',
+                time: time || '14:00',
+                plate: [],
+                isDone: false,
+                dayOfWeek: 'Datas Marcadas',
+                groupId: groupId,
+                specificDate: dateStr
+            });
+        }
+    } else {
+        newMeals = days.map((day, index) => ({
+            id: `m-${Date.now()}-${index}`,
+            name: 'Nova Refeição',
+            time: time || '14:00',
+            plate: [],
+            isDone: false,
+            dayOfWeek: day,
+            groupId: groupId,
+            specificDate: day === 'Datas Marcadas' ? specificDate : null
+        }));
+    }
+
+    setMealSchedule(prev => [...newMeals, ...prev]);
     setShowAddMealModal(false);
   };
 
@@ -1311,7 +1563,7 @@ const AlertAnimationOverlay = () => (
 
     setCurrentPlate(meal.plate);
     setInitialPlateDays(initialDays);
-    setEditingMealInfo({ name: meal.name, isFixed: fixedMealNames.includes(meal.name) });
+    setEditingMealInfo({ name: meal.name, isFixed: fixedMealNames.includes(meal.name), groupId: meal.groupId, id: meal.id });
     
     setActiveTab('plate');
   };
@@ -1411,8 +1663,51 @@ const AlertAnimationOverlay = () => (
       time: newTime,
       isDone: false
     }));
-    setMealSchedule(prev => [...prev, ...newMeals]);
+    setMealSchedule(prev => [...newMeals, ...prev]);
     setMealToDuplicate(null);
+    triggerConfetti();
+  };
+
+  const handleCloneDay = (sourceDay) => {
+    setCloneSourceDay(sourceDay);
+    setShowCloneModal(true);
+  };
+
+  const confirmCloneDay = (targetDay, targetDate, mode) => {
+    setMealSchedule(prev => {
+      let newSchedule = [...prev];
+      
+      // 1. Se modo for 'replace', remove refeições existentes no destino
+      if (mode === 'replace') {
+        newSchedule = newSchedule.filter(m => {
+          if (m.dayOfWeek !== targetDay) return true;
+          if (targetDay === 'Datas Marcadas') return m.specificDate !== targetDate;
+          return false;
+        });
+      }
+
+      // 2. Encontra refeições da origem (incluindo 'Todos' se for dia da semana)
+      const sourceMeals = prev.filter(m => {
+        if (m.dayOfWeek === cloneSourceDay) return true;
+        if (m.dayOfWeek === 'Todos') {
+           // Verifica se NÃO há override no dia de origem (se houver, o override já foi pego acima)
+           const hasOverride = prev.some(om => om.dayOfWeek === cloneSourceDay && om.name === m.name);
+           return !hasOverride;
+        }
+        return false;
+      });
+
+      // 3. Cria cópias para o destino
+      const clonedMeals = sourceMeals.map((m, i) => ({
+        ...m,
+        id: `m-${Date.now()}-${i}-clone`,
+        dayOfWeek: targetDay,
+        specificDate: targetDay === 'Datas Marcadas' ? targetDate : null,
+        groupId: null // Quebra vínculo de grupo ao clonar para evitar edições acidentais cruzadas
+      }));
+
+      return [...newSchedule, ...clonedMeals];
+    });
     triggerConfetti();
   };
 
@@ -1520,6 +1815,12 @@ const AlertAnimationOverlay = () => (
 
   const handleExportPDF = () => {
     setIsExportingPdf(true);
+    setExportMode('weekly');
+  };
+
+  const handleExportSpecificPDF = () => {
+    setExportMode('specific');
+    setIsExportingPdf(true);
   };
 
   useEffect(() => {
@@ -1594,7 +1895,13 @@ const AlertAnimationOverlay = () => (
           userPantry={pantryItems} 
           currentPlate={currentPlate}
           onToggle={id => setPantryItems(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])}
-          onDelete={id => { setPantryItems(p => p.filter(x => x !== id)); setCustomFoods(c => c.filter(x => x.id !== id)); }}
+          onRemoveFromPantry={id => setPantryItems(p => p.filter(x => x !== id))}
+          onDeleteCustom={id => {
+            if (window.confirm('Deseja excluir este alimento personalizado permanentemente?')) {
+                setCustomFoods(c => c.filter(x => x.id !== id));
+                setPantryItems(p => p.filter(x => x !== id));
+            }
+          }}
           onAddToPlate={id => { 
             setCurrentPlate(p => {
               if (p.find(x => x.foodId === id)) return p.filter(x => x.foodId !== id);
@@ -1652,9 +1959,18 @@ const AlertAnimationOverlay = () => (
         setMealSchedule(prev => {
             let schedule = [...prev];
             const nameToUpdate = editingMealInfo.name;
+            const groupIdToUpdate = editingMealInfo.groupId;
+            const idToUpdate = editingMealInfo.id;
 
             // 1. Clean up: Remove all previous specific-day instances of this meal.
             schedule = schedule.filter(m => {
+                // Proteção para Datas Marcadas: Remove apenas o que está sendo editado (grupo ou item único)
+                if (m.dayOfWeek === 'Datas Marcadas') {
+                     if (groupIdToUpdate && m.groupId === groupIdToUpdate) return false; // Remove membros do grupo
+                     if (!groupIdToUpdate && m.id === idToUpdate) return false; // Remove item específico
+                     return true; // Mantém outros itens com mesmo nome em outras datas
+                }
+
                 if (m.name !== nameToUpdate) return true;
                 if (editingMealInfo.isFixed && m.dayOfWeek === 'Todos') return true;
                 return false;
@@ -1676,7 +1992,7 @@ const AlertAnimationOverlay = () => (
                     if (day === 'Todos') return;
                     const templateMeal = mealSchedule.find(m => m.name === nameToUpdate && m.dayOfWeek === 'Todos');
                     const mealTime = templateMeal ? templateMeal.time : (defaultTimes[nameToUpdate] || '12:00');
-                    schedule.push({ id: `m-${Date.now()}-${day}`, name: nameToUpdate, time: mealTime, plate: [...currentPlate], isDone: false, dayOfWeek: day, withWhom, eventLocation, description, specificDate: isDateSpecific ? specificDate : null });
+                    schedule.unshift({ id: `m-${Date.now()}-${day}`, name: nameToUpdate, time: mealTime, plate: [...currentPlate], isDone: false, dayOfWeek: day, withWhom, eventLocation, description, specificDate: isDateSpecific ? specificDate : null });
                 });
             }
             return schedule;
@@ -1712,7 +2028,7 @@ const AlertAnimationOverlay = () => (
                 } else {
                     const templateMeal = nextSchedule.find(m => m.name === mealName && m.dayOfWeek === 'Todos');
                     const mealTime = templateMeal ? templateMeal.time : time;
-                    nextSchedule.push({ 
+                    nextSchedule.unshift({ 
                         id: `m-${Date.now()}-${day}`, name: mealName, time: mealTime, 
                         plate: [...currentPlate], isDone: false, dayOfWeek: day,
                         groupId: newGroupId,
@@ -1742,7 +2058,7 @@ const AlertAnimationOverlay = () => (
           unitWeights={UNIT_WEIGHTS}
           scheduleWarnings={scheduleWarnings}
           onClearWarnings={() => setScheduleWarnings([])}
-          onAddMeal={() => setShowAddMealModal(true)}
+          onAddMeal={(context) => { setAddMealContext(context); setShowAddMealModal(true); }}
           onEditMeal={handleEditMeal}
           onClearMeal={handleClearMeal}
           onDeleteMeal={handleDeleteMeal}
@@ -1757,6 +2073,8 @@ const AlertAnimationOverlay = () => (
           profile={userProfile}
           triggerConfetti={triggerConfetti}
           onMealDone={(meal) => handleMealDone(meal, userProfile)}
+          onExportSpecificPDF={handleExportSpecificPDF}
+          onCloneDay={handleCloneDay}
         />
       )}
       {activeTab === 'brain' && (
@@ -1778,7 +2096,7 @@ const AlertAnimationOverlay = () => (
         onInstallClick={handleInstallClick}
         showInstallButton={!!installPrompt}
       />}
-      {showAddMealModal && <AddMealModal onClose={() => setShowAddMealModal(false)} onConfirm={handleAddMeal} />}
+      {showAddMealModal && <AddMealModal onClose={() => setShowAddMealModal(false)} onConfirm={handleAddMeal} context={addMealContext} />}
       {mealToDelete && (
         <DeleteMealModal 
           onClose={() => setMealToDelete(null)} 
@@ -1808,6 +2126,7 @@ const AlertAnimationOverlay = () => (
         />
       }
       {showSummaryModal && <ScheduleSummaryModal meals={mealSchedule} onClose={() => setShowSummaryModal(false)} />}
+      {showCloneModal && <CloneDayModal sourceDay={cloneSourceDay} onClose={() => setShowCloneModal(false)} onConfirm={confirmCloneDay} mealSchedule={mealSchedule} />}
       {showShoppingList && <ShoppingListModal 
         meals={mealSchedule} 
         allFoods={allAvailableFoods} 
@@ -1837,11 +2156,13 @@ const AlertAnimationOverlay = () => (
             allFoods={allAvailableFoods} 
             profile={userProfile}
             dailyGoal={getDailyGoal()}
+            mode={exportMode}
           />
         </>
       )}
       {showCalorieAlert && <CalorieAlertModal excessCalories={excessCalories} onClose={() => setShowCalorieAlert(false)} />}
       {showGoalReached && <GoalReachedModal onClose={() => setShowGoalReached(false)} />}
+      {showWhatsNew && <WhatsNewModal onClose={handleCloseWhatsNew} onOpenManual={() => { handleCloseWhatsNew(); setShowManual(true); }} />}
     </>
   );
 };

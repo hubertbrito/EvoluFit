@@ -147,7 +147,7 @@ const SetupScreen = ({ userProfile, onComplete, onCancel, currentTheme, onThemeC
                   type="text" 
                   value={data.name}
                   onChange={(e) => handleChange('name', e.target.value)}
-                  className={`w-full p-2.5 border-2 bg-emerald-50/50 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none ${errors.name ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+                  className={`w-full p-2.5 border-2 bg-emerald-50/50 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-gray-900 ${errors.name ? 'border-red-500 ring-1 ring-red-500' : ''}`}
                   placeholder="Ex: Maria"
                 />
               </div>
@@ -157,7 +157,7 @@ const SetupScreen = ({ userProfile, onComplete, onCancel, currentTheme, onThemeC
                   type="tel" 
                   value={data.phone || ''}
                   onChange={(e) => handleChange('phone', e.target.value)}
-                  className="w-full p-2.5 border-2 bg-emerald-50/50 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full p-2.5 border-2 bg-emerald-50/50 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-gray-900"
                   placeholder="Ex: 11999999999"
                 />
               </div>
@@ -178,7 +178,7 @@ const SetupScreen = ({ userProfile, onComplete, onCancel, currentTheme, onThemeC
                   <select 
                     value={data.gender}
                     onChange={(e) => handleChange('gender', e.target.value)}
-                    className="w-full p-2.5 border rounded-xl bg-white"
+                    className="w-full p-2.5 border rounded-xl bg-white text-gray-900"
                   >
                     <option value="M">Masculino</option>
                     <option value="F">Feminino</option>
@@ -268,7 +268,7 @@ const SetupScreen = ({ userProfile, onComplete, onCancel, currentTheme, onThemeC
                 <select 
                   value={data.activityLevel}
                   onChange={(e) => handleChange('activityLevel', e.target.value)}
-                  className="w-full p-2.5 border rounded-xl bg-white mb-4"
+                  className="w-full p-2.5 border rounded-xl bg-white mb-4 text-gray-900"
                 >
                   <option value="Sedentário">Nenhum / Sedentário</option>
                   <option value="Leve">Leve (Caminhada, Yoga, Alongamento)</option>

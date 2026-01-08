@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Clock, AlertCircle, Zap, Wheat, Droplets, Calendar, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser, Edit, CalendarDays, Users, MapPin, CalendarCheck2, StickyNote, X, CheckCircle, Check, Trophy, Undo2 } from 'lucide-react';
+import { Clock, AlertCircle, Zap, Wheat, Droplets, Calendar, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser, Edit, CalendarDays, Users, MapPin, CalendarCheck2, StickyNote, X, CheckCircle, Check, Trophy, Undo2, GripVertical, Share2, Activity, FileDown, Copy } from 'lucide-react';
 import { UNIT_WEIGHTS, getFoodUnitWeight } from '../constants';
 import CustomSelect from './CustomSelect';
 
@@ -54,7 +54,98 @@ const DayCompleteModal = ({ onClose }) => (
   </div>
 );
 
-const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal, onClearMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep, waterIntake, onUpdateWater, waterGoal, onUpdateWaterGoal, triggerConfetti, onMealDone, movedMealId, profile }) => {
+const NutritionalSummaryModal = ({ title, meals, allFoods, onClose }) => {
+  const totals = useMemo(() => {
+    return meals.reduce((acc, meal) => {
+      const mealNutrients = meal.plate.reduce((n, item) => {
+        const food = allFoods.find(f => String(f.id) === String(item.foodId));
+        if (!food) return n;
+        const weight = getFoodUnitWeight(food, item.unit) * item.quantity;
+        const factor = weight / 100;
+        return {
+          calories: n.calories + (food.calories || 0) * factor,
+          protein: n.protein + (food.protein || 0) * factor,
+          carbs: n.carbs + (food.carbs || 0) * factor,
+          fat: n.fat + (food.fat || 0) * factor,
+          fiber: n.fiber + (food.fiber || 0) * factor,
+        };
+      }, { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
+
+      return {
+        calories: acc.calories + mealNutrients.calories,
+        protein: acc.protein + mealNutrients.protein,
+        carbs: acc.carbs + mealNutrients.carbs,
+        fat: acc.fat + mealNutrients.fat,
+        fiber: acc.fiber + mealNutrients.fiber,
+      };
+    }, { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
+  }, [meals, allFoods]);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce">
+        <div className="p-4 border-b dark:border-gray-700 bg-emerald-50 dark:bg-emerald-900/20 flex justify-between items-center">
+          <h3 className="font-bold text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
+            <Activity size={20} />
+            Resumo Nutricional
+          </h3>
+          <button onClick={onClose} className="p-1 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 rounded-full transition-colors text-emerald-600 dark:text-emerald-400">
+            <X size={20} />
+          </button>
+        </div>
+        <div className="p-6">
+            <h4 className="text-center font-black text-gray-800 dark:text-gray-100 text-lg mb-1 capitalize">{title}</h4>
+            <p className="text-center text-xs text-gray-500 dark:text-gray-400 mb-6">{meals.length} refeições planejadas</p>
+
+            <div className="flex justify-center mb-6">
+                <div className="text-center">
+                    <span className="text-4xl font-black text-emerald-600 dark:text-emerald-400">{Math.round(totals.calories)}</span>
+                    <span className="text-sm font-bold text-gray-400 block">kcal totais</span>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-xl">
+                    <div className="flex items-center gap-2 mb-1">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Proteínas</span>
+                    </div>
+                    <span className="text-lg font-black text-gray-800 dark:text-gray-100">{Math.round(totals.protein)}g</span>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-xl">
+                    <div className="flex items-center gap-2 mb-1">
+                        <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                        <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Carbos</span>
+                    </div>
+                    <span className="text-lg font-black text-gray-800 dark:text-gray-100">{Math.round(totals.carbs)}g</span>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-xl">
+                    <div className="flex items-center gap-2 mb-1">
+                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Gorduras</span>
+                    </div>
+                    <span className="text-lg font-black text-gray-800 dark:text-gray-100">{Math.round(totals.fat)}g</span>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-xl">
+                    <div className="flex items-center gap-2 mb-1">
+                        <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                        <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Fibras</span>
+                    </div>
+                    <span className="text-lg font-black text-gray-800 dark:text-gray-100">{Math.round(totals.fiber)}g</span>
+                </div>
+            </div>
+        </div>
+        <div className="p-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-end">
+          <button onClick={onClose} className="w-full py-2 bg-emerald-600 text-white rounded-xl font-bold shadow-md hover:bg-emerald-700 transition-transform active:scale-95">
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal, onClearMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep, waterIntake, onUpdateWater, waterGoal, onUpdateWaterGoal, triggerConfetti, onMealDone, movedMealId, profile, onExportSpecificPDF, onCloneDay }) => {
   const [now, setNow] = useState(new Date());
   const [activeDays, setActiveDays] = useState(() => {
     const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
@@ -66,6 +157,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
   const [tempGoal, setTempGoal] = useState(waterGoal);
   const [hasCelebratedWater, setHasCelebratedWater] = useState(false);
   const [showDayCompleteModal, setShowDayCompleteModal] = useState(false);
+  const [summaryData, setSummaryData] = useState(null);
 
   useEffect(() => {
     setTempGoal(waterGoal);
@@ -257,6 +349,88 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
     }
   };
 
+  const handleDragStart = (e, index) => {
+    // Permite arrastar apenas se o handle for clicado
+    if (!e.target.closest('.drag-handle')) {
+      e.preventDefault();
+      return;
+    }
+    e.dataTransfer.setData('text/plain', index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault(); // Necessário para permitir o drop
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e, targetIndex) => {
+    e.preventDefault();
+    const sourceIndexStr = e.dataTransfer.getData('text/plain');
+    if (!sourceIndexStr) return;
+    
+    const sourceIndex = parseInt(sourceIndexStr, 10);
+    if (isNaN(sourceIndex) || sourceIndex === targetIndex) return;
+
+    const sourceMeal = filteredMeals[sourceIndex];
+    const targetMeal = filteredMeals[targetIndex];
+
+    const newMeals = [...meals];
+    const sourceOriginalIndex = newMeals.findIndex(m => m.id === sourceMeal.id);
+    const [movedItem] = newMeals.splice(sourceOriginalIndex, 1);
+    const targetOriginalIndex = newMeals.findIndex(m => m.id === targetMeal.id);
+    
+    newMeals.splice(sourceIndex < targetIndex ? targetOriginalIndex + 1 : targetOriginalIndex, 0, movedItem);
+    onUpdateMeals(newMeals);
+  };
+
+  const handleShareDay = () => {
+    if (activeDays.length === 0) return;
+    const day = activeDays[0];
+    
+    if (filteredMeals.length === 0) {
+      alert('Não há refeições agendadas para este dia.');
+      return;
+    }
+
+    let message = `📅 *Cardápio de ${day === 'Datas Marcadas' ? 'Datas Específicas' : day} - EvoluFit*\n\n`;
+
+    filteredMeals.forEach(meal => {
+      message += `⏰ *${meal.time} - ${meal.name}*`;
+      if (meal.specificDate) {
+         const dateStr = new Date(meal.specificDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+         message += ` (${dateStr})`;
+      }
+      message += `\n`;
+
+      if (meal.plate.length > 0) {
+        meal.plate.forEach(item => {
+          const food = allFoods.find(f => String(f.id) === String(item.foodId));
+          if (food) {
+             message += `• ${formatFoodQuantity(item.quantity, item.unit, food.name)}\n`;
+          }
+        });
+      } else {
+        message += `_(Vazio)_\n`;
+      }
+      
+      if (meal.withWhom) message += `👥 Com: ${meal.withWhom}\n`;
+      if (meal.eventLocation) message += `📍 Local: ${meal.eventLocation}\n`;
+      if (meal.description) message += `📝 Nota: ${meal.description}\n`;
+      
+      message += `\n`;
+    });
+
+    message += `_Gerado pelo App EvoluFit_`;
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const handleShowSummary = (title, mealsForSummary) => {
+      setSummaryData({ title, meals: mealsForSummary });
+  };
+
   return (
     <div className="p-4 space-y-6 pb-28">
       <style>{`
@@ -438,11 +612,46 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-end">
             <div className="flex-1">
-                <h2 className="text-2xl font-black text-gray-800 dark:text-gray-100 tracking-tighter">
-                {activeDays.length === 1 && activeDays[0] !== 'Datas Marcadas'
-                    ? `Agenda de ${activeDays[0]}` 
-                    : activeDays[0] === 'Datas Marcadas' ? 'Agenda de Datas Marcadas' : 'Agenda'}
-                </h2>
+                <div className="flex items-center gap-2">
+                    <h2 
+                        onClick={() => {
+                            if (activeDays.length === 1 && activeDays[0] !== 'Datas Marcadas') {
+                                handleShowSummary(activeDays[0], filteredMeals);
+                            }
+                        }}
+                        className={`text-2xl font-black text-gray-800 dark:text-gray-100 tracking-tighter ${activeDays.length === 1 && activeDays[0] !== 'Datas Marcadas' ? 'cursor-pointer hover:text-emerald-600 transition-colors' : ''}`}
+                        title={activeDays.length === 1 && activeDays[0] !== 'Datas Marcadas' ? "Ver Resumo Nutricional do Dia" : ""}
+                    >
+                    {activeDays.length === 1 && activeDays[0] !== 'Datas Marcadas'
+                        ? `Agenda de ${activeDays[0]}` 
+                        : activeDays[0] === 'Datas Marcadas' ? 'Agenda de Datas Marcadas' : 'Agenda'}
+                    </h2>
+                    <button 
+                        onClick={handleShareDay}
+                        className="p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors shadow-sm"
+                        title="Compartilhar Cardápio no WhatsApp"
+                    >
+                        <Share2 size={18} />
+                    </button>
+                    {activeDays.includes('Datas Marcadas') && (
+                        <button 
+                            onClick={onExportSpecificPDF}
+                            className="p-2 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 rounded-full hover:bg-teal-200 dark:hover:bg-teal-900/50 transition-colors shadow-sm"
+                            title="Exportar Datas Marcadas para PDF"
+                        >
+                            <FileDown size={18} />
+                        </button>
+                    )}
+                    {activeDays.length === 1 && activeDays[0] !== 'Datas Marcadas' && (
+                        <button 
+                            onClick={() => onCloneDay(activeDays[0])}
+                            className="p-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors shadow-sm"
+                            title="Clonar Refeições deste Dia"
+                        >
+                            <Copy size={18} />
+                        </button>
+                    )}
+                </div>
                 {/* Barras de Progresso */}
                 {activeDays.length === 1 && activeDays[0] !== 'Datas Marcadas' && filteredMeals.length > 0 && (
                   <div className="mt-2 space-y-2">
@@ -504,13 +713,35 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
               : [meal.dayOfWeek];
 
             return (
+            <React.Fragment key={meal.id}>
+            {activeDays.includes('Datas Marcadas') && meal.specificDate && (index === 0 || filteredMeals[index - 1].specificDate !== meal.specificDate) && (
+                <div 
+                    onClick={() => handleShowSummary(
+                        new Date(meal.specificDate + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }),
+                        filteredMeals.filter(m => m.specificDate === meal.specificDate)
+                    )}
+                    className="sticky top-14 z-10 bg-emerald-50/95 dark:bg-emerald-900/90 backdrop-blur-sm p-2 rounded-lg border border-emerald-200 dark:border-emerald-800 shadow-sm mb-4 mt-2 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors flex justify-between items-center group"
+                >
+                    <span className="font-bold text-emerald-800 dark:text-emerald-300 text-sm flex items-center gap-2 capitalize">
+                        <CalendarCheck2 size={16} />
+                        {new Date(meal.specificDate + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    </span>
+                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold group-hover:underline">Ver Resumo</span>
+                </div>
+            )}
             <div 
-                key={meal.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, index)}
                 className={`p-4 rounded-[2rem] border-2 transition-all relative overflow-hidden 
                   ${isMoved ? 'highlight-move-animation' : ''} 
                   ${meal.isDone ? 'opacity-75 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700' : (isCurrent ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-400 shadow-xl ring-4 ring-orange-400/10' : 'bg-white dark:bg-gray-800 border-indigo-50 dark:border-gray-700 shadow-sm hover:border-orange-300')}`}
             >
               <div className="flex justify-between items-start mb-5 gap-3">
+                <div className="drag-handle mt-2 p-1 -ml-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 cursor-grab active:cursor-grabbing text-gray-300 hover:text-emerald-600 transition-colors" title="Arrastar para reordenar (Computador)">
+                    <GripVertical size={20} />
+                </div>
                 <label className="flex items-center space-x-2 cursor-pointer group shrink-0 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 p-1.5 rounded-xl transition-colors shadow-sm">
                     <div className={`p-1.5 rounded-lg transition-colors ${isCurrent ? 'bg-orange-600 text-white shadow-md' : 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-300 shadow-sm'}`}>
                         <Clock size={14} />
@@ -746,21 +977,19 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                   )}
               </div>
             </div>
+            </React.Fragment>
           );
         })}
       </div>
 
-      {/* O botão de adicionar refeição não faz sentido na aba "Avulso" */}
-      {!activeDays.includes('Datas Marcadas') && (
-        <div data-tour-id="schedule-add-meal">
-          <button
-            onClick={onAddMeal}
-            className="w-full mt-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" /> Adicionar Nova Refeição
-          </button>
-        </div>
-      )}
+      <div data-tour-id="schedule-add-meal">
+        <button
+          onClick={() => onAddMeal(activeDays[0])}
+          className="w-full mt-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-700 transition-colors"
+        >
+          <Plus className="w-4 h-4" /> Adicionar Nova Refeição
+        </button>
+      </div>
       
       <div className="mt-8 px-2 space-y-5 text-gray-600 dark:text-gray-400">
         <h3 className="text-sm font-black text-gray-800 dark:text-gray-200 border-b dark:border-gray-700 pb-2 uppercase">Como criar uma nova refeição:</h3>
@@ -791,6 +1020,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
       )}
 
       {showDayCompleteModal && <DayCompleteModal onClose={() => setShowDayCompleteModal(false)} />}
+      {summaryData && <NutritionalSummaryModal title={summaryData.title} meals={summaryData.meals} allFoods={allFoods} onClose={() => setSummaryData(null)} />}
     </div>
   );
 };

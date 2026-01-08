@@ -11,7 +11,7 @@ const dayColors = {
   Domingo: 'border-purple-200 bg-purple-50',
 };
 
-const SchedulePdfView = ({ meals, allFoods, profile, dailyGoal }) => {
+const SchedulePdfView = ({ meals, allFoods, profile, dailyGoal, mode = 'weekly' }) => {
   const weekDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
   const calculateMealCalories = (plate) => {
@@ -22,6 +22,89 @@ const SchedulePdfView = ({ meals, allFoods, profile, dailyGoal }) => {
       return acc + ((food.calories / 100) * weight);
     }, 0);
   };
+
+  if (mode === 'specific') {
+    const specificMeals = meals.filter(m => m.specificDate && m.dayOfWeek === 'Datas Marcadas');
+    
+    const mealsByDate = specificMeals.reduce((acc, meal) => {
+        const date = meal.specificDate;
+        if (!acc[date]) acc[date] = [];
+        acc[date].push(meal);
+        return acc;
+    }, {});
+
+    const sortedDates = Object.keys(mealsByDate).sort((a, b) => new Date(a) - new Date(b));
+
+    return (
+      <div 
+        id="pdf-export-content" 
+        className="absolute -left-[9999px] top-0 w-[210mm] min-h-[297mm] p-8 bg-white text-gray-800 font-sans"
+        style={{ fontFamily: 'sans-serif' }}
+      >
+        <div className="flex justify-between items-center border-b-2 border-emerald-500 pb-4 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-emerald-600">EvoluFit - Datas Marcadas</h1>
+            <p className="text-lg font-semibold text-gray-600">{profile.name}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm font-bold">Meta Diária</p>
+            <p className="text-2xl font-black text-emerald-700">{Math.round(dailyGoal)} kcal</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6">
+          {sortedDates.map(date => {
+            const mealsForDay = mealsByDate[date].sort((a, b) => a.time.localeCompare(b.time));
+            const totalDayCalories = mealsForDay.reduce((sum, meal) => sum + calculateMealCalories(meal.plate), 0);
+            
+            const dateObj = new Date(date + 'T00:00:00');
+            const dateStr = dateObj.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+            return (
+              <div key={date} className="p-4 rounded-lg border-2 border-teal-200 bg-teal-50">
+                <div className="flex justify-between items-baseline mb-3 border-b border-teal-200 pb-2">
+                  <h2 className="text-xl font-extrabold text-teal-800 capitalize">{dateStr}</h2>
+                  <p className="text-sm font-bold text-gray-600">Total: <span className="text-base font-black text-emerald-700">{Math.round(totalDayCalories)} kcal</span></p>
+                </div>
+                
+                <div className="space-y-4">
+                  {mealsForDay.map(meal => {
+                    if (meal.plate.length === 0) return null;
+                    const mealCalories = calculateMealCalories(meal.plate);
+                    return (
+                      <div key={meal.id} className="text-sm">
+                        <div className="flex justify-between items-center bg-white/50 rounded-t-md px-3 py-1">
+                          <p className="font-bold">{meal.time} - {meal.name}</p>
+                          <p className="font-semibold">{Math.round(mealCalories)} kcal</p>
+                        </div>
+                        <ul className="list-disc list-inside bg-white/80 rounded-b-md p-3 text-xs space-y-1">
+                          {meal.plate.map((item, index) => {
+                            const food = allFoods.find(f => f.id === item.foodId);
+                            return <li key={index}>{item.quantity} {item.unit} de {food ? food.name : 'Alimento não encontrado'}</li>;
+                          })}
+                        </ul>
+                        {(meal.withWhom || meal.eventLocation || meal.description) && (
+                            <div className="mt-1 px-3 text-xs text-gray-500 italic">
+                                {[meal.withWhom, meal.eventLocation, meal.description].filter(Boolean).join(' • ')}
+                            </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+          {sortedDates.length === 0 && (
+             <div className="text-center py-10 text-gray-400">
+                <p>Nenhuma refeição encontrada para datas específicas.</p>
+             </div>
+          )}
+        </div>
+        <p className="text-center text-xs text-gray-400 mt-8">Gerado por EvoluFit em {new Date().toLocaleDateString('pt-BR')}</p>
+      </div>
+    );
+  }
 
   return (
     <div 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Mic, Plus, Trash2, Utensils, Info, Filter, ArrowUp, Loader } from 'lucide-react';
+import { Search, Mic, Plus, Trash2, Utensils, Info, Filter, ArrowUp, Loader, MessageCircle } from 'lucide-react';
 import { DIET_TYPES } from '../constants';
 import { searchFoodsDB, getFoodsByCategoryDB } from '../db.js';
 
@@ -21,7 +21,8 @@ const PantryScreen = ({
   userPantry, 
   currentPlate, 
   onToggle, 
-  onDelete, 
+  onRemoveFromPantry,
+  onDeleteCustom,
   onAddToPlate, 
   onVoiceClick, 
   isListening, 
@@ -41,8 +42,23 @@ const PantryScreen = ({
   const [showScrollTop, setShowScrollTop] = useState(false);
   const listRef = useRef(null);
   
-  const categories = ['Dispensa', 'Frutas', 'Vegetais', 'Carboidratos', 'Proteínas', 'Leguminosas', 'Laticínios', 'Gorduras', 'Bebidas', 'Doces', 'Industrializados'];
+  const categories = ['Dispensa', 'Meus Alimentos', 'Frutas', 'Vegetais', 'Carboidratos', 'Proteínas', 'Leguminosas', 'Laticínios', 'Gorduras', 'Bebidas', 'Doces', 'Industrializados'];
   const diets = ['Todas', ...DIET_TYPES];
+
+  const categoryColors = {
+    'Carboidratos': 'text-orange-600 bg-orange-50 border-orange-100',
+    'Proteínas': 'text-rose-600 bg-rose-50 border-rose-100',
+    'Vegetais': 'text-emerald-600 bg-emerald-50 border-emerald-100',
+    'Frutas': 'text-yellow-600 bg-yellow-50 border-yellow-100',
+    'Leguminosas': 'text-amber-700 bg-amber-50 border-amber-100',
+    'Laticínios': 'text-blue-600 bg-blue-50 border-blue-100',
+    'Gorduras': 'text-amber-600 bg-amber-50 border-amber-100',
+    'Bebidas': 'text-cyan-600 bg-cyan-50 border-cyan-100',
+    'Doces': 'text-pink-600 bg-pink-50 border-pink-100',
+    'Industrializados': 'text-gray-600 bg-gray-50 border-gray-100',
+    'Outros': 'text-slate-600 bg-slate-50 border-slate-100',
+    'Meus Alimentos': 'text-purple-600 bg-purple-50 border-purple-100'
+  };
 
   useEffect(() => {
     const fetchAndSetFoods = async () => {
@@ -57,6 +73,15 @@ const PantryScreen = ({
         if (viewMode === 'categories') {
           if (activeCategory === 'Dispensa') {
             foods = allFoods.filter(f => userPantry.includes(f.id));
+            // Ordena por categoria e depois por nome para agrupamento
+            foods.sort((a, b) => {
+                const catA = a.category || 'Outros';
+                const catB = b.category || 'Outros';
+                if (catA !== catB) return catA.localeCompare(catB);
+                return a.name.localeCompare(b.name);
+            });
+          } else if (activeCategory === 'Meus Alimentos') {
+            foods = allFoods.filter(f => f.category === 'Meus Alimentos');
           } else {
             foods = await getFoodsByCategoryDB(activeCategory);
           }
@@ -141,7 +166,7 @@ const PantryScreen = ({
       `}</style>
       <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-100 dark:border-blue-800 flex items-start gap-2">
         <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-        <p className="text-xs text-blue-700 dark:text-blue-300"><strong>Dispensa:</strong> Busque ou use a voz para <strong>adicionar novos itens</strong> que você tem em casa. Depois, toque em um alimento para <strong>selecioná-lo</strong> (borda verde) e montar seu Prato.</p>
+        <p className="text-xs text-blue-700 dark:text-blue-300"><strong>Dispensa:</strong> Toque em um card para adicioná-lo à sua dispensa e selecioná-lo para o prato automaticamente. Use a lixeira para remover itens da sua lista pessoal.</p>
       </div>
 
       {/* Sticky Menu Container */}
@@ -241,11 +266,15 @@ const PantryScreen = ({
 
       {/* List */}
       <div ref={listRef} key={`${viewMode}-${viewMode === 'categories' ? activeCategory : activeDiet}`} className="space-y-3 animate-fade-in">
-        {displayedFoods.map(food => {
+        {displayedFoods.map((food, index) => {
           const isInPantry = userPantry.includes(food.id);
           const plateItem = currentPlate.find(p => p.foodId === food.id);
           const isSelected = !!plateItem;
           const isVoiceAdded = food.id === voiceAddedFoodId;
+
+          // Lógica de Cabeçalho de Categoria (Apenas na aba Dispensa e sem busca)
+          const showHeader = activeCategory === 'Dispensa' && !searchTerm && viewMode === 'categories' && (index === 0 || displayedFoods[index - 1].category !== food.category);
+          const categoryStyle = categoryColors[food.category] || categoryColors['Outros'];
 
           const itemClasses = [
             'p-4 rounded-2xl shadow-sm border flex items-center justify-between cursor-pointer transition-all',
@@ -254,10 +283,22 @@ const PantryScreen = ({
           ].filter(Boolean).join(' ');
 
           return (
+            <React.Fragment key={food.id}>
+            {showHeader && (
+                <div className={`sticky top-32 z-10 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-sm mb-2 mt-4 first:mt-0 ${categoryStyle}`}>
+                    {food.category || 'Outros'}
+                </div>
+            )}
             <div 
-              key={food.id} 
               data-food-id={food.id}
-              onClick={() => isInPantry ? onAddToPlate(food.id) : onToggle(food.id)}
+              onClick={() => {
+                if (isInPantry) {
+                    onAddToPlate(food.id);
+                } else {
+                    onToggle(food.id); // Adiciona à dispensa
+                    onAddToPlate(food.id); // Seleciona para o prato
+                }
+              }}
               className={itemClasses}
             >
               <div className="flex items-center gap-3">
@@ -282,13 +323,6 @@ const PantryScreen = ({
                     >
                       <Utensils className="w-4 h-4" />
                     </button>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); onDelete(food.id); }}
-                      className="p-2 text-gray-300 hover:text-rose-500 transition-colors"
-                      title="Remover da Dispensa"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
                   </>
                 ) : (
                   <button 
@@ -299,8 +333,29 @@ const PantryScreen = ({
                     <Plus className="w-4 h-4" />
                   </button>
                 )}
+
+                {/* Botão de Lixeira Condicional */}
+                {activeCategory === 'Dispensa' && isInPantry && (
+                    <button 
+                    onClick={(e) => { e.stopPropagation(); onRemoveFromPantry(food.id); }}
+                    className="p-2 text-gray-300 hover:text-rose-500 transition-colors"
+                    title="Remover da Dispensa"
+                    >
+                    <Trash2 className="w-4 h-4" />
+                    </button>
+                )}
+                {activeCategory === 'Meus Alimentos' && (
+                    <button 
+                    onClick={(e) => { e.stopPropagation(); onDeleteCustom(food.id); }}
+                    className="p-2 text-gray-300 hover:text-rose-500 transition-colors"
+                    title="Excluir Alimento Permanentemente"
+                    >
+                    <Trash2 className="w-4 h-4" />
+                    </button>
+                )}
               </div>
             </div>
+            </React.Fragment>
           );
         })}
 
@@ -316,6 +371,22 @@ const PantryScreen = ({
             <p>Nenhum item encontrado nesta categoria.</p>
           </div>
         )}
+      </div>
+
+      {/* Suggestion Box */}
+      <div className="mt-8 p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-800 text-center">
+        <p className="text-xs text-emerald-800 dark:text-emerald-300 mb-3 font-medium">
+          Não encontrou algum alimento? Ajude a melhorar o banco de dados!
+        </p>
+        <a 
+          href="https://wa.me/5531984775695?text=Ol%C3%A1!%20Gostaria%20de%20sugerir%20um%20novo%20alimento%20para%20o%20EvoluFit:"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#25D366] text-white rounded-xl text-xs font-bold shadow-md hover:bg-[#128C7E] transition-transform active:scale-95"
+        >
+          <MessageCircle size={16} />
+          Sugerir via WhatsApp
+        </a>
       </div>
 
       {/* Scroll to Top Button */}
