@@ -134,6 +134,7 @@ const ShoppingListModal = ({ meals, allFoods = [], onClose, checkedItems = {}, o
   }, [meals, allFoods, period, selectedGroupKeys, groupByCategory, hiddenItems]);
 
   const hasCheckedItems = useMemo(() => Object.values(checkedItems).some(v => v), [checkedItems]);
+  const hasHiddenItems = Object.keys(hiddenItems).length > 0;
 
   const handleShare = () => {
     const text = `🛒 *Lista de Compras - EvoluFit*\nPeríodo: ${period}\n\n` + 

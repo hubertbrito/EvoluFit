@@ -11,7 +11,7 @@ import BrainScreen from './components/BrainScreen';
 import ScheduleScreen from './components/ScheduleScreen';
 import FoodAddedModal from './components/FoodAddedModal';
 import ScheduleSummaryModal from './components/ScheduleSummaryModal';
-// import ShoppingListModal from './components/ShoppingListModal';
+import ShoppingListModal from './components/ShoppingListModal';
 import SetupScreen from './components/SetupScreen';
 import SchedulePdfView from './components/SchedulePdfView';
 import { Layout } from './components/Layout';
@@ -969,44 +969,61 @@ const AlertAnimationOverlay = () => (
       }
     });
 
+    // Validação do Dia Atual: Se não for hoje, não dispara confetes nem alertas
+    const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
+    const todayName = daysMap[new Date().getDay()];
+    const todayDate = new Date().toISOString().split('T')[0];
+    
+    const isToday = meal.dayOfWeek === 'Todos' || meal.dayOfWeek === todayName || (meal.dayOfWeek === 'Datas Marcadas' && meal.specificDate === todayDate);
+
+    if (!isToday) return;
+
     const currentConsumed = getConsumedCalories();
     const totalAfterMeal = currentConsumed + mealCalories;
     const dailyGoal = getDailyGoal();
     const tmb = getTMB();
     const isLosingWeight = userProfile.targetWeight < userProfile.weight;
 
-    // 1. Lógica de Alerta de Excesso (sempre ativa)
-    if (totalAfterMeal > dailyGoal * 1.05) {
-      setExcessCalories(totalAfterMeal - dailyGoal);
-      setShowCalorieAlert(true);
-      return; // Interrompe para não celebrar e alertar ao mesmo tempo
-    }
-
-    // 2. Lógica de Celebração
-    const allMealsForToday = mealSchedule.filter(m => (m.dayOfWeek === (new Date().toLocaleDateString('pt-BR', { weekday: 'long' })) || m.dayOfWeek === 'Todos') && m.plate.length > 0);
-    const doneMealsCount = mealSchedule.filter(m => m.isDone && (m.dayOfWeek === (new Date().toLocaleDateString('pt-BR', { weekday: 'long' })) || m.dayOfWeek === 'Todos')).length;
+    const allMealsForToday = mealSchedule.filter(m => (m.dayOfWeek === todayName || m.dayOfWeek === 'Todos') && m.plate.length > 0);
+    const doneMealsCount = mealSchedule.filter(m => m.isDone && (m.dayOfWeek === todayName || m.dayOfWeek === 'Todos')).length;
+    // Adiciona 1 pois a refeição atual está sendo marcada como feita neste momento
     const isLastMeal = doneMealsCount + 1 >= allMealsForToday.length;
 
     let shouldCelebrate = false;
+    let shouldAlertExcess = false;
 
     if (isLosingWeight) {
-      // Objetivo: Emagrecer. Celebra se atingiu a meta OU se concluiu o dia acima do TMB.
-      if ((totalAfterMeal >= dailyGoal) || (isLastMeal && totalAfterMeal >= tmb)) {
+      // CENÁRIO 1: PERDA DE PESO
+      const toleranceLimit = dailyGoal * 1.05; // 5% de tolerância
+
+      if (totalAfterMeal > toleranceLimit) {
+        // Excesso Negativo (> 5%): Aviso de excesso, sem confete
+        shouldAlertExcess = true;
+      } else if (totalAfterMeal >= dailyGoal && totalAfterMeal <= toleranceLimit) {
+        // Margem de Tolerância (entre 100% e 105%): Confete, sem aviso
         shouldCelebrate = true;
+      } else if (totalAfterMeal > tmb && isLastMeal) {
+        // Regra da TMB + Última Refeição: Confete
+        shouldCelebrate = true; 
       }
     } else {
-      // Objetivo: Manter ou Ganhar Peso. Celebra APENAS se atingiu a meta.
+      // CENÁRIO 2: GANHO DE PESO (HIPERTROFIA)
+      // Sem avisos negativos de excesso.
       if (totalAfterMeal >= dailyGoal) {
         shouldCelebrate = true;
       }
     }
 
+    if (shouldAlertExcess) {
+      setExcessCalories(totalAfterMeal - dailyGoal);
+      setShowCalorieAlert(true);
+      return; // Não celebra se tiver alerta de excesso
+    }
+
     if (shouldCelebrate) {
         setShowGoalReached(true);
         if (activeTab === 'schedule') triggerConfetti(); // Dispara confete apenas na tela de agenda
-        const msg = new SpeechSynthesisUtterance("Você atingiu sua meta diária EvoluFit. Parabéns!");
-        msg.lang = 'pt-BR';
-        window.speechSynthesis.speak(msg);
+        // REMOVIDO: Aviso por voz
     }
   };
 
@@ -1034,18 +1051,24 @@ const AlertAnimationOverlay = () => (
   // Atualiza o Badge do App (PWA) com o número de refeições do dia
   useEffect(() => {
     if ('setAppBadge' in navigator) {
-      const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
-      const today = daysMap[new Date().getDay()];
-      // Conta refeições de hoje que têm itens no prato
-      const count = mealSchedule.filter(m => (m.dayOfWeek === today || m.dayOfWeek === 'Todos') && m.plate.length > 0).length;
+      // Lógica de Badge: Indica mensagens do sistema (ex: Alertas pendentes ou excesso)
+      let badgeCount = 0;
+      const dailyGoal = getDailyGoal();
+      const currentCalories = getTodayCalories();
+      const isLosingWeight = userProfile.targetWeight < userProfile.weight;
       
-      if (count > 0) {
-        navigator.setAppBadge(count).catch(e => console.error("Erro ao definir badge:", e));
+      // Se ultrapassou a meta (e for perda de peso), badge = 1 (Aviso crítico)
+      if (isLosingWeight && currentCalories > dailyGoal * 1.05) {
+        badgeCount = 1;
+      }
+      
+      if (badgeCount > 0) {
+        navigator.setAppBadge(badgeCount).catch(e => console.error("Erro ao definir badge:", e));
       } else {
         navigator.clearAppBadge().catch(e => console.error("Erro ao limpar badge:", e));
       }
     }
-  }, [mealSchedule]);
+  }, [mealSchedule, userProfile]);
 
   // Sistema de Alerta em Tempo Real
   useEffect(() => {
@@ -1058,16 +1081,12 @@ const AlertAnimationOverlay = () => (
       // Alerta de Limite de Calorias
       const dailyGoal = getDailyGoal();
       const currentCalories = getTodayCalories();
+      const isLosingWeight = userProfile.targetWeight < userProfile.weight;
+
       // Verifica se passou do limite e se ainda não avisou hoje (lógica simplificada para demo)
-      // Num app real, usaríamos um estado para não repetir o alerta a cada 30s
-      if (currentCalories > dailyGoal && !window.hasAlertedCalories) {
-        alert(`ATENÇÃO: Você ultrapassou sua meta de ${Math.round(dailyGoal)} kcal para hoje!`);
-        playLimitSound(); // Toca o som de alerta de limite
-        if ('speechSynthesis' in window) {
-          const msg = new SpeechSynthesisUtterance(`Atenção. Você ultrapassou sua meta calórica diária.`);
-          msg.lang = 'pt-BR';
-          window.speechSynthesis.speak(msg);
-        }
+      // Só alerta excesso se o objetivo for PERDA DE PESO e passar da tolerância de 5%
+      if (isLosingWeight && currentCalories > dailyGoal * 1.05 && !window.hasAlertedCalories) {
+        // Alerta visual apenas (Badge e Modal já cuidam disso, aqui removemos o alert intrusivo e a voz)
         window.hasAlertedCalories = true; // Flag temporária na janela
       }
       
@@ -1083,7 +1102,7 @@ const AlertAnimationOverlay = () => (
       }));
     }, 30000);
     return () => clearInterval(interval);
-  }, [mealSchedule, userProfile.alarmSound]);
+  }, [mealSchedule, userProfile.alarmSound, userProfile]);
 
   const playLimitSound = () => {
     try {
@@ -1789,7 +1808,7 @@ const AlertAnimationOverlay = () => (
         />
       }
       {showSummaryModal && <ScheduleSummaryModal meals={mealSchedule} onClose={() => setShowSummaryModal(false)} />}
-      {/* {showShoppingList && <ShoppingListModal 
+      {showShoppingList && <ShoppingListModal 
         meals={mealSchedule} 
         allFoods={allAvailableFoods} 
         onClose={() => setShowShoppingList(false)} 
@@ -1797,7 +1816,7 @@ const AlertAnimationOverlay = () => (
         onToggleCheck={setShoppingListCheckedItems}
         hiddenItems={shoppingListHiddenItems}
         onToggleHidden={setShoppingListHiddenItems}
-      />} */}
+      />}
       {showFoodAddedModal && <FoodAddedModal 
         foodName={newlyAddedFoodName} 
         onClose={() => {

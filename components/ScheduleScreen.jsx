@@ -195,6 +195,13 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
     return result;
   }, [meals, activeDays]);
 
+  // Lógica de Planejamento Total (Soma de tudo agendado para o dia, feito ou não)
+  const totalPlannedCalories = useMemo(() => {
+    return filteredMeals.reduce((total, meal) => {
+      return total + calculateMealNutrients(meal.plate).calories;
+    }, 0);
+  }, [filteredMeals, calculateMealNutrients]);
+
   // Lógica de Progresso do Dia
   const dayProgress = useMemo(() => {
     if (filteredMeals.length === 0) return 0;
@@ -226,6 +233,8 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
       percentage: dailyGoal > 0 ? Math.min(100, (consumedCalories / dailyGoal) * 100) : 0,
     };
   }, [filteredMeals, profile, calculateMealNutrients]);
+
+  const isOverPlanned = totalPlannedCalories > caloriesProgress.goal && caloriesProgress.goal > 0;
 
   const handleToggleDone = (meal) => {
     const newStatus = !meal.isDone;
@@ -260,6 +269,17 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
           animation: highlight-move 2s ease-out;
         }
       `}</style>
+
+      {/* Aviso de Planejamento Excedido (Fixo) */}
+      {isOverPlanned && (
+        <div className="bg-rose-50 p-3 rounded-xl border border-rose-200 flex items-start gap-3 shadow-sm animate-pulse">
+          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+          <p className="text-xs text-rose-800">
+            <strong>Atenção ao Planejamento:</strong> A soma das refeições agendadas ({Math.round(totalPlannedCalories)} kcal) ultrapassa sua meta diária ({caloriesProgress.goal} kcal). Considere ajustar as quantidades.
+          </p>
+        </div>
+      )}
+
       {scheduleWarnings && scheduleWarnings.length > 0 && (
         <div className="bg-amber-100 p-4 rounded-2xl border-2 border-dashed border-amber-400 flex flex-col gap-3">
             <div className="flex items-center gap-2">
