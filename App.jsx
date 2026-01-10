@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trash2, Copy, AlertTriangle, Eraser, Download, Loader } from 'lucide-react';
+import EducationalModal from './components/EducationalModal';
 import { FOOD_DATABASE, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures, inferNutrients } from './constants';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -8,6 +9,7 @@ import { populateDB } from './db.js';
 import PantryScreen from './components/PantryScreen';
 import PlateScreen from './components/PlateScreen';
 import BrainScreen from './components/BrainScreen';
+import educationalData from './educationalData';
 import ScheduleScreen from './components/ScheduleScreen';
 import FoodAddedModal from './components/FoodAddedModal';
 import ScheduleSummaryModal from './components/ScheduleSummaryModal';
@@ -21,6 +23,17 @@ import TrialEndScreen from './components/TrialEndScreen';
 
 // Definindo localmente para não depender de arquivo de tipos externo
 const Category = { INDUSTRIALIZADOS: 'Industrializados' };
+
+const BADGES_DATA = [
+  { id: 'first_step', name: 'Primeiro Passo', description: 'Registrou a primeira refeição.', icon: '🦶' },
+  { id: 'streak_3', name: 'Aquecendo', description: 'Manteve o foco por 3 dias seguidos.', icon: '🔥' },
+  { id: 'streak_7', name: 'Semana Imbatível', description: '7 dias de constância total.', icon: '🏆' },
+  { id: 'streak_30', name: 'Iniciado', description: '1 mês de foco! O hábito está formado.', icon: '🧘' },
+  { id: 'streak_60', name: 'Mestre', description: '2 meses de disciplina absoluta.', icon: '🥋' },
+  { id: 'streak_90', name: 'Monge', description: '3 meses. Sua mente controla seu corpo.', icon: '📿' },
+  { id: 'streak_120', name: 'O Iluminado', description: '4 meses. Você transcendeu a dieta.', icon: '✨' },
+  { id: 'water_master', name: 'Hidratado', description: 'Atingiu a meta de água do dia.', icon: '💧' },
+];
 
 const DEFAULT_MEAL_SCHEDULE = [
   { id: 'm1', name: 'Café da Manhã', time: '08:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
@@ -46,6 +59,7 @@ const TourOverlay = ({ step, onNext, onBack, onSkip, highlightedRect }) => {
     const timer = setTimeout(() => setIsBouncing(false), 400); // Duração da animação
     return () => clearTimeout(timer);
   }, [step]);
+
 
   const steps = [
     {
@@ -206,6 +220,86 @@ const ManualScreen = ({ onClose, onReset, onInstallClick, showInstallButton }) =
       </div>
       
       <div className="p-6 overflow-y-auto space-y-6 text-xs text-gray-600 leading-relaxed">
+        <div className="space-y-3 bg-purple-50 p-4 rounded-lg border border-purple-200">
+          <h3 className="font-bold text-purple-800 text-base">Guia da Nova Era Alimentar: O Despertar da Nutrição Naturalista</h3>
+          
+          <div className="space-y-2">
+            <h4 className="font-bold text-purple-900">Introdução: O Fim dos Mitos</h4>
+            <p className="text-purple-800">
+              Bem-vindo a uma nova forma de enxergar o seu corpo. Em janeiro de 2026, as diretrizes alimentares globais (lideradas pelo USDA e FDA) passaram pela maior transformação das últimas décadas. O que antes era considerado o "padrão" foi invertido. O foco saiu da contagem obsessiva de calorias e entrou na Densidade Nutricional e no Conhecimento Naturalista. Este manual explica como o nosso app agora te ajuda a navegar nessa nova realidade.
+            </p>
+          </div>
+          <div className="space-y-2 pt-2 border-t border-purple-200">
+            <h4 className="font-bold text-purple-900">1. A Inversão da Pirâmide: Por que Proteína é a Base?</h4>
+            <p className="text-purple-800">
+              Durante anos, fomos ensinados que a base da alimentação eram os carboidratos (pães, massas, cereais). A ciência de 2026 provou o contrário: a base da saúde humana é a Proteína de alta qualidade (carnes, ovos, peixes e vegetais proteicos) e as Gorduras Naturais.
+            </p>
+            <ul className="list-disc list-inside pl-2 space-y-1 text-purple-800">
+              <li><strong>O Superpoder da Proteína:</strong> Diferente dos carboidratos refinados, a proteína possui um alto Efeito Térmico. Isso significa que seu corpo queima energia apenas para digeri-la.</li>
+              <li><strong>A Saciedade Real:</strong> A proteína regula os hormônios da fome (como a grelina). Quando você prioriza a proteína, você envia uma mensagem de "segurança" ao seu cérebro, permitindo que você coma um volume maior de comida e, ainda assim, perca gordura ou mantenha o peso com facilidade.</li>
+            </ul>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-purple-200">
+            <h4 className="font-bold text-purple-900">2. Comida de Verdade vs. Ultraprocessados</h4>
+            <p className="text-purple-800">
+              O conceito naturalista adotado pelo app separa o que é "combustível" do que é "distração".
+            </p>
+            <ul className="list-disc list-inside pl-2 space-y-1 text-purple-800">
+              <li><strong>Alimentos de Verdade:</strong> São aqueles que a natureza entrega prontos (ou quase prontos). Carnes, frutas, vegetais, raízes e sementes. Eles contêm a matriz de informação que suas células reconhecem.</li>
+              <li><strong>O Perigo dos Invisíveis:</strong> Açúcares adicionados e aditivos químicos "sequestram" seu paladar e desligam sua saciedade. As novas diretrizes de 2026 recomendam a redução drástica de itens de pacote (ultraprocessados), que inflamam o corpo e causam neblina mental.</li>
+            </ul>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-purple-200">
+            <h4 className="font-bold text-purple-900">3. Volume Inteligente: Coma Mais, Nutra Melhor</h4>
+            <p className="text-purple-800">
+              A grande revelação desta nova era é que comer pouco não é sinônimo de saúde. O segredo está no volume inteligente. Ao preencher seu prato com alimentos densos (proteínas e fibras), você ocupa espaço físico no estômago e nutre suas células profundamente. O resultado? Você se sente satisfeito por muito mais tempo e elimina a necessidade de "beliscar" alimentos processados ao longo do dia.
+            </p>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-purple-200">
+            <h4 className="font-bold text-purple-900">4. Como o App te Guia (A Didática Subjetiva)</h4>
+            <p className="text-purple-800">
+              Nossa plataforma não vai apenas registrar o que você come. Ela vai te ensinar enquanto você navega:
+            </p>
+            <ul className="list-disc list-inside pl-2 space-y-1 text-purple-800">
+              <li><strong>Na sua Dispensa:</strong> Identificamos o que é aliado e o que é distração, te ensinando a ler rótulos de forma invisível.</li>
+              <li><strong>No seu Prato:</strong> Celebramos quando você escolhe a proteína primeiro, validando sua inteligência biológica.</li>
+              <li><strong>Na sua Agenda:</strong> Mostramos como a constância na "comida de verdade" transforma seu gráfico de energia e saúde.</li>
+            </ul>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-purple-200">
+            <h4 className="font-bold text-purple-900">5. Conclusão: Autonomia e Liberdade</h4>
+            <p className="text-purple-800">
+              O objetivo final não é te prender a uma dieta, mas te dar Conhecimento Naturalista. Quando você entende como a proteína e os alimentos naturais funcionam, você ganha liberdade. Você para de lutar contra a balança e começa a trabalhar a favor da sua biologia.
+            </p>
+            <p className="text-purple-800 font-bold mt-2">
+              Lembre-se: Cada escolha por um alimento real é um voto em uma versão mais forte, lúcida e vibrante de você mesmo. Estamos aqui para garantir que você vença essa jornada através do conhecimento.
+            </p>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-purple-200">
+            <h4 className="font-bold text-purple-900">6. O Jogo da Evolução (Gamificação)</h4>
+            <p className="text-purple-800">
+              O EvoluFit reconhece sua dedicação. Transformamos sua constância em um jogo de evolução pessoal.
+            </p>
+            <ul className="list-disc list-inside pl-2 space-y-1 text-purple-800">
+              <li><strong>Níveis de Consciência:</strong> Seu nível é definido pela sua maior sequência de dias (Streak) mantendo o foco.
+                <ul className="list-none pl-4 mt-1 text-[10px] space-y-0.5 opacity-90">
+                  <li>🌱 <strong>Novato (0-29 dias):</strong> O começo da jornada.</li>
+                  <li>🧘 <strong>Iniciado (30 dias):</strong> O hábito está se formando.</li>
+                  <li>🥋 <strong>Mestre (60 dias):</strong> Disciplina e controle.</li>
+                  <li>📿 <strong>Monge (90 dias):</strong> Sua mente comanda o corpo.</li>
+                  <li>✨ <strong>O Iluminado (120+ dias):</strong> Transcendência nutricional.</li>
+                </ul>
+              </li>
+              <li><strong>Como Evoluir:</strong> Basta registrar suas refeições diariamente. Se perder um dia, seu "Fogo" (Streak atual) apaga, mas seu Nível (baseado no recorde) permanece como um marco da sua história.</li>
+            </ul>
+          </div>
+        </div>
+
         <div className="space-y-2">
           <h3 className="font-bold text-emerald-700 text-base">Funcionalidades Detalhadas</h3>
           <ul className="list-disc list-inside space-y-2 pl-1 grid grid-cols-1 gap-1">
@@ -225,6 +319,7 @@ const ManualScreen = ({ onClose, onReset, onInstallClick, showInstallButton }) =
             <li><strong>14. Exportar PDF:</strong> Salve ou imprima seu planejamento alimentar.</li>
             <li><strong>15. Offline:</strong> Funciona sem internet após o primeiro acesso (exceto busca por voz).</li>
             <li><strong>16. Reset e Ajustes:</strong> Redefina sua agenda ou atualize seu perfil a qualquer momento.</li>
+            <li><strong>17. Gamificação:</strong> Suba de nível e desbloqueie conquistas mantendo a constância.</li>
           </ul>
         </div>
 
@@ -762,6 +857,51 @@ const ResetScheduleModal = ({ onClose, onConfirm }) => {
   );
 };
 
+const AchievementModal = ({ badge, onClose }) => (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce text-center relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-yellow-100/50 to-transparent pointer-events-none"></div>
+      <div className="p-8 flex flex-col items-center">
+        <div className="text-6xl mb-4 animate-bounce">{badge.icon}</div>
+        <h2 className="text-2xl font-black text-gray-800 mb-1">Nova Conquista!</h2>
+        <p className="text-emerald-600 font-bold text-lg mb-2">{badge.name}</p>
+        <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+          {badge.description}
+        </p>
+        <button 
+          onClick={onClose}
+          className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-md hover:bg-emerald-700 transition-transform active:scale-95"
+        >
+          Incrível!
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const LevelUpModal = ({ badge, onClose }) => (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
+    <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce text-center relative border-4 border-yellow-400">
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
+      <div className="p-8 flex flex-col items-center relative z-10">
+        <h2 className="text-3xl font-black text-yellow-400 mb-2 tracking-widest drop-shadow-md animate-pulse">LEVEL UP!</h2>
+        <div className="text-8xl mb-4 animate-bounce filter drop-shadow-lg">{badge.icon}</div>
+        <p className="text-white font-bold text-xl mb-1">Você agora é um</p>
+        <p className="text-yellow-300 font-black text-2xl mb-4 uppercase tracking-wider">{badge.name}</p>
+        <p className="text-indigo-100 text-sm mb-8 leading-relaxed px-4">
+          {badge.description}
+        </p>
+        <button 
+          onClick={onClose}
+          className="w-full py-3 bg-yellow-400 text-indigo-900 rounded-xl font-black shadow-[0_4px_0_rgb(180,83,9)] hover:shadow-[0_2px_0_rgb(180,83,9)] hover:translate-y-[2px] transition-all active:shadow-none active:translate-y-[4px]"
+        >
+          CONTINUAR JORNADA
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 const App = () => {
   const [activeTab, setActiveTab] = useState('pantry');
   
@@ -799,6 +939,7 @@ const App = () => {
       waterGoal: '2500',
       alarmSound: 'sine',
       isSetupDone: false,
+      planStartDate: new Date().toISOString(),
       ...parsed
     };
   });
@@ -851,6 +992,25 @@ const App = () => {
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [showCalorieAlert, setShowCalorieAlert] = useState(false);
   const [showGoalReached, setShowGoalReached] = useState(false);
+  const [newUnlockedBadge, setNewUnlockedBadge] = useState(null);
+  const [newLevelUpBadge, setNewLevelUpBadge] = useState(null);
+
+  // State for educational modal
+  const [showEducationalModal, setShowEducationalModal] = useState(false);
+  const [currentEducationalContent, setCurrentEducationalContent] = useState(null);
+
+  useEffect(() => {
+    // Listener de Navegação para o Educador Nutricional (Diretrizes 2026)
+    const content = educationalData[activeTab];
+    if (content) {
+      const hasSeen = localStorage.getItem(content.storageKey);
+      if (!hasSeen) {
+        setCurrentEducationalContent(content);
+        setShowEducationalModal(true);
+      }
+    }
+  }, [activeTab]);
+
   const [excessCalories, setExcessCalories] = useState(0);
   const [movedMealId, setMovedMealId] = useState(null);
   const [isTrialActive, setIsTrialActive] = useState(true);
@@ -878,6 +1038,85 @@ const App = () => {
     }
     return 0;
   });
+
+  // --- Gamificação: Estado de Streaks e Conquistas ---
+  const [gamification, setGamification] = useState(() => {
+    const saved = localStorage.getItem('gamification');
+    return saved ? JSON.parse(saved) : {
+      currentStreak: 0,
+      maxStreak: 0,
+      lastLogDate: null,
+      achievements: [],
+      hearts: 0
+    };
+  });
+
+  useEffect(() => {
+    localStorage.setItem('gamification', JSON.stringify(gamification));
+  }, [gamification]);
+
+  // Verifica se o streak foi quebrado ao carregar o app
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    setGamification(prev => {
+      // Se o último log não foi hoje nem ontem, e o streak é maior que 0, quebrou.
+      if (prev.lastLogDate && prev.lastLogDate !== today && prev.lastLogDate !== yesterdayStr && prev.currentStreak > 0) {
+        return { ...prev, currentStreak: 0 };
+      }
+      return prev;
+    });
+  }, []);
+
+  // --- Sistema de Conquistas (Badges) ---
+  useEffect(() => {
+    const currentAchievements = gamification.achievements || [];
+    const newAchievements = [];
+    
+    // Regras de Desbloqueio
+    if (gamification.currentStreak >= 1 && !currentAchievements.includes('first_step')) newAchievements.push('first_step');
+    if (gamification.currentStreak >= 3 && !currentAchievements.includes('streak_3')) newAchievements.push('streak_3');
+    if (gamification.currentStreak >= 7 && !currentAchievements.includes('streak_7')) newAchievements.push('streak_7');
+    
+    // Níveis (Baseados no Recorde/MaxStreak para não punir perda de combo acidental)
+    if (gamification.maxStreak >= 30 && !currentAchievements.includes('streak_30')) newAchievements.push('streak_30');
+    if (gamification.maxStreak >= 60 && !currentAchievements.includes('streak_60')) newAchievements.push('streak_60');
+    if (gamification.maxStreak >= 90 && !currentAchievements.includes('streak_90')) newAchievements.push('streak_90');
+    if (gamification.maxStreak >= 120 && !currentAchievements.includes('streak_120')) newAchievements.push('streak_120');
+    
+    // Regra de Água (Desbloqueia na primeira vez que atinge a meta)
+    if (waterIntake >= parseInt(userProfile.waterGoal || 2500) && waterIntake > 0 && !currentAchievements.includes('water_master')) {
+        newAchievements.push('water_master');
+    }
+
+    if (newAchievements.length > 0) {
+        setGamification(prev => ({
+            ...prev,
+            achievements: [...(prev.achievements || []), ...newAchievements]
+        }));
+        
+        // Verifica se alguma das novas conquistas é um Level Up
+        const levelBadgeIds = ['streak_30', 'streak_60', 'streak_90', 'streak_120'];
+        const levelBadgeId = newAchievements.find(id => levelBadgeIds.includes(id));
+
+        if (levelBadgeId) {
+            const badgeData = BADGES_DATA.find(b => b.id === levelBadgeId);
+            setNewLevelUpBadge(badgeData);
+            playLevelUpSound();
+            triggerConfetti();
+        } else {
+            // Se não for level up, mostra conquista normal
+            const badgeData = BADGES_DATA.find(b => b.id === newAchievements[newAchievements.length - 1]);
+            if (badgeData) {
+                setNewUnlockedBadge(badgeData);
+                triggerConfetti();
+            }
+        }
+    }
+  }, [gamification.currentStreak, waterIntake, userProfile.waterGoal]);
 
   // Estado para histórico de água (persistido)
   const [waterHistory, setWaterHistory] = useState(() => {
@@ -926,6 +1165,47 @@ const App = () => {
     const interval = setInterval(checkDayChange, 60000); // Checa a cada minuto
     window.addEventListener('focus', checkDayChange); // Checa ao focar a janela (ex: voltar do background no celular)
     return () => { clearInterval(interval); window.removeEventListener('focus', checkDayChange); };
+  }, []);
+
+  // --- Lógica de Renovação Semanal Automática ---
+  useEffect(() => {
+    const today = new Date();
+    const todayDateStr = today.toISOString().split('T')[0];
+    const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
+    const todayName = daysMap[today.getDay()];
+
+    setMealSchedule(prevSchedule => {
+      let hasChanges = false;
+      const newSchedule = prevSchedule.map(meal => {
+        if (!meal.isDone) return meal;
+
+        let shouldReset = false;
+
+        // Caso 1: Refeição de dia específico (ex: Segunda)
+        // Se hoje é Segunda, mas a refeição foi marcada como feita em uma data diferente de hoje (ex: Segunda passada), reseta.
+        if (meal.dayOfWeek === todayName) {
+           if (meal.lastDoneDate && meal.lastDoneDate !== todayDateStr) {
+             shouldReset = true;
+           }
+        }
+        
+        // Caso 2: Refeição 'Todos' (Diária)
+        // Se foi feita, mas não hoje, reseta para estar disponível hoje.
+        if (meal.dayOfWeek === 'Todos') {
+           if (meal.lastDoneDate && meal.lastDoneDate !== todayDateStr) {
+             shouldReset = true;
+           }
+        }
+
+        if (shouldReset) {
+          hasChanges = true;
+          return { ...meal, isDone: false, lastDoneDate: null };
+        }
+        return meal;
+      });
+
+      return hasChanges ? newSchedule : prevSchedule;
+    });
   }, []);
 
   // --- Lógica de Controle de Acesso (Trial e Admin) ---
@@ -1202,6 +1482,33 @@ const AlertAnimationOverlay = () => (
 
     if (!isToday) return;
 
+    // --- Lógica de Gamificação (Atualizar Streak) ---
+    setGamification(prev => {
+      const todayStr = new Date().toISOString().split('T')[0];
+      
+      // Se já registrou hoje, não muda o streak
+      if (prev.lastLogDate === todayStr) return prev;
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+      let newStreak = prev.currentStreak;
+      // Se registrou ontem, incrementa. Se não (e não é hoje), reseta para 1.
+      if (prev.lastLogDate === yesterdayStr) {
+        newStreak += 1;
+      } else {
+        newStreak = 1;
+      }
+
+      return {
+        ...prev,
+        currentStreak: newStreak,
+        maxStreak: Math.max(newStreak, prev.maxStreak),
+        lastLogDate: todayStr
+      };
+    });
+
     const currentConsumed = getConsumedCalories();
     const totalAfterMeal = currentConsumed + mealCalories;
     const dailyGoal = getDailyGoal();
@@ -1215,6 +1522,20 @@ const AlertAnimationOverlay = () => (
 
     let shouldCelebrate = false;
     let shouldAlertExcess = false;
+
+    // Lógica de Corações (Escolhas Sábias)
+    const healthyCategories = ['Vegetais', 'Frutas', 'Proteínas', 'Leguminosas', 'Gorduras'];
+    const unhealthyCategories = ['Industrializados', 'Doces'];
+    let healthyScore = 0;
+    
+    meal.plate.forEach(item => {
+        const food = allFoods.find(f => f.id === item.foodId);
+        if (food) {
+            if (healthyCategories.includes(food.category)) healthyScore++;
+            if (unhealthyCategories.includes(food.category)) healthyScore--;
+        }
+    });
+    const isWiseChoice = healthyScore > 0;
 
     if (isLosingWeight) {
       // CENÁRIO 1: PERDA DE PESO
@@ -1248,6 +1569,11 @@ const AlertAnimationOverlay = () => (
         setShowGoalReached(true);
         if (activeTab === 'schedule') triggerConfetti(); // Dispara confete apenas na tela de agenda
         // REMOVIDO: Aviso por voz
+
+        // Ganha coração se fez escolhas sábias
+        if (isWiseChoice) {
+            setGamification(prev => ({ ...prev, hearts: (prev.hearts || 0) + 1 }));
+        }
     }
   };
 
@@ -1418,6 +1744,37 @@ const AlertAnimationOverlay = () => (
     } catch (e) { console.error("Erro ao tocar som de reordenação", e); }
   };
 
+  const playLevelUpSound = () => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const now = ctx.currentTime;
+
+      const playTone = (freq, time, duration) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine'; // Onda senoidal pura para um som "mágico"
+        osc.frequency.setValueAtTime(freq, time);
+        gain.gain.setValueAtTime(0.1, time);
+        gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(time);
+        osc.stop(time + duration);
+      };
+
+      // Arpejo de Level Up (C Maior ascendente)
+      playTone(523.25, now, 0.2);       // C5
+      playTone(659.25, now + 0.1, 0.2); // E5
+      playTone(783.99, now + 0.2, 0.2); // G5
+      playTone(1046.50, now + 0.3, 0.6);// C6 (Nota final mais longa)
+      
+    } catch (e) {
+      console.error("Audio error", e);
+    }
+  };
+
   const triggerAlert = (mealName, plate) => {
     // 1. Ativa a animação visual na tela
     setIsAlerting(true);
@@ -1478,6 +1835,60 @@ const AlertAnimationOverlay = () => (
     setNewlyAddedFoodName(name);
     setShowFoodAddedModal(true);
     return newId;
+  };
+
+  // Helper para disparar mensagens educativas (evita repetição de código)
+  const triggerEducationalMessage = (key) => {
+    const content = educationalData[key];
+    if (content) {
+      const hasSeen = localStorage.getItem(content.storageKey);
+      if (!hasSeen) {
+        setCurrentEducationalContent(content);
+        setShowEducationalModal(true);
+      }
+    }
+  };
+
+  // --- Lógica Educacional Interativa (Diretrizes 2026) ---
+  const handleFoodInteraction = (foodId) => {
+    const food = allAvailableFoods.find(f => f.id === foodId);
+    if (!food) return;
+
+    let contentKey = null;
+
+    // Critério 1: Proteína Densa (Categoria ou > 10g de proteína)
+    if (food.category === 'Proteínas' || (food.protein && food.protein >= 10)) {
+      contentKey = 'interaction_protein';
+    } 
+    // Critério 2: Alimentos Naturais/Integrais
+    else if (['Frutas', 'Vegetais', 'Leguminosas'].includes(food.category)) {
+      contentKey = 'interaction_natural';
+    }
+
+    if (contentKey) {
+      triggerEducationalMessage(contentKey);
+    }
+  };
+
+  // Lógica de Interação no Prato (Volume Inteligente)
+  const handlePlateUpdate = (id, updates) => {
+    setCurrentPlate(prev => {
+      const itemIndex = prev.findIndex(x => x.foodId === id);
+      if (itemIndex === -1) return prev;
+      
+      const oldItem = prev[itemIndex];
+      // Verifica se houve aumento de quantidade em alimentos estratégicos
+      if (updates.quantity && updates.quantity > oldItem.quantity) {
+        const food = allAvailableFoods.find(f => f.id === id);
+        if (food && ['Vegetais', 'Frutas', 'Leguminosas', 'Proteínas'].includes(food.category)) {
+          triggerEducationalMessage('interaction_volume');
+        }
+      }
+      
+      const newPlate = [...prev];
+      newPlate[itemIndex] = { ...oldItem, ...updates };
+      return newPlate;
+    });
   };
 
   const startListening = () => {
@@ -1811,6 +2222,7 @@ const AlertAnimationOverlay = () => (
   const handleProfileUpdate = (newProfile) => {
     setUserProfile(newProfile);
     validateSchedule(newProfile);
+    triggerEducationalMessage('interaction_profile_update');
   };
 
   const handleExportPDF = () => {
@@ -1889,8 +2301,19 @@ const AlertAnimationOverlay = () => (
         currentTheme={theme}
         onThemeChange={setTheme}
       >
+         {showEducationalModal && currentEducationalContent && (
+        <EducationalModal
+          title={currentEducationalContent.title}
+          message={currentEducationalContent.message}
+          onClose={() => { 
+            setShowEducationalModal(false); 
+            localStorage.setItem(currentEducationalContent.storageKey, 'true'); 
+          }}
+        />
+         )}
       {activeTab === 'pantry' && (
         <PantryScreen 
+
           allFoods={allAvailableFoods} 
           userPantry={pantryItems} 
           currentPlate={currentPlate}
@@ -1907,6 +2330,7 @@ const AlertAnimationOverlay = () => (
               if (p.find(x => x.foodId === id)) return p.filter(x => x.foodId !== id);
               return [...p, { foodId: id, quantity: 1, unit: 'Colher Sopa', multiplier: 1.0 }];
             });
+            handleFoodInteraction(id); // Dispara o insight educativo
           }}
           onVoiceClick={startListening}
           isListening={isListening}
@@ -1926,8 +2350,8 @@ const AlertAnimationOverlay = () => (
           key={mealSchedule.map(m => m.id).join('-')}
           initialSelectedDays={initialPlateDays}
           plate={currentPlate} 
-          onRemove={id => setCurrentPlate(p => p.filter(x => x.foodId !== id))} 
-          onUpdate={(id, up) => setCurrentPlate(p => p.map(x => x.foodId === id ? {...x, ...up} : x))} 
+          onRemove={id => setCurrentPlate(p => p.filter(x => x.foodId !== id))}
+          onUpdate={handlePlateUpdate}
           allFoods={allAvailableFoods}
           meals={mealSchedule}
           showTour={showTour}
@@ -2046,6 +2470,7 @@ const AlertAnimationOverlay = () => (
     setInitialPlateDays([]);
     setEditingMealInfo(null);
     setActiveTab('schedule');
+    triggerEducationalMessage('interaction_schedule_confirm');
 }}
           onAddMore={() => setActiveTab('pantry')}
         />
@@ -2082,6 +2507,8 @@ const AlertAnimationOverlay = () => (
           schedule={mealSchedule} 
           allFoods={allAvailableFoods} 
           profile={userProfile}
+          gamification={gamification}
+          badgesData={BADGES_DATA}
           onRestartTour={handleRestartTour}
           waterHistory={waterHistory}
           onEditProfile={() => setUserProfile(prev => ({ ...prev, isSetupDone: false }))}
@@ -2125,7 +2552,12 @@ const AlertAnimationOverlay = () => (
           groupMembers={groupToClear}
         />
       }
-      {showSummaryModal && <ScheduleSummaryModal meals={mealSchedule} onClose={() => setShowSummaryModal(false)} />}
+      {showSummaryModal && (
+        <ScheduleSummaryModal 
+          meals={mealSchedule} 
+          onClose={() => setShowSummaryModal(false)} 
+        />
+      )}
       {showCloneModal && <CloneDayModal sourceDay={cloneSourceDay} onClose={() => setShowCloneModal(false)} onConfirm={confirmCloneDay} mealSchedule={mealSchedule} />}
       {showShoppingList && <ShoppingListModal 
         meals={mealSchedule} 
@@ -2163,8 +2595,11 @@ const AlertAnimationOverlay = () => (
       {showCalorieAlert && <CalorieAlertModal excessCalories={excessCalories} onClose={() => setShowCalorieAlert(false)} />}
       {showGoalReached && <GoalReachedModal onClose={() => setShowGoalReached(false)} />}
       {showWhatsNew && <WhatsNewModal onClose={handleCloseWhatsNew} onOpenManual={() => { handleCloseWhatsNew(); setShowManual(true); }} />}
+      {newUnlockedBadge && <AchievementModal badge={newUnlockedBadge} onClose={() => setNewUnlockedBadge(null)} />}
+      {newLevelUpBadge && <LevelUpModal badge={newLevelUpBadge} onClose={() => setNewLevelUpBadge(null)} />}
     </>
   );
 };
+
 
 export default App;

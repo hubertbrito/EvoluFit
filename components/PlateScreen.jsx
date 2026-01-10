@@ -396,13 +396,13 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
                   <div>
                     <label className="text-xs font-bold text-blue-800 mb-1 block">Lembrete / Descrição</label>
                     <div className="relative">
-                      <input 
-                        type="text"
+                      <textarea 
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         maxLength={80}
                         placeholder="Ex: Levar a sobremesa..."
-                        className="w-full p-2.5 pl-9 border-2 border-indigo-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-400 text-gray-900"
+                        rows={3}
+                        className="w-full p-2.5 pl-9 border-2 border-indigo-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-400 text-gray-900 resize-none"
                       />
                       <StickyNote className="w-4 h-4 text-indigo-300 absolute left-2.5 top-3" />
                     </div>

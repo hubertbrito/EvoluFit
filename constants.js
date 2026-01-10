@@ -794,6 +794,7 @@ export const inferNutrients = (name) => {
     'peito de peru': '351',
     'bife': '16',     // Bife Bovino Grelhado
     'carne': '15',    // Carne Moída (Refogada)
+    'rabada': '760',
     'peixe': '345',   // Tilápia Grelhada
     'salmão': '346',  // Salmão Grelhado
     'salmao': '346',

@@ -64,9 +64,21 @@ const PantryScreen = ({
     const fetchAndSetFoods = async () => {
       setIsLoading(true);
       if (searchTerm) {
-        const results = await searchFoodsDB(searchTerm);
-        results.sort((a, b) => a.name.localeCompare(b.name));
-        setDisplayedFoods(results);
+        const dbResults = await searchFoodsDB(searchTerm);
+        
+        // Busca também nos alimentos customizados (que não estão no IndexedDB)
+        const normalizedSearch = searchTerm.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const customResults = allFoods.filter(f => 
+            f.id.toString().startsWith('custom-') && 
+            f.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(normalizedSearch)
+        );
+
+        const results = [...dbResults, ...customResults];
+        // Remove duplicatas por ID para segurança
+        const uniqueResults = Array.from(new Map(results.map(item => [item.id, item])).values());
+        
+        uniqueResults.sort((a, b) => a.name.localeCompare(b.name));
+        setDisplayedFoods(uniqueResults);
       } else {
         let foods;
         // A busca por categoria agora também é otimizada com IndexedDB
@@ -81,9 +93,13 @@ const PantryScreen = ({
                 return a.name.localeCompare(b.name);
             });
           } else if (activeCategory === 'Meus Alimentos') {
-            foods = allFoods.filter(f => f.category === 'Meus Alimentos');
+            // Mostra TODOS os alimentos criados pelo usuário, independente da categoria nutricional
+            foods = allFoods.filter(f => f.id.toString().startsWith('custom-'));
           } else {
-            foods = await getFoodsByCategoryDB(activeCategory);
+            // Busca no DB e mescla com customizados da mesma categoria
+            const dbFoods = await getFoodsByCategoryDB(activeCategory);
+            const customFoods = allFoods.filter(f => f.id.toString().startsWith('custom-') && f.category === activeCategory);
+            foods = [...dbFoods, ...customFoods];
           }
         } else { // A filtragem por dieta continua em memória por ser mais complexa
           foods = activeDiet === 'Todas' 

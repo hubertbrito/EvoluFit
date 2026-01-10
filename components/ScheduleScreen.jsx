@@ -330,7 +330,12 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
 
   const handleToggleDone = (meal) => {
     const newStatus = !meal.isDone;
-    updateMeal(meal.id, { isDone: newStatus });
+    const todayDateStr = new Date().toISOString().split('T')[0];
+    
+    updateMeal(meal.id, { 
+        isDone: newStatus,
+        lastDoneDate: newStatus ? todayDateStr : null 
+    });
 
     if (newStatus && onMealDone) {
       onMealDone(meal);
@@ -742,22 +747,22 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                 <div className="drag-handle mt-2 p-1 -ml-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 cursor-grab active:cursor-grabbing text-gray-300 hover:text-emerald-600 transition-colors" title="Arrastar para reordenar (Computador)">
                     <GripVertical size={20} />
                 </div>
-                <label className="flex items-center space-x-2 cursor-pointer group shrink-0 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 p-1.5 rounded-xl transition-colors shadow-sm">
-                    <div className={`p-1.5 rounded-lg transition-colors ${isCurrent ? 'bg-orange-600 text-white shadow-md' : 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-300 shadow-sm'}`}>
-                        <Clock size={14} />
+                <label className="flex items-center space-x-1 cursor-pointer group shrink-0 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 p-1 rounded-lg transition-colors shadow-sm">
+                    <div className={`p-1 rounded-md transition-colors ${isCurrent ? 'bg-orange-600 text-white shadow-md' : 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-300 shadow-sm'}`}>
+                        <Clock size={12} />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-indigo-800 dark:text-indigo-300 uppercase leading-none mb-0.5">Mudar Hora</span>
+                      <span className="text-[8px] font-black text-indigo-800 dark:text-indigo-300 uppercase leading-none mb-px">Hora</span>
                       <input 
                           type="time" 
                           value={meal.time}
                           onChange={(e) => updateMeal(meal.id, { time: e.target.value })}
-                          className="font-black text-base bg-transparent border-none outline-none focus:ring-0 p-0 text-indigo-950 dark:text-indigo-100 leading-none cursor-pointer appearance-none block"
+                          className="font-black text-xs bg-transparent border-none outline-none focus:ring-0 p-0 text-indigo-950 dark:text-indigo-100 leading-none cursor-pointer appearance-none block"
                       />
                     </div>
                 </label>
                 <div className="flex flex-col items-end min-w-0 flex-1">
-                  <label className="text-xs font-black text-indigo-500 dark:text-indigo-400 uppercase mr-1 w-full text-right truncate">Nome da Refeição</label>
+                  <label className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase mr-1 w-full text-right truncate">Nome da Refeição</label>
                   <input
                     type="text"
                     value={meal.name}
@@ -774,7 +779,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                         updateMeal(meal.id, { name: val });
                     }}
                     placeholder="Ex: Chá das três"
-                    className="text-right font-black text-indigo-950 dark:text-indigo-100 text-sm uppercase tracking-tight bg-transparent border-none outline-none focus:ring-0 p-0 w-full min-w-[50px] max-w-full placeholder:text-indigo-300 dark:placeholder:text-indigo-700 placeholder:italic placeholder:font-normal placeholder:text-sm"
+                    className="text-right font-black text-indigo-950 dark:text-indigo-100 text-xs uppercase tracking-tight bg-transparent border-none outline-none focus:ring-0 p-0 w-full min-w-[50px] max-w-full placeholder:text-indigo-300 dark:placeholder:text-indigo-700 placeholder:italic placeholder:font-normal placeholder:text-xs"
                   />
                   {nutrients.calories > 0 && (
                     <span className="text-orange-800 dark:text-orange-300 font-black text-sm tracking-tighter mt-1">{Math.round(nutrients.calories)} kcal</span>

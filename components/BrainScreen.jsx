@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Brain, Activity, Target, Zap, Calendar, AlertTriangle, Edit, CheckCircle, FileText, ArrowRight, RefreshCw, BarChart2, TrendingUp, TrendingDown, Share2, Droplets } from 'lucide-react';
+import { Brain, Activity, Target, Zap, Calendar, AlertTriangle, Edit, CheckCircle, FileText, ArrowRight, RefreshCw, BarChart2, TrendingUp, TrendingDown, Share2, Droplets, Flame, Trophy, Lock, Info, X, Star, Heart, Clock } from 'lucide-react';
 import { getFoodUnitWeight } from '../constants';
 
 const PieChart = ({ data, size = 120, strokeWidth = 20 }) => {
@@ -117,9 +117,18 @@ const WaterHistoryChart = ({ history, goal }) => {
   );
 };
 
-const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour, onResetSchedule, waterHistory = {} }) => {
+const LEVELS = [
+  { days: 0, title: 'Novato', icon: '🌱', next: 30 },
+  { days: 30, title: 'Iniciado', icon: '🧘', next: 60 },
+  { days: 60, title: 'Mestre', icon: '🥋', next: 90 },
+  { days: 90, title: 'Monge', icon: '📿', next: 120 },
+  { days: 120, title: 'O Iluminado', icon: '✨', next: null }
+];
+
+const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour, onResetSchedule, waterHistory = {}, gamification, badgesData = [] }) => {
   const [filterDay, setFilterDay] = useState('Hoje');
   const days = ['Hoje', 'Semana Toda', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+  const [showBadgesInfo, setShowBadgesInfo] = useState(false);
 
   const calculateDailyTotals = () => {
     let totals = { totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0 };
@@ -286,6 +295,30 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
     window.open(whatsappUrl, '_blank');
   };
 
+  const unlockedCount = (gamification?.achievements || []).length;
+  const totalBadges = badgesData.length;
+  const progressPercent = totalBadges > 0 ? (unlockedCount / totalBadges) * 100 : 0;
+
+  // Cálculo do Nível Atual
+  const currentStreak = gamification?.maxStreak || 0;
+  const currentLevelIndex = LEVELS.reduce((acc, level, index) => {
+    return currentStreak >= level.days ? index : acc;
+  }, 0);
+  const currentLevel = LEVELS[currentLevelIndex];
+  const nextLevel = LEVELS[currentLevelIndex + 1];
+  
+  // Cálculo da Barra de XP do Nível
+  const levelProgress = nextLevel 
+    ? Math.min(100, Math.max(0, ((currentStreak - currentLevel.days) / (nextLevel.days - currentLevel.days)) * 100))
+    : 100; // Nível máximo
+
+  // Cálculo do Progresso do Plano (Semanas)
+  const planStartDate = new Date(profile.planStartDate || new Date());
+  const daysPassed = Math.floor((new Date() - planStartDate) / (1000 * 60 * 60 * 24));
+  const totalPlanWeeks = parseInt(profile.weeks) || 12;
+  const totalPlanDays = totalPlanWeeks * 7;
+  const planProgress = Math.min(100, Math.max(0, (daysPassed / totalPlanDays) * 100));
+
   return (
     <div className="p-4 space-y-6 pb-24">
       <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
@@ -303,6 +336,116 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
             <Edit size={20} />
           </button>
         </div>
+
+        {/* --- Card de Nível (RPG) --- */}
+        {gamification && (
+          <div className="mb-6 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+              <Star size={120} />
+            </div>
+            <div className="relative z-10">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Nível de Consciência</p>
+                  <h3 className="text-2xl font-black flex items-center gap-2">
+                    <span className="text-3xl">{currentLevel.icon}</span> {currentLevel.title}
+                  </h3>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-bold opacity-90">{currentStreak} dias</p>
+                  {nextLevel && <p className="text-[9px] opacity-70">Próximo: {nextLevel.title} ({nextLevel.days}d)</p>}
+                </div>
+              </div>
+              {/* Barra de XP */}
+              <div className="h-2 bg-black/20 rounded-full overflow-hidden mt-2"><div className="h-full bg-yellow-400 rounded-full transition-all duration-1000 ease-out" style={{ width: `${levelProgress}%` }}></div></div>
+            </div>
+          </div>
+        )}
+
+        {/* --- Card de Gamificação (Streaks & Hearts) --- */}
+        {gamification && (
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="bg-gradient-to-r from-orange-500 to-rose-500 rounded-2xl p-3 text-white shadow-lg relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-2 opacity-10"><Flame size={60} /></div>
+              <div className="relative z-10">
+                <p className="text-[9px] font-bold uppercase tracking-wider opacity-90 mb-1">Sequência</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-black">{gamification.currentStreak}</span>
+                  <span className="text-[10px] font-bold opacity-90">dias</span>
+                </div>
+                <p className="text-[8px] mt-1 opacity-80">Recorde: {gamification.maxStreak}</p>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-rose-500 to-pink-600 rounded-2xl p-3 text-white shadow-lg relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-2 opacity-10"><Heart size={60} /></div>
+              <div className="relative z-10">
+                <p className="text-[9px] font-bold uppercase tracking-wider opacity-90 mb-1">Vidas (Escolhas)</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-black">{gamification.hearts || 0}</span>
+                  <span className="text-[10px] font-bold opacity-90">corações</span>
+                </div>
+                <p className="text-[8px] mt-1 opacity-80">Ganhe com escolhas sábias</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- Barra de Progresso do Plano (Semanas) --- */}
+        {profile.weeks && (
+          <div className="mb-6 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-xl border border-gray-100 dark:border-gray-600">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <Clock size={14} className="text-blue-500" /> Jornada da Meta
+              </h3>
+              <span className="text-[10px] font-bold text-gray-500">{daysPassed} / {totalPlanDays} dias</span>
+            </div>
+            <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden relative">
+              <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${planProgress}%` }}></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-[8px] font-black text-white drop-shadow-md">{Math.round(planProgress)}% Concluído</span>
+              </div>
+            </div>
+            <p className="text-[9px] text-center text-gray-400 mt-1">Meta: {totalPlanWeeks} semanas</p>
+          </div>
+        )}
+
+        {/* --- Galeria de Conquistas --- */}
+        {gamification && badgesData.length > 0 && (
+          <div className="mb-6">
+            <div className="flex justify-between items-end mb-3">
+              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <Trophy size={16} className="text-yellow-500" /> Galeria de Conquistas
+              </h3>
+              <button onClick={() => setShowBadgesInfo(true)} className="text-gray-400 hover:text-emerald-500 transition-colors p-1 flex items-center gap-1">
+                <Info size={14} /> <span className="text-[10px] font-bold">Info</span>
+              </button>
+            </div>
+
+            {/* Barra de Progresso das Conquistas */}
+            <div className="mb-4">
+              <div className="flex justify-between text-[10px] font-bold text-gray-500 mb-1">
+                <span>Nível de Conquista</span>
+                <span>{unlockedCount}/{totalBadges}</span>
+              </div>
+              <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden"><div className="h-full bg-yellow-400 rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }}></div></div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-2">
+              {badgesData.map(badge => {
+                const isUnlocked = (gamification.achievements || []).includes(badge.id);
+                return (
+                  <div key={badge.id} className={`aspect-square rounded-xl flex flex-col items-center justify-center p-1 border-2 transition-all ${isUnlocked ? 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-700' : 'bg-gray-50 border-gray-100 dark:bg-gray-800 dark:border-gray-700 grayscale opacity-60'}`}>
+                    <div className="text-2xl mb-1">{isUnlocked ? badge.icon : <Lock size={20} className="text-gray-300" />}</div>
+                    <span className="text-[8px] font-bold text-center leading-tight text-gray-600 dark:text-gray-400">
+                      {badge.name}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Dados Metabólicos */}
         <div className="grid grid-cols-2 gap-3 mb-6">
@@ -546,6 +689,43 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
           </div>
         </div>
       </div>
+
+      {/* Modal de Informações das Conquistas */}
+      {showBadgesInfo && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce border border-white/20">
+            <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+              <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                <Trophy size={18} className="text-yellow-500" /> Guia de Conquistas
+              </h3>
+              <button onClick={() => setShowBadgesInfo(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="p-4 max-h-[60vh] overflow-y-auto space-y-4">
+              <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                Desbloqueie medalhas mantendo a constância e atingindo suas metas. Cada conquista representa um passo na sua evolução.
+              </p>
+              <div className="space-y-3">
+                {badgesData.map(badge => (
+                  <div key={badge.id} className="flex items-start gap-3 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <div className="text-2xl">{badge.icon}</div>
+                    <div>
+                      <p className="text-xs font-bold text-gray-800 dark:text-gray-200">{badge.name}</p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400">{badge.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-100 dark:border-gray-700">
+              <button onClick={() => setShowBadgesInfo(false)} className="w-full py-2 bg-emerald-600 text-white rounded-xl font-bold text-sm shadow-md hover:bg-emerald-700 active:scale-95 transition-transform">
+                Entendi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
