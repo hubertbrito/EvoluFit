@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Brain, Activity, Target, Zap, Calendar, AlertTriangle, Edit, CheckCircle, FileText, ArrowRight, RefreshCw, BarChart2, TrendingUp, TrendingDown, Share2, Droplets, Flame, Trophy, Lock, Info, X, Star, Heart, Clock } from 'lucide-react';
+import { Brain, Activity, Target, Zap, Calendar, AlertTriangle, Edit, CheckCircle, FileText, ArrowRight, RefreshCw, BarChart2, TrendingUp, TrendingDown, Share2, Droplets, Flame, Trophy, Lock, Info, X, Star, Heart, Clock, BookOpen } from 'lucide-react';
 import { getFoodUnitWeight } from '../constants';
 
 const PieChart = ({ data, size = 120, strokeWidth = 20 }) => {
@@ -125,10 +125,86 @@ const LEVELS = [
   { days: 120, title: 'O Iluminado', icon: '✨', next: null }
 ];
 
+const LevelSystemInfoModal = ({ onClose }) => (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce">
+      <div className="p-4 border-b border-indigo-100 dark:border-gray-700 bg-indigo-50 dark:bg-indigo-900/20 flex justify-between items-center">
+        <h3 className="font-bold text-indigo-800 dark:text-indigo-300 flex items-center gap-2">
+          <Star size={18} className="text-yellow-500" /> Sistema de Evolução
+        </h3>
+        <button onClick={onClose} className="p-1 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-full transition-colors text-indigo-600 dark:text-indigo-400">
+          <X size={20} />
+        </button>
+      </div>
+      <div className="p-5 space-y-4">
+        <div className="bg-indigo-50 dark:bg-indigo-900/10 p-3 rounded-xl border border-indigo-100 dark:border-indigo-800">
+          <h4 className="font-bold text-indigo-700 dark:text-indigo-300 text-sm mb-1">Como subir de nível?</h4>
+          <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+            Seu nível é definido pelo seu <strong>XP Total</strong> (Experiência). Você ganha XP de duas formas:
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-orange-600">
+              <Flame size={18} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-800 dark:text-gray-200">Constância Diária</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">1 Dia de Streak = <strong>1 XP</strong></p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg text-emerald-600">
+              <BookOpen size={18} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-800 dark:text-gray-200">Sabedoria Nutricional</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Cada Badge (Água/Coração) = <strong>+5 XP</strong></p>
+              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">Acelere sua evolução!</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-100 dark:border-gray-700 pt-3">
+          <h4 className="font-bold text-gray-700 dark:text-gray-300 text-xs mb-2 uppercase tracking-wider">Tabela de Níveis</h4>
+          <div className="space-y-1.5">
+            {LEVELS.map(l => (
+              <div key={l.title} className="flex justify-between text-xs">
+                <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1">{l.icon} {l.title}</span>
+                <span className="font-bold text-indigo-600 dark:text-indigo-400">{l.days} XP</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="p-4 border-t bg-gray-50 dark:bg-gray-800 flex justify-end">
+        <button 
+          onClick={onClose} 
+          className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-bold shadow-md hover:bg-indigo-700 transition-transform active:scale-95"
+        >
+          Entendi
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour, onResetSchedule, waterHistory = {}, gamification, badgesData = [] }) => {
   const [filterDay, setFilterDay] = useState('Hoje');
   const days = ['Hoje', 'Semana Toda', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
   const [showBadgesInfo, setShowBadgesInfo] = useState(false);
+  const [showLevelInfo, setShowLevelInfo] = useState(false);
+
+  const getBadgeRequirement = (id) => {
+    if (id === 'first_step') return '1ª Refeição';
+    if (id === 'water_master') return '3 Dias Água';
+    const [type, val] = id.split('_');
+    if (type === 'streak') return `${val} Dias`;
+    if (type === 'heart') return `${val} Vidas`;
+    return '';
+  };
 
   const calculateDailyTotals = () => {
     let totals = { totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0 };
@@ -299,17 +375,23 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
   const totalBadges = badgesData.length;
   const progressPercent = totalBadges > 0 ? (unlockedCount / totalBadges) * 100 : 0;
 
-  // Cálculo do Nível Atual
-  const currentStreak = gamification?.maxStreak || 0;
+  // Cálculo do Nível Atual com Bônus de Sabedoria
+  const wisdomBadgesCount = (gamification?.achievements || []).filter(id => {
+      const badge = badgesData.find(b => b.id === id);
+      return badge && (badge.category === 'heart' || badge.category === 'water');
+  }).length;
+  const wisdomBonus = wisdomBadgesCount * 5;
+  const effectiveStreak = (gamification?.maxStreak || 0) + wisdomBonus;
+
   const currentLevelIndex = LEVELS.reduce((acc, level, index) => {
-    return currentStreak >= level.days ? index : acc;
+    return effectiveStreak >= level.days ? index : acc;
   }, 0);
   const currentLevel = LEVELS[currentLevelIndex];
   const nextLevel = LEVELS[currentLevelIndex + 1];
   
   // Cálculo da Barra de XP do Nível
   const levelProgress = nextLevel 
-    ? Math.min(100, Math.max(0, ((currentStreak - currentLevel.days) / (nextLevel.days - currentLevel.days)) * 100))
+    ? Math.min(100, Math.max(0, ((effectiveStreak - currentLevel.days) / (nextLevel.days - currentLevel.days)) * 100))
     : 100; // Nível máximo
 
   // Cálculo do Progresso do Plano (Semanas)
@@ -346,13 +428,16 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
             <div className="relative z-10">
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Nível de Consciência</p>
+                  <div className="flex items-center gap-1 mb-0.5">
+                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Nível de Consciência</p>
+                    <button onClick={() => setShowLevelInfo(true)} className="opacity-60 hover:opacity-100 transition-opacity"><Info size={12} /></button>
+                  </div>
                   <h3 className="text-2xl font-black flex items-center gap-2">
                     <span className="text-3xl">{currentLevel.icon}</span> {currentLevel.title}
                   </h3>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-bold opacity-90">{currentStreak} dias</p>
+                  <p className="text-xs font-bold opacity-90">{effectiveStreak} XP (Dias + Sabedoria)</p>
                   {nextLevel && <p className="text-[9px] opacity-70">Próximo: {nextLevel.title} ({nextLevel.days}d)</p>}
                 </div>
               </div>
@@ -410,39 +495,71 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
           </div>
         )}
 
-        {/* --- Galeria de Conquistas --- */}
+        {/* --- Galeria de Conquistas (Níveis) --- */}
         {gamification && badgesData.length > 0 && (
           <div className="mb-6">
-            <div className="flex justify-between items-end mb-3">
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-black text-gray-800 dark:text-gray-100 flex items-center gap-2">
                 <Trophy size={16} className="text-yellow-500" /> Galeria de Conquistas
               </h3>
-              <button onClick={() => setShowBadgesInfo(true)} className="text-gray-400 hover:text-emerald-500 transition-colors p-1 flex items-center gap-1">
-                <Info size={14} /> <span className="text-[10px] font-bold">Info</span>
-              </button>
-            </div>
-
-            {/* Barra de Progresso das Conquistas */}
-            <div className="mb-4">
-              <div className="flex justify-between text-[10px] font-bold text-gray-500 mb-1">
-                <span>Nível de Conquista</span>
-                <span>{unlockedCount}/{totalBadges}</span>
+              <div className="flex flex-col items-center">
+                 <span className="text-[10px] font-black text-rose-500 animate-pulse mb-0.5">Click info</span>
+                 <button onClick={() => setShowBadgesInfo(true)} className="p-2 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-full hover:bg-rose-200 transition-colors shadow-sm">
+                   <Info size={24} strokeWidth={2.5} />
+                 </button>
               </div>
-              <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden"><div className="h-full bg-yellow-400 rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }}></div></div>
             </div>
 
-            <div className="grid grid-cols-4 gap-2">
-              {badgesData.map(badge => {
-                const isUnlocked = (gamification.achievements || []).includes(badge.id);
-                return (
-                  <div key={badge.id} className={`aspect-square rounded-xl flex flex-col items-center justify-center p-1 border-2 transition-all ${isUnlocked ? 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-700' : 'bg-gray-50 border-gray-100 dark:bg-gray-800 dark:border-gray-700 grayscale opacity-60'}`}>
-                    <div className="text-2xl mb-1">{isUnlocked ? badge.icon : <Lock size={20} className="text-gray-300" />}</div>
-                    <span className="text-[8px] font-bold text-center leading-tight text-gray-600 dark:text-gray-400">
-                      {badge.name}
-                    </span>
-                  </div>
-                );
-              })}
+            <div className="space-y-6">
+                {/* Level Badges */}
+                {badgesData.some(b => b.category === 'level') && (
+                    <div className="bg-indigo-50 dark:bg-indigo-900/10 p-3 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                        <div className="mb-3">
+                            <h4 className="text-xs font-black uppercase text-indigo-600 dark:text-indigo-400">Nível de Consciência</h4>
+                            <p className="text-[9px] text-gray-500 dark:text-gray-400">Evolua mantendo a constância diária (Streaks).</p>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2">
+                            {badgesData.filter(b => b.category === 'level').map(badge => {
+                                const isUnlocked = (gamification.achievements || []).includes(badge.id);
+                                return (
+                                    <div key={badge.id} className={`aspect-square rounded-xl flex flex-col items-center justify-center p-1 border-2 transition-all ${isUnlocked ? 'bg-white border-indigo-300 shadow-sm dark:bg-indigo-900/40 dark:border-indigo-500' : 'bg-gray-100 border-gray-200 dark:bg-gray-800 dark:border-gray-700 grayscale opacity-50'}`}>
+                                        <div className="text-3xl mb-1">{isUnlocked ? badge.icon : <Lock size={20} className="text-gray-400" />}</div>
+                                        <span className="text-[9px] font-black text-center leading-tight text-gray-700 dark:text-gray-300">{badge.name}</span>
+                                        <span className="text-[7px] font-bold text-center text-indigo-400 dark:text-indigo-300 mt-0.5 leading-none">{getBadgeRequirement(badge.id)}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* Guia de Conquistas da Sabedoria Nutricional (Nova Seção Unificada) */}
+                {badgesData.some(b => b.category === 'heart' || b.category === 'water') && (
+                    <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-800">
+                        <div className="mb-3">
+                            <h4 className="text-lg font-black text-blue-800 dark:text-blue-300 flex items-center gap-2">
+                                <BookOpen size={20} /> Sabedoria Nutricional
+                            </h4>
+                            <p className="text-sm text-blue-600 dark:text-blue-400 mt-1 leading-tight">
+                                Conquistas rápidas que aceleram sua evolução. <br/>
+                                <strong>Cada badge = +5 dias no Nível de Consciência.</strong>
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-4 gap-3">
+                            {badgesData.filter(b => b.category === 'heart' || b.category === 'water').map(badge => {
+                                const isUnlocked = (gamification.achievements || []).includes(badge.id);
+                                const isWater = badge.category === 'water';
+                                return (
+                                    <div key={badge.id} className={`aspect-square rounded-xl flex flex-col items-center justify-center p-1 border-2 transition-all ${isUnlocked ? (isWater ? 'bg-cyan-100 border-cyan-500 shadow-md' : 'bg-rose-100 border-rose-500 shadow-md') : 'bg-gray-100 border-gray-300 grayscale opacity-60'}`}>
+                                        <div className="text-2xl mb-1">{isUnlocked ? badge.icon : <Lock size={16} className="text-gray-400" />}</div>
+                                        <span className={`text-[9px] font-black text-center leading-tight whitespace-pre-line px-0.5 ${isUnlocked ? (isWater ? 'text-cyan-900' : 'text-rose-900') : 'text-gray-500'}`}>{badge.name}</span>
+                                        <span className={`text-[7px] font-bold text-center mt-0.5 leading-none ${isUnlocked ? (isWater ? 'text-cyan-700' : 'text-rose-700') : 'text-gray-400'}`}>{getBadgeRequirement(badge.id)}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
             </div>
           </div>
         )}
@@ -726,6 +843,7 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
           </div>
         </div>
       )}
+      {showLevelInfo && <LevelSystemInfoModal onClose={() => setShowLevelInfo(false)} />}
     </div>
   );
 };

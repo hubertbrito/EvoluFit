@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Mic, Plus, Trash2, Utensils, Info, Filter, ArrowUp, Loader, MessageCircle } from 'lucide-react';
+import { Search, Mic, Plus, Trash2, Utensils, Info, Filter, ArrowUp, Loader, MessageCircle, X } from 'lucide-react';
 import { DIET_TYPES } from '../constants';
 import { searchFoodsDB, getFoodsByCategoryDB } from '../db.js';
 
@@ -34,6 +34,7 @@ const PantryScreen = ({
   tourStep
 }) => {
   const [displayedFoods, setDisplayedFoods] = useState([]);
+  const [showInfo, setShowInfo] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   // const [searchTerm, setSearchTerm] = useState(''); // Estado movido para App.jsx
   const [activeCategory, setActiveCategory] = useState('Dispensa');
@@ -59,6 +60,11 @@ const PantryScreen = ({
     'Outros': 'text-slate-600 bg-slate-50 border-slate-100',
     'Meus Alimentos': 'text-purple-600 bg-purple-50 border-purple-100'
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowInfo(false), 30000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const fetchAndSetFoods = async () => {
@@ -180,9 +186,22 @@ const PantryScreen = ({
           animation: pulse-highlight 2s ease-out 5; /* 2s x 5 = 10s de destaque */
         }
       `}</style>
-      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-100 dark:border-blue-800 flex items-start gap-2">
-        <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-        <p className="text-xs text-blue-700 dark:text-blue-300"><strong>Dispensa:</strong> Toque em um card para adicioná-lo à sua dispensa e selecioná-lo para o prato automaticamente. Use a lixeira para remover itens da sua lista pessoal.</p>
+      
+      <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showInfo ? 'max-h-60 opacity-100' : 'max-h-6 opacity-100 -my-2'}`}>
+        {showInfo ? (
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-100 dark:border-blue-800 flex items-start gap-2 relative">
+            <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-blue-700 dark:text-blue-300 pr-6"><strong>Dispensa:</strong> Toque em um card para adicioná-lo à sua dispensa e selecioná-lo para o prato automaticamente. Use a lixeira para remover itens da sua lista pessoal.</p>
+            <button onClick={() => setShowInfo(false)} className="absolute top-2 right-2 text-blue-400 hover:text-blue-600 p-1"><X size={16} /></button>
+          </div>
+        ) : (
+          <div className="flex justify-end">
+              <button onClick={() => setShowInfo(true)} className="flex items-center gap-1 text-blue-500 hover:text-blue-600 transition-colors p-0">
+                  <Info size={16} />
+                  <span className="text-[10px] font-bold">Info</span>
+              </button>
+          </div>
+        )}
       </div>
 
       {/* Sticky Menu Container */}

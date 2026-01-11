@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Trash2, Plus, ChefHat, Calendar, Info, Clock, ChevronUp, ChevronDown, Users, MapPin, StickyNote } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Trash2, Plus, ChefHat, Calendar, Info, Clock, ChevronUp, ChevronDown, Users, MapPin, StickyNote, X } from 'lucide-react';
 import { MEASURE_UNITS, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures } from '../constants';
 import CustomSelect from './CustomSelect';
 
@@ -7,6 +7,7 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
   const [selectedDays, setSelectedDays] = useState(initialSelectedDays);
   const [specificDate, setSpecificDate] = useState('');
   const [selectedMealName, setSelectedMealName] = useState(() => editingMealInfo ? editingMealInfo.name : null);
+  const [showInfo, setShowInfo] = useState(true);
   const [selectedTargetId, setSelectedTargetId] = useState(null);
   const dateInputRef = useRef(null);
 
@@ -50,6 +51,11 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
     'Lanche das 22h', 
     'Ceia da Meia-noite'
   ];
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowInfo(false), 30000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const calculateTotal = () => {
     return plate.reduce((acc, item) => {
@@ -115,9 +121,22 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
           color: transparent;
         }
       `}</style>
-      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-100 dark:border-blue-800 flex items-start gap-2">
-        <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-        <p className="text-xs text-blue-700 dark:text-blue-200"><strong>Montagem do Prato:</strong> Ajuste as quantidades e medidas de cada item. O cálculo de calorias é atualizado na hora. Ao final, agende para um dia e refeição específicos.</p>
+      
+      <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showInfo ? 'max-h-60 opacity-100' : 'max-h-6 opacity-100 -my-4'}`}>
+        {showInfo ? (
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-100 dark:border-blue-800 flex items-start gap-2 relative">
+              <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+              <p className="text-xs text-blue-700 dark:text-blue-200 pr-6"><strong>Montagem do Prato:</strong> Ajuste as quantidades e medidas de cada item. O cálculo de calorias é atualizado na hora. Ao final, agende para um dia e refeição específicos.</p>
+              <button onClick={() => setShowInfo(false)} className="absolute top-2 right-2 text-blue-400 hover:text-blue-600 p-1"><X size={16} /></button>
+          </div>
+        ) : (
+          <div className="flex justify-end">
+              <button onClick={() => setShowInfo(true)} className="flex items-center gap-1 text-blue-500 hover:text-blue-600 transition-colors p-0">
+                  <Info size={16} />
+                  <span className="text-[10px] font-bold">Info</span>
+              </button>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-between">

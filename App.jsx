@@ -20,19 +20,33 @@ import { Layout } from './components/Layout';
 import CalorieAlertModal from './components/CalorieAlertModal';
 import GoalReachedModal from './components/GoalReachedModal';
 import TrialEndScreen from './components/TrialEndScreen';
+import WaterGoalModal from './components/WaterGoalModal';
 
 // Definindo localmente para não depender de arquivo de tipos externo
 const Category = { INDUSTRIALIZADOS: 'Industrializados' };
 
 const BADGES_DATA = [
-  { id: 'first_step', name: 'Primeiro Passo', description: 'Registrou a primeira refeição.', icon: '🦶' },
-  { id: 'streak_3', name: 'Aquecendo', description: 'Manteve o foco por 3 dias seguidos.', icon: '🔥' },
-  { id: 'streak_7', name: 'Semana Imbatível', description: '7 dias de constância total.', icon: '🏆' },
-  { id: 'streak_30', name: 'Iniciado', description: '1 mês de foco! O hábito está formado.', icon: '🧘' },
-  { id: 'streak_60', name: 'Mestre', description: '2 meses de disciplina absoluta.', icon: '🥋' },
-  { id: 'streak_90', name: 'Monge', description: '3 meses. Sua mente controla seu corpo.', icon: '📿' },
-  { id: 'streak_120', name: 'O Iluminado', description: '4 meses. Você transcendeu a dieta.', icon: '✨' },
-  { id: 'water_master', name: 'Hidratado', description: 'Atingiu a meta de água do dia.', icon: '💧' },
+  { id: 'first_step', name: 'Primeiro Passo', description: 'Registrou a primeira refeição.', icon: '🦶', category: 'level' },
+  { id: 'streak_3', name: 'Aquecendo', description: 'Manteve o foco por 3 dias seguidos.', icon: '🔥', category: 'level' },
+  { id: 'streak_7', name: 'Semana Imbatível', description: '7 dias de constância total.', icon: '🏆', category: 'level' },
+  { id: 'streak_30', name: 'Iniciado', description: '1 mês de foco! O hábito está formado.', icon: '🧘', category: 'level' },
+  { id: 'streak_60', name: 'Mestre', description: '2 meses de disciplina absoluta.', icon: '🥋', category: 'level' },
+  { id: 'streak_90', name: 'Monge', description: '3 meses. Sua mente controla seu corpo.', icon: '📿', category: 'level' },
+  { id: 'streak_120', name: 'O Iluminado', description: '4 meses. Você transcendeu a dieta.', icon: '✨', category: 'level' },
+  { id: 'water_master', name: 'Fluxo Vital', description: 'Manteve a hidratação ideal por 3 dias seguidos.', icon: '💧', category: 'water' },
+  { id: 'heart_10', name: 'Despertar', description: 'Conquistou 10 corações com escolhas saudáveis.', icon: '💙', category: 'heart' },
+  { id: 'heart_50', name: 'Equilíbrio', description: '50 corações! Suas células agradecem.', icon: '💖', category: 'heart' },
+  { id: 'heart_100', name: 'Vitalidade', description: '100 corações. Você domina a arte de comer.', icon: '👑', category: 'heart' },
+  { id: 'heart_120', name: 'Plenitude', description: '120 corações. Você é um exemplo de constância!', icon: '🏆', category: 'heart' },
+  { id: 'heart_150', name: 'Quebrou a\nMatrix', description: '150 corações. Prêmio Secreto Desbloqueado!', icon: '💎', category: 'heart' },
+];
+
+const LEVELS = [
+  { days: 0, title: 'Novato', icon: '🌱' },
+  { days: 30, title: 'Iniciado', icon: '🧘' },
+  { days: 60, title: 'Mestre', icon: '🥋' },
+  { days: 90, title: 'Monge', icon: '📿' },
+  { days: 120, title: 'O Iluminado', icon: '✨' }
 ];
 
 const DEFAULT_MEAL_SCHEDULE = [
@@ -196,6 +210,47 @@ const TourOverlay = ({ step, onNext, onBack, onSkip, highlightedRect }) => {
     </div>
   );
 };
+
+const HeartExplosion = () => {
+  return (
+    <div className="fixed inset-0 pointer-events-none z-[210] flex items-center justify-center">
+      <style>{`
+        @keyframes float-up {
+          0% { transform: translateY(0) scale(0.5); opacity: 0; }
+          20% { opacity: 1; transform: translateY(-20px) scale(1.2); }
+          100% { transform: translateY(-200px) scale(1); opacity: 0; }
+        }
+      `}</style>
+      {Array.from({ length: 15 }).map((_, i) => (
+        <div
+          key={i}
+          className="absolute text-4xl drop-shadow-md"
+          style={{
+            left: `${50 + (Math.random() * 60 - 30)}%`,
+            top: `${50 + (Math.random() * 60 - 30)}%`,
+            animation: `float-up ${1 + Math.random()}s ease-out forwards`,
+            animationDelay: `${Math.random() * 0.5}s`
+          }}
+        >
+          ❤️
+        </div>
+      ))}
+      <div className="absolute text-2xl font-black text-rose-500 bg-white/90 px-4 py-2 rounded-full shadow-xl animate-bounce border-2 border-rose-200">
+        +1 Coração!
+      </div>
+    </div>
+  );
+};
+
+const ClappingFeedback = ({ message }) => (
+  <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[200] bg-white/95 backdrop-blur-md px-6 py-4 rounded-2xl shadow-2xl border-2 border-emerald-400 flex items-center gap-4 animate-bounce">
+    <div className="text-4xl">👏</div>
+    <div>
+      <h3 className="text-lg font-black text-emerald-700 leading-none">Mandou Bem!</h3>
+      <p className="text-xs font-bold text-emerald-600/80">{message || "Refeição registrada."}</p>
+    </div>
+  </div>
+);
 
 const ManualScreen = ({ onClose, onReset, onInstallClick, showInstallButton }) => (
   <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
@@ -902,6 +957,28 @@ const LevelUpModal = ({ badge, onClose }) => (
   </div>
 );
 
+const IncentiveModal = ({ onClose, title, message }) => (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce text-center">
+      <div className="bg-amber-400 p-6 flex justify-center">
+        <div className="bg-white p-4 rounded-full shadow-lg">
+          <AlertTriangle size={48} className="text-amber-500" />
+        </div>
+      </div>
+      <div className="p-6">
+        <h2 className="text-2xl font-black text-gray-800 mb-2">{title || "Não Desista!"}</h2>
+        <p className="text-gray-600 text-sm mb-6 leading-relaxed">{message}</p>
+        <button 
+          onClick={onClose}
+          className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold shadow-md hover:bg-amber-600 transition-transform active:scale-95"
+        >
+          Vou recuperar!
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 const App = () => {
   const [activeTab, setActiveTab] = useState('pantry');
   
@@ -994,6 +1071,12 @@ const App = () => {
   const [showGoalReached, setShowGoalReached] = useState(false);
   const [newUnlockedBadge, setNewUnlockedBadge] = useState(null);
   const [newLevelUpBadge, setNewLevelUpBadge] = useState(null);
+  const [showHeartExplosion, setShowHeartExplosion] = useState(false);
+  const [showClapping, setShowClapping] = useState(false);
+  const [clappingMessage, setClappingMessage] = useState('');
+  const [showWaterGoalModal, setShowWaterGoalModal] = useState(false);
+  const [hasCelebratedWaterToday, setHasCelebratedWaterToday] = useState(false);
+  const [showWaterLostModal, setShowWaterLostModal] = useState(false);
 
   // State for educational modal
   const [showEducationalModal, setShowEducationalModal] = useState(false);
@@ -1047,7 +1130,8 @@ const App = () => {
       maxStreak: 0,
       lastLogDate: null,
       achievements: [],
-      hearts: 0
+      hearts: 0,
+      hydrationScore: 0 // 0 a 3 (Barra de hidratação)
     };
   });
 
@@ -1087,10 +1171,13 @@ const App = () => {
     if (gamification.maxStreak >= 90 && !currentAchievements.includes('streak_90')) newAchievements.push('streak_90');
     if (gamification.maxStreak >= 120 && !currentAchievements.includes('streak_120')) newAchievements.push('streak_120');
     
-    // Regra de Água (Desbloqueia na primeira vez que atinge a meta)
-    if (waterIntake >= parseInt(userProfile.waterGoal || 2500) && waterIntake > 0 && !currentAchievements.includes('water_master')) {
-        newAchievements.push('water_master');
-    }
+    // Regras de Corações (Novas)
+    const hearts = gamification.hearts || 0;
+    if (hearts >= 10 && !currentAchievements.includes('heart_10')) newAchievements.push('heart_10');
+    if (hearts >= 50 && !currentAchievements.includes('heart_50')) newAchievements.push('heart_50');
+    if (hearts >= 100 && !currentAchievements.includes('heart_100')) newAchievements.push('heart_100');
+    if (hearts >= 120 && !currentAchievements.includes('heart_120')) newAchievements.push('heart_120');
+    if (hearts >= 150 && !currentAchievements.includes('heart_150')) newAchievements.push('heart_150');
 
     if (newAchievements.length > 0) {
         setGamification(prev => ({
@@ -1145,27 +1232,93 @@ const App = () => {
     });
   }, [waterIntake]);
 
-  // Monitora a virada do dia para resetar a água se o app estiver aberto
+  // --- Lógica de Água: Virada do Dia e Score ---
   useEffect(() => {
     const checkDayChange = () => {
       const today = new Date().toLocaleDateString('pt-BR');
       const saved = localStorage.getItem('waterIntake');
+      
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
           if (parsed.date !== today) {
+            // Virada de dia detectada! Processar Score de Hidratação.
+            const goal = parseInt(userProfile.waterGoal || 2500);
+            const wasGoalMet = parsed.count >= goal;
+            
+            // Calcula dias perdidos (se o usuário não abriu o app por alguns dias)
+            const lastDate = new Date(parsed.date.split('/').reverse().join('-'));
+            const currentDate = new Date();
+            const diffTime = Math.abs(currentDate - lastDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            // diffDays = 1 (ontem), 2 (anteontem), etc.
+
+            setGamification(prev => {
+                let newScore = prev.hydrationScore || 0;
+                let newAchievements = [...(prev.achievements || [])];
+                let badgeLost = false;
+
+                // 1. Processa o dia registrado (Ontem)
+                if (wasGoalMet) {
+                    newScore = Math.min(3, newScore + 1);
+                } else {
+                    newScore = Math.max(0, newScore - 1);
+                }
+
+                // 2. Processa dias não registrados (Gaps) - penaliza score
+                if (diffDays > 1) {
+                    const missedDays = diffDays - 1;
+                    newScore = Math.max(0, newScore - missedDays);
+                }
+
+                // 3. Regra do Badge
+                const hasBadge = newAchievements.includes('water_master');
+                
+                if (newScore === 3 && !hasBadge) {
+                    newAchievements.push('water_master');
+                    setNewUnlockedBadge(BADGES_DATA.find(b => b.id === 'water_master'));
+                } else if (newScore === 0 && hasBadge) {
+                    newAchievements = newAchievements.filter(id => id !== 'water_master');
+                    badgeLost = true;
+                }
+
+                if (badgeLost) {
+                    setShowWaterLostModal(true);
+                }
+
+                return {
+                    ...prev,
+                    hydrationScore: newScore,
+                    achievements: newAchievements
+                };
+            });
+
+            // Reseta para hoje
             setWaterIntake(0);
+            setHasCelebratedWaterToday(false);
           }
         } catch (e) {
-          // Ignora erro aqui, o useState já tratou ou tratará
+          console.error("Erro ao processar virada do dia da água", e);
         }
       }
     };
 
+    // Executa ao montar e em intervalos
+    checkDayChange();
     const interval = setInterval(checkDayChange, 60000); // Checa a cada minuto
     window.addEventListener('focus', checkDayChange); // Checa ao focar a janela (ex: voltar do background no celular)
     return () => { clearInterval(interval); window.removeEventListener('focus', checkDayChange); };
-  }, []);
+  }, [userProfile.waterGoal]);
+
+  // Monitora meta de água atingida HOJE para celebrar
+  useEffect(() => {
+    const goal = parseInt(userProfile.waterGoal || 2500);
+    if (waterIntake >= goal && waterIntake > 0 && !hasCelebratedWaterToday) {
+        setHasCelebratedWaterToday(true);
+        setShowWaterGoalModal(true);
+        triggerConfetti();
+    }
+  }, [waterIntake, userProfile.waterGoal, hasCelebratedWaterToday]);
 
   // --- Lógica de Renovação Semanal Automática ---
   useEffect(() => {
@@ -1524,18 +1677,22 @@ const AlertAnimationOverlay = () => (
     let shouldAlertExcess = false;
 
     // Lógica de Corações (Escolhas Sábias)
+    // Regra: Ganha coração se (Saudáveis > Não Saudáveis)
     const healthyCategories = ['Vegetais', 'Frutas', 'Proteínas', 'Leguminosas', 'Gorduras'];
-    const unhealthyCategories = ['Industrializados', 'Doces'];
-    let healthyScore = 0;
+    const unhealthyCategories = ['Industrializados', 'Doces', 'Carboidratos']; // Carboidratos incluídos como "pesados" para o balanço
+    
+    let healthyCount = 0;
+    let unhealthyCount = 0;
     
     meal.plate.forEach(item => {
         const food = allFoods.find(f => f.id === item.foodId);
         if (food) {
-            if (healthyCategories.includes(food.category)) healthyScore++;
-            if (unhealthyCategories.includes(food.category)) healthyScore--;
+            if (healthyCategories.includes(food.category)) healthyCount++;
+            if (unhealthyCategories.includes(food.category)) unhealthyCount++;
         }
     });
-    const isWiseChoice = healthyScore > 0;
+    
+    const isWiseChoice = healthyCount > unhealthyCount;
 
     if (isLosingWeight) {
       // CENÁRIO 1: PERDA DE PESO
@@ -1565,16 +1722,23 @@ const AlertAnimationOverlay = () => (
       return; // Não celebra se tiver alerta de excesso
     }
 
+    // Ganha coração se fez escolhas sábias (Agora independente da meta diária)
+    if (isWiseChoice) {
+        setGamification(prev => ({ ...prev, hearts: (prev.hearts || 0) + 1 }));
+        setShowHeartExplosion(true);
+        setTimeout(() => setShowHeartExplosion(false), 3000);
+    }
+
+    // Feedback de Palminhas (Sempre que consumir)
+    setClappingMessage(isWiseChoice ? "Excelente escolha nutricional!" : "Refeição registrada!");
+    setShowClapping(true);
+    setTimeout(() => setShowClapping(false), 3000);
+
     if (shouldCelebrate) {
         setShowGoalReached(true);
-        if (activeTab === 'schedule') triggerConfetti(); // Dispara confete apenas na tela de agenda
-        // REMOVIDO: Aviso por voz
-
-        // Ganha coração se fez escolhas sábias
-        if (isWiseChoice) {
-            setGamification(prev => ({ ...prev, hearts: (prev.hearts || 0) + 1 }));
-        }
     }
+
+    // Confete removido daqui pois agora temos HeartExplosion e Clapping específicos
   };
 
   // Cálculo de Calorias de Hoje
@@ -2235,6 +2399,17 @@ const AlertAnimationOverlay = () => (
     setIsExportingPdf(true);
   };
 
+  // Cálculo do Nível com Bônus de Sabedoria
+  const wisdomBadgesCount = (gamification.achievements || []).filter(id => {
+      const badge = BADGES_DATA.find(b => b.id === id);
+      return badge && (badge.category === 'heart' || badge.category === 'water');
+  }).length;
+  const effectiveStreak = (gamification.maxStreak || 0) + (wisdomBadgesCount * 5); // Cada badge de sabedoria vale 5 dias
+
+  const currentLevel = LEVELS.reduce((acc, level) => {
+    return effectiveStreak >= level.days ? level : acc;
+  }, LEVELS[0]);
+
   useEffect(() => {
     if (isExportingPdf) {
       const input = document.getElementById('pdf-export-content');
@@ -2300,6 +2475,9 @@ const AlertAnimationOverlay = () => (
         onExportPDF={handleExportPDF}
         currentTheme={theme}
         onThemeChange={setTheme}
+        gamification={gamification}
+        level={currentLevel}
+        allBadges={BADGES_DATA}
       >
          {showEducationalModal && currentEducationalContent && (
         <EducationalModal
@@ -2500,6 +2678,8 @@ const AlertAnimationOverlay = () => (
           onMealDone={(meal) => handleMealDone(meal, userProfile)}
           onExportSpecificPDF={handleExportSpecificPDF}
           onCloneDay={handleCloneDay}
+          gamification={gamification}
+          // hasCelebratedWater removido daqui pois é controlado pelo App agora
         />
       )}
       {activeTab === 'brain' && (
@@ -2597,6 +2777,10 @@ const AlertAnimationOverlay = () => (
       {showWhatsNew && <WhatsNewModal onClose={handleCloseWhatsNew} onOpenManual={() => { handleCloseWhatsNew(); setShowManual(true); }} />}
       {newUnlockedBadge && <AchievementModal badge={newUnlockedBadge} onClose={() => setNewUnlockedBadge(null)} />}
       {newLevelUpBadge && <LevelUpModal badge={newLevelUpBadge} onClose={() => setNewLevelUpBadge(null)} />}
+      {showHeartExplosion && <HeartExplosion />}
+      {showClapping && <ClappingFeedback message={clappingMessage} />}
+      {showWaterGoalModal && <WaterGoalModal onClose={() => setShowWaterGoalModal(false)} />}
+      {showWaterLostModal && <IncentiveModal onClose={() => setShowWaterLostModal(false)} title="Badge Perdido!" message="Sua barra de hidratação zerou e o emblema 'Hidratado' apagou. Beba água regularmente para recuperá-lo!" />}
     </>
   );
 };

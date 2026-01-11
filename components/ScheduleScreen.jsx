@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Clock, AlertCircle, Zap, Wheat, Droplets, Calendar, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser, Edit, CalendarDays, Users, MapPin, CalendarCheck2, StickyNote, X, CheckCircle, Check, Trophy, Undo2, GripVertical, Share2, Activity, FileDown, Copy } from 'lucide-react';
+import { Clock, AlertCircle, Zap, Wheat, Droplets, Calendar, ArrowUp, ArrowDown, Trash2, Plus, Info, Eraser, Edit, CalendarDays, Users, MapPin, CalendarCheck2, StickyNote, X, CheckCircle, Check, Trophy, Undo2, GripVertical, Share2, Activity, FileDown, Copy, Heart } from 'lucide-react';
 import { UNIT_WEIGHTS, getFoodUnitWeight } from '../constants';
 import CustomSelect from './CustomSelect';
 
@@ -28,25 +28,44 @@ const dayColors = {
   'Datas Marcadas': 'bg-teal-100 text-teal-800 border border-teal-200',
 };
 
-const DayCompleteModal = ({ onClose }) => (
+const DayCompleteModal = ({ onClose, hearts = 0 }) => (
   <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce text-center">
-      <div className="bg-emerald-500 p-6 flex justify-center">
-        <div className="bg-white p-4 rounded-full shadow-lg">
-          <Trophy size={48} className="text-emerald-500" />
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce text-center relative">
+      {/* Background decorativo */}
+      <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-emerald-400 to-teal-600 z-0"></div>
+      
+      <div className="relative z-10 pt-8 px-6">
+        <div className="bg-white p-4 rounded-full shadow-xl inline-flex items-center justify-center mb-4 relative">
+          <Trophy size={48} className="text-yellow-500" />
+          {hearts > 0 && (
+             <div className="absolute -bottom-2 -right-2 bg-rose-500 text-white text-xs font-black px-2 py-1 rounded-full border-2 border-white flex items-center gap-1 shadow-sm">
+                <Heart size={10} fill="currentColor" /> {hearts}
+             </div>
+          )}
         </div>
-      </div>
-      <div className="p-6">
-        <h2 className="text-2xl font-black text-gray-800 mb-2">Dia Concluído!</h2>
+        
+        <h2 className="text-2xl font-black text-gray-800 mb-2">Dia Conquistado!</h2>
         <p className="text-gray-600 text-sm mb-6 leading-relaxed">
-          Parabéns! Você seguiu seu plano perfeitamente hoje. <br/>
-          <span className="font-bold text-emerald-600">Esse é o caminho para a saúde!</span>
-          <br/>Continue assim amanhã.
+          Você completou todas as refeições de hoje. Sua constância é sua maior força!
         </p>
+
+        {hearts > 0 && (
+            <div className="bg-rose-50 border border-rose-100 rounded-xl p-3 mb-6 flex items-center justify-center gap-3">
+                <div className="p-2 bg-rose-100 rounded-full text-rose-500">
+                    <Heart size={20} fill="currentColor" />
+                </div>
+                <div className="text-left">
+                    <p className="text-[10px] font-bold text-rose-400 uppercase tracking-wider">Total de Vidas</p>
+                    <p className="text-lg font-black text-rose-600 leading-none">{hearts} Corações</p>
+                </div>
+            </div>
+        )}
+
         <button 
           onClick={onClose}
-          className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-md hover:bg-emerald-700 transition-transform active:scale-95"
+          className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-transform active:scale-95 flex items-center justify-center gap-2"
         >
+          <CheckCircle size={18} />
           Continuar Focado
         </button>
       </div>
@@ -145,7 +164,7 @@ const NutritionalSummaryModal = ({ title, meals, allFoods, onClose }) => {
   );
 };
 
-const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal, onClearMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep, waterIntake, onUpdateWater, waterGoal, onUpdateWaterGoal, triggerConfetti, onMealDone, movedMealId, profile, onExportSpecificPDF, onCloneDay }) => {
+const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal, onClearMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep, waterIntake, onUpdateWater, waterGoal, onUpdateWaterGoal, triggerConfetti, onMealDone, movedMealId, profile, onExportSpecificPDF, onCloneDay, gamification }) => {
   const [now, setNow] = useState(new Date());
   const [activeDays, setActiveDays] = useState(() => {
     const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
@@ -155,9 +174,14 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
   const [showWaterModal, setShowWaterModal] = useState(false);
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [tempGoal, setTempGoal] = useState(waterGoal);
-  const [hasCelebratedWater, setHasCelebratedWater] = useState(false);
   const [showDayCompleteModal, setShowDayCompleteModal] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
+  const [showInfo, setShowInfo] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowInfo(false), 30000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     setTempGoal(waterGoal);
@@ -169,13 +193,6 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
   };
 
   const goalMet = waterIntake >= waterGoal;
-
-  useEffect(() => {
-    if (goalMet && !hasCelebratedWater) {
-      triggerConfetti();
-      setHasCelebratedWater(true);
-    }
-  }, [goalMet, hasCelebratedWater, triggerConfetti]);
 
   const waterGoalOptions = [
     { value: '500', label: '500 ml' },
@@ -447,6 +464,13 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
         .highlight-move-animation {
           animation: highlight-move 2s ease-out;
         }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(5px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out forwards;
+        }
       `}</style>
 
       {/* Aviso de Planejamento Excedido (Fixo) */}
@@ -511,66 +535,76 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
         </div>
       </div>
 
-      <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-xl border border-blue-200 dark:border-blue-800 flex items-start gap-2 shadow-sm">
-        <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-        <p className="text-xs text-blue-800 dark:text-blue-200">
-          <strong>Dica:</strong> Renomeie, reordene ou exclua refeições. Clique em "+ Adicionar" para criar novos horários no dia selecionado.
-        </p>
-      </div>
+      {showInfo ? (
+        <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-xl border border-blue-200 dark:border-blue-800 flex items-start gap-2 shadow-sm relative animate-fade-in">
+          <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+          <p className="text-xs text-blue-800 dark:text-blue-200 pr-6">
+            <strong>Dica:</strong> Renomeie, reordene ou exclua refeições. Clique em "+ Adicionar" para criar novos horários no dia selecionado.
+          </p>
+          <button onClick={() => setShowInfo(false)} className="absolute top-2 right-2 text-blue-500 hover:text-blue-700 p-1"><X size={16} /></button>
+        </div>
+      ) : (
+        <div className="flex justify-end animate-fade-in -my-5">
+            <button onClick={() => setShowInfo(true)} className="flex items-center gap-1 text-blue-500 hover:text-blue-600 transition-colors p-0">
+                <Info size={16} />
+                <span className="text-[10px] font-bold">Info</span>
+            </button>
+        </div>
+      )}
 
       {/* Widget de Hidratação */}
-      <div className="bg-cyan-50 dark:bg-cyan-900/10 p-4 rounded-2xl border border-cyan-100 dark:border-cyan-800 shadow-sm">
-        <div className="mb-2">
-            <h3 className="text-[10px] font-bold text-cyan-600 uppercase tracking-wider flex items-center gap-1">
-                <Info size={12} /> Controle de Consumo de Água
+      <div className="bg-cyan-50 dark:bg-cyan-900/10 p-3 rounded-2xl border border-cyan-100 dark:border-cyan-800 shadow-sm">
+        <div className="mb-1">
+            <h3 className="text-[9px] font-bold text-cyan-600 uppercase tracking-wider flex items-center gap-1">
+                <Info size={10} /> Controle de Consumo de Água
             </h3>
         </div>
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center gap-3">
-            <div className="p-1.5 bg-white dark:bg-cyan-900 rounded-full text-cyan-500 shadow-sm"><Droplets size={14} /></div>
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2">
+            <div className="p-1 bg-white dark:bg-cyan-900 rounded-full text-cyan-500 shadow-sm"><Droplets size={12} /></div>
             
             {isEditingGoal ? (
-                <div className="flex items-center gap-2">
-                    <div className="w-28">
+                <div className="flex items-center gap-1">
+                    <div className="w-24">
                         <CustomSelect
                             value={tempGoal}
                             onChange={(val) => setTempGoal(val)}
                             options={waterGoalOptions}
                             placeholder="Meta"
-                            className="text-xs py-1 px-2"
+                            className="text-[10px] py-0.5 px-1 h-7"
                         />
                     </div>
                     <button 
                         onClick={handleSaveGoal} 
-                        className="px-2.5 py-1 text-[10px] font-bold bg-emerald-500 text-white rounded-lg shadow-sm hover:bg-emerald-600"
+                        className="px-2 py-0.5 text-[9px] font-bold bg-emerald-500 text-white rounded-md shadow-sm hover:bg-emerald-600"
                     >Salvar</button>
                 </div>
             ) : (
                 <div className="group flex flex-col items-start cursor-pointer" onClick={() => setIsEditingGoal(true)} title="Clique para editar a meta">
-                    <span className="text-[8px] text-cyan-600 font-bold mb-0.5 leading-tight">Editar meta de<br/>consumo de agua/dia</span>
-                    <div className="flex items-center gap-2">
+                    <span className="text-[7px] text-cyan-600 font-bold mb-px leading-tight">Meta Diária</span>
+                    <div className="flex items-center gap-1">
                         <p className="font-bold text-cyan-900 dark:text-cyan-100 text-xs">Meta: {waterGoal}ml</p>
-                        <Edit size={12} className="text-cyan-700 hover:text-cyan-900 transition-colors" />
+                        <Edit size={10} className="text-cyan-700 hover:text-cyan-900 transition-colors" />
                     </div>
                 </div>
             )}
           </div>
           <div className="text-right">
-             <p className="text-[10px] text-cyan-600 font-bold uppercase mb-0.5">Total Hoje</p>
-             <span className="font-black text-cyan-700 dark:text-cyan-300 text-base">{waterIntake} ml</span>
+             <p className="text-[8px] text-cyan-600 font-bold uppercase mb-px">Total Hoje</p>
+             <span className="font-black text-cyan-700 dark:text-cyan-300 text-sm">{waterIntake} ml</span>
           </div>
         </div>
         <button 
           onClick={() => setShowWaterModal(true)}
-          className="w-full py-1.5 bg-cyan-500 text-white rounded-xl font-bold text-xs shadow-md hover:bg-cyan-600 transition-colors flex items-center justify-center gap-2"
+          className="w-full py-1.5 bg-cyan-500 text-white rounded-lg font-bold text-[10px] shadow-sm hover:bg-cyan-600 transition-colors flex items-center justify-center gap-1.5"
         >
-          <Plus size={16} /> Registrar Consumo
+          <Plus size={12} /> Registrar Consumo
         </button>
 
         {goalMet && (
-          <div className="mt-3 text-center bg-emerald-100 border border-emerald-200 text-emerald-800 p-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
-            <CheckCircle size={14} />
-            <span>Parabéns! Meta de hoje atingida!</span>
+          <div className="mt-2 text-center bg-emerald-100 border border-emerald-200 text-emerald-800 p-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5">
+            <CheckCircle size={12} />
+            <span>Meta atingida!</span>
           </div>
         )}
       </div>
@@ -1024,7 +1058,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
         </button>
       )}
 
-      {showDayCompleteModal && <DayCompleteModal onClose={() => setShowDayCompleteModal(false)} />}
+      {showDayCompleteModal && <DayCompleteModal onClose={() => setShowDayCompleteModal(false)} hearts={gamification?.hearts || 0} />}
       {summaryData && <NutritionalSummaryModal title={summaryData.title} meals={summaryData.meals} allFoods={allFoods} onClose={() => setSummaryData(null)} />}
     </div>
   );
