@@ -17,7 +17,7 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
     <div className="flex flex-col h-screen max-w-md mx-auto bg-white dark:bg-gray-900 shadow-2xl relative overflow-hidden">
       <header className="bg-emerald-600 text-white p-2 pt-4 flex flex-col items-center shadow-md z-10 gap-2">
         <div className="flex items-center gap-1.5">
-          <span className="font-bold text-sm tracking-tighter opacity-90">EvoluFit</span>
+          <span className="font-bold text-sm tracking-tighter opacity-90">EvoluFit v2.0</span>
           {(accessStatus === 'premium' || accessStatus === 'admin') ? (
             <div 
               onClick={isRealAdmin ? onDebugToggle : undefined}
