@@ -2654,11 +2654,7 @@ const AlertAnimationOverlay = () => (
     );
   }
 
-  if (showWelcome) {
-    return <WelcomeScreen onStart={handleWelcomeAccept} />;
-  }
-
-  if (!userProfile.isSetupDone) {
+  if (!userProfile.isSetupDone && !showWelcome) {
     return <SetupScreen 
       userProfile={userProfile} 
       onComplete={handleProfileUpdate} 
@@ -2668,8 +2664,13 @@ const AlertAnimationOverlay = () => (
     />;
   }
 
-  if (!isTrialActive) {
-    return <TrialEndScreen />;
+  if (!isTrialActive && !showWelcome) {
+    return (
+      <>
+        <TrialEndScreen />
+        {needRefresh && <UpdateToast onUpdate={() => updateServiceWorker(true)} />}
+      </>
+    );
   }
 
   return (
@@ -2694,6 +2695,7 @@ const AlertAnimationOverlay = () => (
         isRealAdmin={isRealAdmin}
         onDebugToggle={handleDebugToggle}
       >
+         {showWelcome && <WelcomeScreen onStart={handleWelcomeAccept} />}
          {showEducationalModal && currentEducationalContent && (
         <EducationalModal
           title={currentEducationalContent.title}
