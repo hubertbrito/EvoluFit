@@ -21,6 +21,7 @@ import CalorieAlertModal from './components/CalorieAlertModal';
 import GoalReachedModal from './components/GoalReachedModal';
 import TrialEndScreen from './components/TrialEndScreen';
 import WaterGoalModal from './components/WaterGoalModal';
+import WelcomeScreen from './components/WelcomeScreen';
 
 // Definindo localmente para não depender de arquivo de tipos externo
 const Category = { INDUSTRIALIZADOS: 'Industrializados' };
@@ -1077,6 +1078,7 @@ const App = () => {
   const [showWaterGoalModal, setShowWaterGoalModal] = useState(false);
   const [hasCelebratedWaterToday, setHasCelebratedWaterToday] = useState(false);
   const [showWaterLostModal, setShowWaterLostModal] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   // State for educational modal
   const [showEducationalModal, setShowEducationalModal] = useState(false);
@@ -1084,6 +1086,8 @@ const App = () => {
 
   useEffect(() => {
     // Listener de Navegação para o Educador Nutricional (Diretrizes 2026)
+    if (showTour) return;
+
     const content = educationalData[activeTab];
     if (content) {
       const hasSeen = localStorage.getItem(content.storageKey);
@@ -1092,7 +1096,7 @@ const App = () => {
         setShowEducationalModal(true);
       }
     }
-  }, [activeTab]);
+  }, [activeTab, showTour]);
 
   const [excessCalories, setExcessCalories] = useState(0);
   const [movedMealId, setMovedMealId] = useState(null);
@@ -1364,8 +1368,73 @@ const App = () => {
   // --- Lógica de Controle de Acesso (Trial e Admin) ---
   useEffect(() => {
     const checkAccess = () => {
-      // Checa por acesso de admin na URL
       const urlParams = new URLSearchParams(window.location.search);
+      const tokenParam = urlParams.get('access_token');
+      
+      // Definição dos Tokens (Ofuscados em Base64)
+      // IMPORTANTE: Estes tokens devem bater com os configurados na URL de redirecionamento da Kiwify
+      // Weekly: EVOLUFIT_WEEKLY_2026 -> RVZPTFVGSVRfV0VFS0xZXzIwMjY=
+      // Monthly: EVOLUFIT_MONTHLY_2026 -> RVZPTFVGSVRfTU9OVEhMWV8yMDI2
+      // Yearly: EVOLUFIT_YEARLY_2026 -> RVZPTFVGSVRfWUVBUkxZXzIwMjY=
+      const PLAN_TOKENS = {
+        'RVZPTFVGSVRfV0VFS0xZXzIwMjY=': { days: 7, type: 'premium', plan: 'weekly' },
+        'RVZPTFVGSVRfTU9OVEhMWV8yMDI2': { days: 30, type: 'premium', plan: 'monthly' },
+        'RVZPTFVGSVRfWUVBUkxZXzIwMjY=': { days: 365, type: 'premium', plan: 'yearly' }
+      };
+
+      // 1. Prioridade: Validação via URL (Novo Acesso Pós-Pagamento)
+      if (tokenParam) {
+        const encodedToken = btoa(tokenParam); // Codifica o que veio na URL para comparar
+        const planInfo = PLAN_TOKENS[encodedToken];
+
+        if (planInfo) {
+          const expiryDate = new Date();
+          expiryDate.setDate(expiryDate.getDate() + planInfo.days);
+          
+          const accessData = {
+            type: 'premium',
+            plan: planInfo.plan,
+            expiryDate: expiryDate.toISOString(),
+            token: encodedToken // Salva o hash para validação futura
+          };
+
+          localStorage.setItem('accessInfo', JSON.stringify(accessData));
+          setIsTrialActive(true);
+          window.history.replaceState({}, document.title, window.location.pathname); // Limpa URL
+          if (!userProfile.isSetupDone) setShowWelcome(true); // Mostra boas-vindas mesmo se pagou, se for setup inicial
+          alert(`Acesso ${planInfo.plan === 'weekly' ? 'Semanal' : planInfo.plan === 'monthly' ? 'Mensal' : 'Anual'} ativado com sucesso!`);
+          return;
+        } else {
+          alert('Token de acesso inválido ou expirado.');
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+
+      // 2. Prioridade: Verificação de Persistência (Admin ou Premium)
+      const accessInfo = JSON.parse(localStorage.getItem('accessInfo'));
+
+      if (accessInfo) {
+        if (accessInfo.type === 'admin') {
+          setIsTrialActive(true);
+          return;
+        }
+        
+        if (accessInfo.type === 'premium') {
+          const now = new Date();
+          const expiry = new Date(accessInfo.expiryDate);
+          const isValidToken = PLAN_TOKENS[accessInfo.token];
+
+          if (isValidToken && now < expiry) {
+            setIsTrialActive(true);
+            return;
+          } else {
+            // Expirou ou token inválido
+            localStorage.removeItem('accessInfo');
+          }
+        }
+      }
+
+      // 3. Prioridade: Checa por acesso de admin na URL (Legado)
       if (urlParams.get('admin') === 'true') {
         localStorage.setItem('accessInfo', JSON.stringify({ type: 'admin' }));
         setIsTrialActive(true); // Admin sempre tem acesso
@@ -1374,20 +1443,14 @@ const App = () => {
         return;
       }
 
-      const accessInfo = JSON.parse(localStorage.getItem('accessInfo'));
-
-      // Se for admin, não faz mais nada
-      if (accessInfo?.type === 'admin') {
-        setIsTrialActive(true);
-        return;
-      }
-
+      // 4. Prioridade: Trial Gratuito (72h)
       const firstAccess = localStorage.getItem('firstAccessTime');
       if (!firstAccess) {
-        localStorage.setItem('firstAccessTime', new Date().getTime().toString());
-        setIsTrialActive(true);
+        // Não inicia o trial automaticamente. Mostra a tela de vendas/boas-vindas primeiro.
+        setShowWelcome(true);
+        setIsTrialActive(false); // Fica falso até aceitar o desafio
       } else {
-        const trialEndTime = parseInt(firstAccess, 10) + 72 * 60 * 60 * 1000; // 72 horas
+        const trialEndTime = parseInt(firstAccess, 10) + (72 * 60 * 60 * 1000); // 72 horas
         setIsTrialActive(new Date().getTime() < trialEndTime);
       }
     };
@@ -2399,6 +2462,15 @@ const AlertAnimationOverlay = () => (
     setIsExportingPdf(true);
   };
 
+  const handleWelcomeAccept = () => {
+    // Inicia o contador de 72h agora
+    if (!localStorage.getItem('firstAccessTime')) {
+        localStorage.setItem('firstAccessTime', new Date().getTime().toString());
+    }
+    setIsTrialActive(true);
+    setShowWelcome(false);
+  };
+
   // Cálculo do Nível com Bônus de Sabedoria
   const wisdomBadgesCount = (gamification.achievements || []).filter(id => {
       const badge = BADGES_DATA.find(b => b.id === id);
@@ -2445,6 +2517,10 @@ const AlertAnimationOverlay = () => (
   const handleProfileCancel = () => {
     setUserProfile(prev => ({ ...prev, isSetupDone: true }));
   };
+
+  if (showWelcome) {
+    return <WelcomeScreen onStart={handleWelcomeAccept} />;
+  }
 
   if (!userProfile.isSetupDone) {
     return <SetupScreen 
