@@ -191,6 +191,27 @@ const LevelSystemInfoModal = ({ onClose }) => (
   </div>
 );
 
+const MetricsExplanation = () => (
+  <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4 border border-blue-100 dark:border-blue-800 shadow-sm">
+    <h3 className="font-bold text-blue-800 dark:text-blue-300 mb-3 flex items-center gap-2 text-sm">
+      <Info size={16} />
+      Entenda seus Números
+    </h3>
+    <div className="space-y-3 text-xs text-blue-900/80 dark:text-blue-200 leading-relaxed">
+      <div>
+        <p className="font-bold text-blue-800 dark:text-blue-300 mb-0.5">🔥 TMB (Taxa Metabólica Basal)</p>
+        <p>Energia que seu corpo gasta <strong>em repouso</strong>. É o seu "custo de sobrevivência".</p>
+        <p className="mt-1 font-medium opacity-90">💡 Como usar: Nunca coma muito abaixo do TMB! Isso trava o metabolismo.</p>
+      </div>
+      <div className="border-t border-blue-200 dark:border-blue-700 pt-2">
+        <p className="font-bold text-blue-800 dark:text-blue-300 mb-0.5">🎯 Meta Diária</p>
+        <p>Seu alvo real de calorias diaria, ajustado para seu objetivo e atividade física.</p>
+        <p className="mt-1 font-medium opacity-90">💡 Como usar: Mire neste valor(aproximado) com alimentos de verdade para ter resultado.</p>
+      </div>
+    </div>
+  </div>
+);
+
 const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour, onResetSchedule, waterHistory = {}, gamification, badgesData = [] }) => {
   const [filterDay, setFilterDay] = useState('Hoje');
   const days = ['Hoje', 'Semana Toda', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
@@ -563,6 +584,8 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
             </div>
           </div>
         )}
+
+        <MetricsExplanation />
 
         {/* Dados Metabólicos */}
         <div className="grid grid-cols-2 gap-3 mb-6">

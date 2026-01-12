@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { LayoutGrid, ChefHat, BrainCircuit, CalendarClock, RefreshCw, BookOpen, Download, ClipboardList, FileDown, Sun, Moon, ShoppingCart, Trophy, Heart } from 'lucide-react';
+import { LayoutGrid, ChefHat, BrainCircuit, CalendarClock, RefreshCw, BookOpen, Download, ClipboardList, FileDown, Sun, Moon, ShoppingCart, Trophy, Heart, Crown } from 'lucide-react';
 
 const HeaderButton = ({ onClick, title, children }) => (
   <button onClick={onClick} className="flex flex-col items-center justify-center p-1 rounded-lg hover:bg-emerald-700 transition-colors flex-1 min-w-0" title={title}>
@@ -7,7 +7,7 @@ const HeaderButton = ({ onClick, title, children }) => (
   </button>
 );
 
-export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRestartTour, onToggleManual, onInstallClick, showInstallButton, onToggleSummary, onToggleShoppingList, onExportPDF, currentTheme, onThemeChange, gamification, level, allBadges }) => {
+export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRestartTour, onToggleManual, onInstallClick, showInstallButton, onToggleSummary, onToggleShoppingList, onExportPDF, currentTheme, onThemeChange, gamification, level, allBadges, accessStatus, isRealAdmin, onDebugToggle }) => {
   const unlockedBadges = useMemo(() => {
     if (!gamification || !allBadges) return [];
     return allBadges.filter(b => (gamification.achievements || []).includes(b.id));
@@ -16,7 +16,27 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-white dark:bg-gray-900 shadow-2xl relative overflow-hidden">
       <header className="bg-emerald-600 text-white p-2 pt-4 flex flex-col items-center shadow-md z-10 gap-2">
-        <span className="font-bold text-sm tracking-tighter opacity-90">EvoluFit</span>
+        <div className="flex items-center gap-1.5">
+          <span className="font-bold text-sm tracking-tighter opacity-90">EvoluFit</span>
+          {(accessStatus === 'premium' || accessStatus === 'admin') ? (
+            <div 
+              onClick={isRealAdmin ? onDebugToggle : undefined}
+              className={`flex items-center gap-0.5 bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded-full text-[8px] font-black shadow-sm animate-fade-in ${isRealAdmin ? 'cursor-pointer hover:scale-110 transition-transform' : ''}`}
+              title={isRealAdmin ? "Admin: Clique para alternar visualização (Premium/Trial)" : ""}
+            >
+              <Crown size={10} fill="currentColor" />
+              <span>PRO</span>
+            </div>
+          ) : (
+            <div 
+              onClick={isRealAdmin ? onDebugToggle : undefined}
+              className={`bg-white/20 text-white px-1.5 py-0.5 rounded-full text-[8px] font-bold border border-white/30 animate-fade-in ${isRealAdmin ? 'cursor-pointer hover:scale-110 transition-transform' : ''}`}
+              title={isRealAdmin ? "Admin: Clique para alternar visualização" : ""}
+            >
+              TRIAL
+            </div>
+          )}
+        </div>
         <div className="flex items-center justify-between w-full px-1 gap-1">
           {showInstallButton && (
             <HeaderButton onClick={onInstallClick} title="Instale o App">

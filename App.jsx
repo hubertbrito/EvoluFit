@@ -718,6 +718,72 @@ const Confetti = () => {
   );
 };
 
+const GoldConfetti = () => {
+  const confettiCount = 150;
+  const colors = ['#FFD700', '#FFA500', '#B8860B', '#DAA520', '#F0E68C']; // Tons de dourado
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-[300] overflow-hidden flex items-center justify-center">
+      <style>{`
+        @keyframes fall-gold {
+          0% { transform: translateY(-10vh) rotateZ(0deg); opacity: 1; }
+          100% { transform: translateY(110vh) rotateZ(720deg); opacity: 0; }
+        }
+        .confetti-gold {
+          position: absolute;
+          width: 10px;
+          height: 20px;
+          animation: fall-gold 4s linear forwards;
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+      {Array.from({ length: confettiCount }).map((_, i) => {
+        const style = {
+          left: `${Math.random() * 100}vw`,
+          top: `-10vh`,
+          backgroundColor: colors[Math.floor(Math.random() * colors.length)],
+          animationDelay: `${Math.random() * 2}s`,
+          transform: `rotate(${Math.random() * 360}deg)`
+        };
+        return <div key={i} className="confetti-gold" style={style}></div>;
+      })}
+      <div className="z-[301] flex flex-col items-center animate-[pop-in_0.5s_ease-out_forwards]">
+        <div className="text-8xl drop-shadow-2xl filter mb-4">👑</div>
+        <div className="text-4xl font-black text-yellow-400 drop-shadow-[0_4px_0_rgba(0,0,0,0.5)] bg-black/60 px-8 py-4 rounded-3xl backdrop-blur-md border-2 border-yellow-500/50">
+            PRO ATIVADO!
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const WelcomeProModal = ({ onClose }) => (
+  <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fade-in">
+    <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce text-center relative border-4 border-white/20">
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
+      <div className="p-8 flex flex-col items-center relative z-10">
+        <div className="text-6xl mb-4 animate-bounce filter drop-shadow-lg">👑</div>
+        <h2 className="text-3xl font-black text-white mb-2 tracking-tight drop-shadow-md">VOCÊ É PRO!</h2>
+        <p className="text-yellow-100 font-bold text-lg mb-4">A saga continua.</p>
+        <p className="text-white text-sm mb-8 leading-relaxed px-2 font-medium">
+          Parabéns pela decisão de investir na sua melhor versão. <br/>
+          Você desbloqueou o poder total do EvoluFit para dominar a alimentação perfeita.
+        </p>
+        <button 
+          onClick={onClose}
+          className="w-full py-4 bg-white text-yellow-600 rounded-xl font-black shadow-lg hover:bg-gray-50 transition-transform active:scale-95 uppercase tracking-wider"
+        >
+          Acessar Meu Plano
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 const ClearMealModal = ({ onClose, onConfirm, meal, contextDay, groupMembers }) => {
   const allWeekDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
   
@@ -1052,6 +1118,8 @@ const App = () => {
   const [deleteContextDay, setDeleteContextDay] = useState(null);
   const [mealToDuplicate, setMealToDuplicate] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showProConfetti, setShowProConfetti] = useState(false);
+  const [showWelcomePro, setShowWelcomePro] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [mealToClear, setMealToClear] = useState(null);
@@ -1086,7 +1154,9 @@ const App = () => {
 
   useEffect(() => {
     // Listener de Navegação para o Educador Nutricional (Diretrizes 2026)
-    if (showTour) return;
+    const hasSeenTour = localStorage.getItem('hasSeenTour');
+    // Se o tour estiver ativo, ou se o tour nunca foi concluído, não mostre os modais educativos.
+    if (showTour || !hasSeenTour) return;
 
     const content = educationalData[activeTab];
     if (content) {
@@ -1101,6 +1171,8 @@ const App = () => {
   const [excessCalories, setExcessCalories] = useState(0);
   const [movedMealId, setMovedMealId] = useState(null);
   const [isTrialActive, setIsTrialActive] = useState(true);
+  const [accessStatus, setAccessStatus] = useState('trial'); // 'trial', 'premium', 'admin'
+  const [isRealAdmin, setIsRealAdmin] = useState(false); // Controle para exibir ferramentas de debug
   const CURRENT_NEWS_VERSION = 1; // Increment this number to show the modal again to users
   const [addMealContext, setAddMealContext] = useState(null);
   const [exportMode, setExportMode] = useState('weekly');
@@ -1378,9 +1450,33 @@ const App = () => {
       // Yearly: EVOLUFIT_YEARLY_2026 -> RVZPTFVGSVRfWUVBUkxZXzIwMjY=
       const PLAN_TOKENS = {
         'RVZPTFVGSVRfV0VFS0xZXzIwMjY=': { days: 7, type: 'premium', plan: 'weekly' },
-        'RVZPTFVGSVRfTU9OVEhMWV8yMDI2': { days: 30, type: 'premium', plan: 'monthly' },
-        'RVZPTFVGSVRfWUVBUkxZXzIwMjY=': { days: 365, type: 'premium', plan: 'yearly' }
+        'RVZPTFVGSVRfTU9OVEhMWV8yMDI2': { days: 35, type: 'premium', plan: 'monthly' }, // Renovação com 35 dias (folga)
+        'RVZPTFVGSVRfWUVBUkxZXzIwMjY=': { days: 365, type: 'premium', plan: 'yearly' },
+        'TEST_TOKEN_PREMIUM': { days: 30, type: 'premium', plan: 'monthly' } // Token de teste
       };
+
+      // 0. Backdoor de Teste Premium (Para simular usuário pagante sem token real)
+      if (urlParams.get('test_premium') === 'true') {
+        const fakeExpiry = new Date();
+        fakeExpiry.setDate(fakeExpiry.getDate() + 30);
+        const accessData = {
+          type: 'premium',
+          plan: 'monthly',
+          expiryDate: fakeExpiry.toISOString(),
+          token: 'TEST_TOKEN_PREMIUM'
+        };
+        localStorage.setItem('accessInfo', JSON.stringify(accessData));
+        
+        // Ativa a experiência visual completa (Confetes + Modal) sem recarregar
+        setIsTrialActive(true);
+        setAccessStatus('premium');
+        window.history.replaceState({}, document.title, window.location.pathname); // Limpa URL
+        setShowWelcome(false);
+        setShowProConfetti(true);
+        setTimeout(() => setShowProConfetti(false), 5000);
+        setShowWelcomePro(true);
+        return;
+      }
 
       // 1. Prioridade: Validação via URL (Novo Acesso Pós-Pagamento)
       if (tokenParam) {
@@ -1400,9 +1496,12 @@ const App = () => {
 
           localStorage.setItem('accessInfo', JSON.stringify(accessData));
           setIsTrialActive(true);
+          setAccessStatus('premium');
           window.history.replaceState({}, document.title, window.location.pathname); // Limpa URL
-          if (!userProfile.isSetupDone) setShowWelcome(true); // Mostra boas-vindas mesmo se pagou, se for setup inicial
-          alert(`Acesso ${planInfo.plan === 'weekly' ? 'Semanal' : planInfo.plan === 'monthly' ? 'Mensal' : 'Anual'} ativado com sucesso!`);
+          setShowWelcome(false); // Garante que a tela de vendas/trial NÃO apareça
+          setShowProConfetti(true);
+          setTimeout(() => setShowProConfetti(false), 5000);
+          setShowWelcomePro(true); // Exibe o modal de boas-vindas PRO
           return;
         } else {
           alert('Token de acesso inválido ou expirado.');
@@ -1416,6 +1515,8 @@ const App = () => {
       if (accessInfo) {
         if (accessInfo.type === 'admin') {
           setIsTrialActive(true);
+          setAccessStatus('admin');
+          setIsRealAdmin(true);
           return;
         }
         
@@ -1426,6 +1527,7 @@ const App = () => {
 
           if (isValidToken && now < expiry) {
             setIsTrialActive(true);
+            setAccessStatus('premium');
             return;
           } else {
             // Expirou ou token inválido
@@ -1437,6 +1539,8 @@ const App = () => {
       // 3. Prioridade: Checa por acesso de admin na URL (Legado)
       if (urlParams.get('admin') === 'true') {
         localStorage.setItem('accessInfo', JSON.stringify({ type: 'admin' }));
+        setAccessStatus('admin');
+        setIsRealAdmin(true);
         setIsTrialActive(true); // Admin sempre tem acesso
         // Limpa a URL para não ficar visível
         window.history.replaceState({}, document.title, window.location.pathname);
@@ -1444,7 +1548,8 @@ const App = () => {
       }
 
       // 4. Prioridade: Trial Gratuito (72h)
-      const firstAccess = localStorage.getItem('firstAccessTime');
+      // Alterado para 'evolufit_trial_start_v1' para garantir que a WelcomeScreen apareça para todos nesta versão
+      const firstAccess = localStorage.getItem('evolufit_trial_start_v1');
       if (!firstAccess) {
         // Não inicia o trial automaticamente. Mostra a tela de vendas/boas-vindas primeiro.
         setShowWelcome(true);
@@ -1457,6 +1562,24 @@ const App = () => {
 
     checkAccess();
   }, []);
+
+  // Função para alternar modos de visualização (Apenas para Admin Real)
+  const handleDebugToggle = () => {
+    if (!isRealAdmin) return;
+    
+    setAccessStatus(prev => {
+      if (prev === 'admin') {
+        alert('👁️ Modo Visualização: PREMIUM');
+        return 'premium';
+      } else if (prev === 'premium') {
+        alert('👁️ Modo Visualização: TRIAL');
+        return 'trial';
+      } else {
+        alert('🛡️ Modo: ADMIN (Restaurado)');
+        return 'admin';
+      }
+    });
+  };
 
   // --- PWA Logic ---
   useEffect(() => {
@@ -2066,6 +2189,10 @@ const AlertAnimationOverlay = () => (
 
   // Helper para disparar mensagens educativas (evita repetição de código)
   const triggerEducationalMessage = (key) => {
+    // Bloqueio de segurança: Não exibir se o tour estiver rodando ou não finalizado
+    const hasSeenTour = localStorage.getItem('hasSeenTour');
+    if (showTour || !hasSeenTour) return;
+
     const content = educationalData[key];
     if (content) {
       const hasSeen = localStorage.getItem(content.storageKey);
@@ -2464,8 +2591,8 @@ const AlertAnimationOverlay = () => (
 
   const handleWelcomeAccept = () => {
     // Inicia o contador de 72h agora
-    if (!localStorage.getItem('firstAccessTime')) {
-        localStorage.setItem('firstAccessTime', new Date().getTime().toString());
+    if (!localStorage.getItem('evolufit_trial_start_v1')) {
+        localStorage.setItem('evolufit_trial_start_v1', new Date().getTime().toString());
     }
     setIsTrialActive(true);
     setShowWelcome(false);
@@ -2518,6 +2645,15 @@ const AlertAnimationOverlay = () => (
     setUserProfile(prev => ({ ...prev, isSetupDone: true }));
   };
 
+  if (showWelcomePro) {
+    return (
+      <>
+        <WelcomeProModal onClose={() => setShowWelcomePro(false)} />
+        {showProConfetti && <GoldConfetti />}
+      </>
+    );
+  }
+
   if (showWelcome) {
     return <WelcomeScreen onStart={handleWelcomeAccept} />;
   }
@@ -2554,6 +2690,9 @@ const AlertAnimationOverlay = () => (
         gamification={gamification}
         level={currentLevel}
         allBadges={BADGES_DATA}
+        accessStatus={accessStatus}
+        isRealAdmin={isRealAdmin}
+        onDebugToggle={handleDebugToggle}
       >
          {showEducationalModal && currentEducationalContent && (
         <EducationalModal
@@ -2799,6 +2938,7 @@ const AlertAnimationOverlay = () => (
         onConfirm={handleDuplicateConfirm} 
       />}
       {showConfetti && <Confetti />}
+      {showProConfetti && <GoldConfetti />}
       {showResetModal && <ResetScheduleModal onClose={() => setShowResetModal(false)} onConfirm={confirmReset} />}
       {mealToClear && <ClearMealModal 
           onClose={() => { setMealToClear(null); setGroupToClear(null); }} 
