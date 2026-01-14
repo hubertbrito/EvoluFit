@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, Copy, AlertTriangle, Eraser, Download, Loader } from 'lucide-react';
+import { X, Trash2, Copy, AlertTriangle, Eraser, Download, Loader, RefreshCw } from 'lucide-react';
 import EducationalModal from './components/EducationalModal';
 import { FOOD_DATABASE, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures, inferNutrients } from './constants';
 import jsPDF from 'jspdf';
@@ -22,6 +22,8 @@ import GoalReachedModal from './components/GoalReachedModal';
 import TrialEndScreen from './components/TrialEndScreen';
 import WaterGoalModal from './components/WaterGoalModal';
 import WelcomeScreen from './components/WelcomeScreen';
+import UpgradeModal from './components/UpgradeModal';
+import TechNutriDisplay from './components/TechNutriDisplay';
 
 // Definindo localmente para não depender de arquivo de tipos externo
 const Category = { INDUSTRIALIZADOS: 'Industrializados' };
@@ -49,6 +51,21 @@ const LEVELS = [
   { days: 90, title: 'Monge', icon: '📿' },
   { days: 120, title: 'O Iluminado', icon: '✨' }
 ];
+
+const UpdateToast = ({ onUpdate }) => (
+  <div className="fixed bottom-4 right-4 z-[200] bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-2xl border-2 border-emerald-500 flex items-center gap-4 animate-bounce">
+    <div className="flex-shrink-0">
+      <RefreshCw className="w-6 h-6 text-emerald-500 animate-spin" style={{ animationDuration: '2s' }} />
+    </div>
+    <div>
+      <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">Nova versão disponível!</h3>
+      <p className="text-xs text-gray-500 dark:text-gray-300">Clique para atualizar o app.</p>
+    </div>
+    <button onClick={onUpdate} className="ml-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-bold text-xs shadow-md hover:bg-emerald-700 transition-transform active:scale-95">
+      Atualizar
+    </button>
+  </div>
+);
 
 const DEFAULT_MEAL_SCHEDULE = [
   { id: 'm1', name: 'Café da Manhã', time: '08:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
@@ -212,7 +229,7 @@ const TourOverlay = ({ step, onNext, onBack, onSkip, highlightedRect }) => {
   );
 };
 
-const HeartExplosion = () => {
+const HeartExplosion = ({ count = 1 }) => {
   return (
     <div className="fixed inset-0 pointer-events-none z-[210] flex items-center justify-center">
       <style>{`
@@ -237,7 +254,7 @@ const HeartExplosion = () => {
         </div>
       ))}
       <div className="absolute text-2xl font-black text-rose-500 bg-white/90 px-4 py-2 rounded-full shadow-xl animate-bounce border-2 border-rose-200">
-        +1 Coração!
+        +{count} {count > 1 ? 'Corações!' : 'Coração!'}
       </div>
     </div>
   );
@@ -651,17 +668,6 @@ const WhatsNewModal = ({ onClose, onOpenManual }) => {
             <ul className="list-disc list-inside text-xs text-gray-600 space-y-1.5">
               {features.map((f, i) => <li key={i}>{f}</li>)}
             </ul>
-          </div>
-          
-          <div className="mb-4">
-            <h4 className="font-bold text-emerald-700 mb-2 text-sm uppercase">Novos Alimentos</h4>
-            <div className="flex flex-wrap gap-2">
-              {newFoods.map((f, i) => (
-                <span key={i} className="px-2 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-md border border-emerald-100">
-                  {f}
-                </span>
-              ))}
-            </div>
           </div>
 
           <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 text-xs text-blue-800 leading-relaxed">
@@ -1147,6 +1153,9 @@ const App = () => {
   const [hasCelebratedWaterToday, setHasCelebratedWaterToday] = useState(false);
   const [showWaterLostModal, setShowWaterLostModal] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [earnedHeartsAmount, setEarnedHeartsAmount] = useState(1);
+  const [lastSelectedFood, setLastSelectedFood] = useState(null);
 
   // State for educational modal
   const [showEducationalModal, setShowEducationalModal] = useState(false);
@@ -1170,10 +1179,14 @@ const App = () => {
 
   const [excessCalories, setExcessCalories] = useState(0);
   const [movedMealId, setMovedMealId] = useState(null);
-  const [isTrialActive, setIsTrialActive] = useState(true);
+  const [isTrialActive, setIsTrialActive] = useState(() => {
+    // Verifica o parâmetro de teste já na inicialização para evitar flash de conteúdo
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('test_trial_end') === 'true' ? false : true;
+  });
   const [accessStatus, setAccessStatus] = useState('trial'); // 'trial', 'premium', 'admin'
   const [isRealAdmin, setIsRealAdmin] = useState(false); // Controle para exibir ferramentas de debug
-  const CURRENT_NEWS_VERSION = 1; // Increment this number to show the modal again to users
+  const CURRENT_NEWS_VERSION = 2; // Increment this number to show the modal again to users
   const [addMealContext, setAddMealContext] = useState(null);
   const [exportMode, setExportMode] = useState('weekly');
   const [showCloneModal, setShowCloneModal] = useState(false);
@@ -1478,6 +1491,13 @@ const App = () => {
         return;
       }
 
+      // 0.1 Backdoor de Teste Fim do Trial (Para visualizar a tela de bloqueio)
+      if (urlParams.get('test_trial_end') === 'true') {
+        setIsTrialActive(false);
+        setShowWelcome(false);
+        return;
+      }
+
       // 1. Prioridade: Validação via URL (Novo Acesso Pós-Pagamento)
       if (tokenParam) {
         const encodedToken = btoa(tokenParam); // Codifica o que veio na URL para comparar
@@ -1552,7 +1572,10 @@ const App = () => {
       const firstAccess = localStorage.getItem('evolufit_trial_start_v1');
       if (!firstAccess) {
         // Não inicia o trial automaticamente. Mostra a tela de vendas/boas-vindas primeiro.
-        setShowWelcome(true);
+        // Só mostra welcome se NÃO estiver em modo de teste de fim de trial
+        if (urlParams.get('test_trial_end') !== 'true') {
+            setShowWelcome(true);
+        }
         setIsTrialActive(false); // Fica falso até aceitar o desafio
       } else {
         const trialEndTime = parseInt(firstAccess, 10) + (72 * 60 * 60 * 1000); // 72 horas
@@ -1566,7 +1589,7 @@ const App = () => {
   // Função para alternar modos de visualização (Apenas para Admin Real)
   const handleDebugToggle = () => {
     if (!isRealAdmin) return;
-    
+
     setAccessStatus(prev => {
       if (prev === 'admin') {
         alert('👁️ Modo Visualização: PREMIUM');
@@ -1574,6 +1597,9 @@ const App = () => {
       } else if (prev === 'premium') {
         alert('👁️ Modo Visualização: TRIAL');
         return 'trial';
+      } else if (prev === 'trial') {
+        alert('👁️ Modo Visualização: TELA DE BLOQUEIO (Fim do Trial)');
+        return 'trial_ended';
       } else {
         alert('🛡️ Modo: ADMIN (Restaurado)');
         return 'admin';
@@ -1878,7 +1904,16 @@ const AlertAnimationOverlay = () => (
         }
     });
     
-    const isWiseChoice = healthyCount > unhealthyCount;
+    let heartsToAward = 0;
+    let feedbackMsg = "Refeição registrada!";
+
+    if (healthyCount > 0 && unhealthyCount === 0) {
+        heartsToAward = 2;
+        feedbackMsg = "Perfeito! 100% Saudável! (+2 ❤️)";
+    } else if (healthyCount > unhealthyCount) {
+        heartsToAward = 1;
+        feedbackMsg = "Boa escolha! (+1 ❤️)";
+    }
 
     if (isLosingWeight) {
       // CENÁRIO 1: PERDA DE PESO
@@ -1908,15 +1943,16 @@ const AlertAnimationOverlay = () => (
       return; // Não celebra se tiver alerta de excesso
     }
 
-    // Ganha coração se fez escolhas sábias (Agora independente da meta diária)
-    if (isWiseChoice) {
-        setGamification(prev => ({ ...prev, hearts: (prev.hearts || 0) + 1 }));
+    // Ganha corações baseado na qualidade da refeição
+    if (heartsToAward > 0) {
+        setGamification(prev => ({ ...prev, hearts: (prev.hearts || 0) + heartsToAward }));
+        setEarnedHeartsAmount(heartsToAward);
         setShowHeartExplosion(true);
         setTimeout(() => setShowHeartExplosion(false), 3000);
     }
 
     // Feedback de Palminhas (Sempre que consumir)
-    setClappingMessage(isWiseChoice ? "Excelente escolha nutricional!" : "Refeição registrada!");
+    setClappingMessage(feedbackMsg);
     setShowClapping(true);
     setTimeout(() => setShowClapping(false), 3000);
 
@@ -2223,6 +2259,28 @@ const AlertAnimationOverlay = () => (
       triggerEducationalMessage(contentKey);
     }
   };
+
+  // Cálculo dos Nutrientes Totais do Prato para o Display Tech
+  const plateNutrientsTotal = React.useMemo(() => {
+    const allFoods = [...FOOD_DATABASE, ...customFoods];
+    return currentPlate.reduce((acc, item) => {
+      // Garante comparação segura de IDs e conversão numérica
+      const food = allFoods.find(f => String(f.id) === String(item.foodId));
+      if (!food) return acc;
+      
+      const qty = Number(item.quantity) || 0;
+      const unitWeight = Number(getFoodUnitWeight(food, item.unit)) || 0;
+      const weight = unitWeight * qty;
+      const factor = weight / 100;
+      
+      return {
+        calories: acc.calories + ((Number(food.calories) || 0) * factor),
+        protein: acc.protein + ((Number(food.protein) || 0) * factor),
+        carbs: acc.carbs + ((Number(food.carbs) || 0) * factor),
+        fat: acc.fat + ((Number(food.fat) || 0) * factor)
+      };
+    }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+  }, [currentPlate, customFoods]);
 
   // Lógica de Interação no Prato (Volume Inteligente)
   const handlePlateUpdate = (id, updates) => {
@@ -2654,14 +2712,8 @@ const AlertAnimationOverlay = () => (
     );
   }
 
-  if (!userProfile.isSetupDone && !showWelcome) {
-    return <SetupScreen 
-      userProfile={userProfile} 
-      onComplete={handleProfileUpdate} 
-      onCancel={userProfile.name ? handleProfileCancel : undefined}
-      currentTheme={theme}
-      onThemeChange={setTheme}
-    />;
+  if (isRealAdmin && accessStatus === 'trial_ended') {
+    return <TrialEndScreen />;
   }
 
   if (!isTrialActive && !showWelcome) {
@@ -2671,6 +2723,16 @@ const AlertAnimationOverlay = () => (
         {needRefresh && <UpdateToast onUpdate={() => updateServiceWorker(true)} />}
       </>
     );
+  }
+
+  if (!userProfile.isSetupDone && !showWelcome) {
+    return <SetupScreen 
+      userProfile={userProfile} 
+      onComplete={handleProfileUpdate} 
+      onCancel={userProfile.name ? handleProfileCancel : undefined}
+      currentTheme={theme}
+      onThemeChange={setTheme}
+    />;
   }
 
   return (
@@ -2694,7 +2756,9 @@ const AlertAnimationOverlay = () => (
         accessStatus={accessStatus}
         isRealAdmin={isRealAdmin}
         onDebugToggle={handleDebugToggle}
+        onOpenUpgrade={() => setShowUpgradeModal(true)}
       >
+         {needRefresh[0] && <UpdateToast onUpdate={() => updateServiceWorker(true)} />}
          {showWelcome && <WelcomeScreen onStart={handleWelcomeAccept} />}
          {showEducationalModal && currentEducationalContent && (
         <EducationalModal
@@ -2706,12 +2770,24 @@ const AlertAnimationOverlay = () => (
           }}
         />
          )}
+      
+      {/* Display Ultra Tech (Fixo no topo das abas Dispensa e Prato) */}
+      {(activeTab === 'pantry' || activeTab === 'plate') && (
+        <TechNutriDisplay 
+          lastFood={lastSelectedFood} 
+          totalNutrition={plateNutrientsTotal} 
+          isOverLimit={(getConsumedCalories() + plateNutrientsTotal.calories) > getDailyGoal()}
+          activeTab={activeTab}
+        />
+      )}
+
       {activeTab === 'pantry' && (
         <PantryScreen 
 
           allFoods={allAvailableFoods} 
           userPantry={pantryItems} 
           currentPlate={currentPlate}
+          lastSelectedFood={lastSelectedFood}
           onToggle={id => setPantryItems(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])}
           onRemoveFromPantry={id => setPantryItems(p => p.filter(x => x !== id))}
           onDeleteCustom={id => {
@@ -2720,12 +2796,17 @@ const AlertAnimationOverlay = () => (
                 setPantryItems(p => p.filter(x => x !== id));
             }
           }}
+          onPreview={(food) => {
+            setLastSelectedFood(food);
+            handleFoodInteraction(food.id);
+          }}
           onAddToPlate={id => { 
+            const food = allAvailableFoods.find(f => f.id === id);
+            if (food) setLastSelectedFood(food);
             setCurrentPlate(p => {
               if (p.find(x => x.foodId === id)) return p.filter(x => x.foodId !== id);
               return [...p, { foodId: id, quantity: 1, unit: 'Colher Sopa', multiplier: 1.0 }];
             });
-            handleFoodInteraction(id); // Dispara o insight educativo
           }}
           onVoiceClick={startListening}
           isListening={isListening}
@@ -2995,9 +3076,10 @@ const AlertAnimationOverlay = () => (
       {showWhatsNew && <WhatsNewModal onClose={handleCloseWhatsNew} onOpenManual={() => { handleCloseWhatsNew(); setShowManual(true); }} />}
       {newUnlockedBadge && <AchievementModal badge={newUnlockedBadge} onClose={() => setNewUnlockedBadge(null)} />}
       {newLevelUpBadge && <LevelUpModal badge={newLevelUpBadge} onClose={() => setNewLevelUpBadge(null)} />}
-      {showHeartExplosion && <HeartExplosion />}
+      {showHeartExplosion && <HeartExplosion count={earnedHeartsAmount} />}
       {showClapping && <ClappingFeedback message={clappingMessage} />}
       {showWaterGoalModal && <WaterGoalModal onClose={() => setShowWaterGoalModal(false)} />}
+      {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} />}
       {showWaterLostModal && <IncentiveModal onClose={() => setShowWaterLostModal(false)} title="Badge Perdido!" message="Sua barra de hidratação zerou e o emblema 'Hidratado' apagou. Beba água regularmente para recuperá-lo!" />}
     </>
   );

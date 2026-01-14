@@ -7,7 +7,7 @@ const HeaderButton = ({ onClick, title, children }) => (
   </button>
 );
 
-export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRestartTour, onToggleManual, onInstallClick, showInstallButton, onToggleSummary, onToggleShoppingList, onExportPDF, currentTheme, onThemeChange, gamification, level, allBadges, accessStatus, isRealAdmin, onDebugToggle }) => {
+export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRestartTour, onToggleManual, onInstallClick, showInstallButton, onToggleSummary, onToggleShoppingList, onExportPDF, currentTheme, onThemeChange, gamification, level, allBadges, accessStatus, isRealAdmin, onDebugToggle, onOpenUpgrade }) => {
   const unlockedBadges = useMemo(() => {
     if (!gamification || !allBadges) return [];
     return allBadges.filter(b => (gamification.achievements || []).includes(b.id));
@@ -22,16 +22,16 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
             <div 
               onClick={isRealAdmin ? onDebugToggle : undefined}
               className={`flex items-center gap-0.5 bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded-full text-[8px] font-black shadow-sm animate-fade-in ${isRealAdmin ? 'cursor-pointer hover:scale-110 transition-transform' : ''}`}
-              title={isRealAdmin ? "Admin: Clique para alternar visualização (Premium/Trial)" : ""}
+              title={isRealAdmin ? "Admin: Clique para alternar visualização (Premium/Trial/Bloqueio)" : ""}
             >
               <Crown size={10} fill="currentColor" />
               <span>PRO</span>
             </div>
           ) : (
             <div 
-              onClick={isRealAdmin ? onDebugToggle : undefined}
-              className={`bg-white/20 text-white px-1.5 py-0.5 rounded-full text-[8px] font-bold border border-white/30 animate-fade-in ${isRealAdmin ? 'cursor-pointer hover:scale-110 transition-transform' : ''}`}
-              title={isRealAdmin ? "Admin: Clique para alternar visualização" : ""}
+              onClick={isRealAdmin ? onDebugToggle : onOpenUpgrade}
+              className={`bg-white/20 text-white px-1.5 py-0.5 rounded-full text-[8px] font-bold border border-white/30 animate-fade-in cursor-pointer hover:scale-110 transition-transform`}
+              title={isRealAdmin ? "Admin: Clique para alternar visualização (Premium/Trial/Bloqueio)" : "Clique para se tornar PRO"}
             >
               TRIAL
             </div>
@@ -40,35 +40,35 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
         <div className="flex items-center justify-between w-full px-1 gap-1">
           {showInstallButton && (
             <HeaderButton onClick={onInstallClick} title="Instale o App">
-              <Download size={18} />
-              <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5 text-center leading-none">Instale<br/>o App</span>
+              <Download size={20} />
+              <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5 text-center leading-none">Instale<br/>o App</span>
             </HeaderButton>
           )}
           {onExportPDF && (
             <HeaderButton onClick={onExportPDF} title="Exportar para PDF">
-              <FileDown size={18} />
-              <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5">PDF</span>
+              <FileDown size={20} />
+              <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5">PDF</span>
             </HeaderButton>
           )}
           <HeaderButton onClick={onToggleShoppingList} title="Lista de Compras">
-            <ShoppingCart size={18} />
-            <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5 text-center leading-none">Lista</span>
+            <ShoppingCart size={20} />
+            <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5 text-center leading-none">Lista</span>
           </HeaderButton>
           <HeaderButton onClick={onToggleSummary} title="Agendadas">
-            <ClipboardList size={18} />
-            <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5 text-center leading-none">Agendadas</span>
+            <ClipboardList size={20} />
+            <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5 text-center leading-none">Agendadas</span>
           </HeaderButton>
           <HeaderButton onClick={onRestartTour} title="Reiniciar Tour">
-            <RefreshCw size={18} />
-            <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5">Tour</span>
+            <RefreshCw size={20} />
+            <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5">Tour</span>
           </HeaderButton>
           <HeaderButton onClick={() => onThemeChange(currentTheme === 'dark' ? 'light' : 'dark')} title="Alternar Tema">
-            {currentTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-            <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5">Tema</span>
+            {currentTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5">Tema</span>
           </HeaderButton>
           <HeaderButton onClick={onToggleManual} title="Manual de Uso">
-            <BookOpen size={18} />
-            <span className="text-[8px] font-bold uppercase tracking-tighter mt-0.5">Manual</span>
+            <BookOpen size={20} />
+            <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5">Manual</span>
           </HeaderButton>
         </div>
       </header>

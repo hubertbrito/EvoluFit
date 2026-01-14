@@ -267,10 +267,10 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
       });
     });
 
-    return totals;
+    return { totals, daysCount: daysToCalculate.length };
   };
 
-  const totals = calculateDailyTotals();
+  const { totals, daysCount } = calculateDailyTotals();
   
   // Cálculos Metabólicos (Mifflin-St Jeor)
   const calculateMetabolism = () => {
@@ -303,7 +303,10 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
   };
 
   const { bmr, tdee, dailyGoal } = calculateMetabolism();
-  const caloriePercentage = Math.min(100, (totals.totalCalories / dailyGoal) * 100);
+  
+  // Ajusta a meta baseada no período selecionado (ex: Semana Toda = meta * 7)
+  const goalForPeriod = dailyGoal * daysCount;
+  const caloriePercentage = Math.min(100, (totals.totalCalories / goalForPeriod) * 100);
 
   // Dados para o Gráfico Semanal
   const weeklyData = useMemo(() => {
@@ -340,29 +343,29 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
   
   // Data for Pie Chart
   const consumed = Math.round(totals.totalCalories);
-  const goal = Math.round(dailyGoal);
+  const goal = Math.round(goalForPeriod);
   const remaining = Math.max(0, goal - consumed);
   const excess = Math.max(0, consumed - goal);
 
   const pieChartData = consumed <= goal 
       ? [
-          { value: goal, color: '#e2e8f0' }, // Fundo (slate-200)
-          { value: consumed, color: '#22c55e' }, // Progresso (emerald-500)
+          { value: consumed, color: '#22c55e' }, // Consumido (emerald-500)
+          { value: remaining, color: '#e2e8f0' }, // Restante (slate-200)
       ]
       : [
-          { value: consumed, color: '#f43f5e' }, // Fundo em excesso (rose-500)
           { value: goal, color: '#22c55e' }, // Meta (emerald-500)
+          { value: excess, color: '#f43f5e' }, // Excesso (rose-500)
       ];
 
   // Avisos do Dossiê
   const warnings = [];
-  if (totals.totalCalories > dailyGoal * 1.1) {
-    warnings.push({ type: 'danger', msg: 'Você ultrapassou sua meta calórica diária!' });
+  if (totals.totalCalories > goalForPeriod * 1.1) {
+    warnings.push({ type: 'danger', msg: 'Você ultrapassou sua meta calórica para este período!' });
   }
   if (dailyGoal < bmr) {
     warnings.push({ type: 'danger', msg: `ALERTA DE SAÚDE: Sua meta (${Math.round(dailyGoal)} kcal) está abaixo do seu metabolismo basal (${Math.round(bmr)} kcal). Isso é perigoso. Por favor, aumente o prazo da dieta no seu perfil.` });
   }
-  if (totals.totalFat < 30 && totals.totalCalories > 500) { // Exemplo simples
+  if (totals.totalFat < (30 * daysCount) && totals.totalCalories > (500 * daysCount)) { // Exemplo simples escalado
     warnings.push({ type: 'warning', msg: 'Consumo de gorduras (lipídios) está muito baixo. Adicione azeite ou castanhas.' });
   }
 
@@ -394,7 +397,6 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
 
   const unlockedCount = (gamification?.achievements || []).length;
   const totalBadges = badgesData.length;
-  const progressPercent = totalBadges > 0 ? (unlockedCount / totalBadges) * 100 : 0;
 
   // Cálculo do Nível Atual com Bônus de Sabedoria
   const wisdomBadgesCount = (gamification?.achievements || []).filter(id => {
@@ -623,11 +625,11 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
         <div className="mb-6">
           <div className="flex justify-between text-sm mb-1">
             <span className="font-bold text-gray-700 dark:text-gray-300">Progresso Calórico</span>
-            <span className="font-bold text-gray-500">{Math.round(totals.totalCalories)} / {Math.round(dailyGoal)}</span>
+            <span className="font-bold text-gray-500">{Math.round(totals.totalCalories)} / {Math.round(goalForPeriod)}</span>
           </div>
           <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
             <div 
-              className={`h-full rounded-full transition-all duration-500 ${totals.totalCalories > dailyGoal ? 'bg-rose-500' : 'bg-emerald-500'}`} 
+              className={`h-full rounded-full transition-all duration-500 ${totals.totalCalories > goalForPeriod ? 'bg-rose-500' : 'bg-emerald-500'}`} 
               style={{ width: `${caloriePercentage}%` }}
             ></div>
           </div>
@@ -635,7 +637,7 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
 
         {/* Gráfico de Pizza */}
         <div className="mt-8 border-t border-gray-100 dark:border-gray-700 pt-6">
-            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 text-center">Distribuição Calórica do Dia</h3>
+            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 text-center">Distribuição Calórica do Período</h3>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8">
                 <div className="relative">
                     <PieChart data={pieChartData} size={140} strokeWidth={22} />

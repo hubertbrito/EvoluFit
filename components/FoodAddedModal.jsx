@@ -25,7 +25,7 @@ const FoodAddedModal = ({ foodName, onClose }) => {
             O alimento "<strong>{foodName}</strong>" foi adicionado com sucesso à sua dispensa!
           </p>
           <div className="bg-blue-50 p-3 rounded-xl border border-blue-200 text-xs text-blue-800">
-            <strong>Dica:</strong> Você pode encontrá-lo usando a busca ou no final da lista da categoria "Industrializados".
+            <strong>Dica:</strong> Você pode encontrá-lo usando a busca ou no final da lista da categoria "Meus Alimentos".
           </div>
         </div>
         <div className="p-4 border-t bg-gray-50 flex justify-end">

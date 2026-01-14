@@ -20,9 +20,11 @@ const PantryScreen = ({
   allFoods, 
   userPantry, 
   currentPlate, 
+  lastSelectedFood,
   onToggle, 
   onRemoveFromPantry,
   onDeleteCustom,
+  onPreview,
   onAddToPlate, 
   onVoiceClick, 
   isListening, 
@@ -36,6 +38,7 @@ const PantryScreen = ({
   const [displayedFoods, setDisplayedFoods] = useState([]);
   const [showInfo, setShowInfo] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   // const [searchTerm, setSearchTerm] = useState(''); // Estado movido para App.jsx
   const [activeCategory, setActiveCategory] = useState('Dispensa');
   const [viewMode, setViewMode] = useState('categories'); // 'categories' | 'diets'
@@ -205,7 +208,7 @@ const PantryScreen = ({
       </div>
 
       {/* Sticky Menu Container */}
-      <div className="sticky top-0 z-20 bg-gray-50 dark:bg-gray-900 -mx-4 px-4 py-2 space-y-3 shadow-sm">
+      <div className="sticky top-[110px] z-20 bg-gray-50 dark:bg-gray-900 -mx-4 px-4 py-2 space-y-3 shadow-sm mt-4">
         {/* Header / Search */}
         <div className="space-y-2">
           <label className="text-xs font-medium text-gray-600 dark:text-gray-300 block ml-1">
@@ -306,6 +309,8 @@ const PantryScreen = ({
           const plateItem = currentPlate.find(p => p.foodId === food.id);
           const isSelected = !!plateItem;
           const isVoiceAdded = food.id === voiceAddedFoodId;
+          const isPreviewed = lastSelectedFood && lastSelectedFood.id === food.id;
+          const isConfirmingDelete = confirmDeleteId === food.id;
 
           // Lógica de Cabeçalho de Categoria (Apenas na aba Dispensa e sem busca)
           const showHeader = activeCategory === 'Dispensa' && !searchTerm && viewMode === 'categories' && (index === 0 || displayedFoods[index - 1].category !== food.category);
@@ -326,7 +331,8 @@ const PantryScreen = ({
             )}
             <div 
               data-food-id={food.id}
-              onClick={() => {
+              onClick={() => onPreview(food)}
+              onDoubleClick={() => {
                 if (isInPantry) {
                     onAddToPlate(food.id);
                 } else {
@@ -334,26 +340,34 @@ const PantryScreen = ({
                     onAddToPlate(food.id); // Seleciona para o prato
                 }
               }}
-              className={itemClasses}
+              className={`${itemClasses} relative overflow-hidden`}
             >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{food.emoji || '🍽️'}</span>
-                <div>
-                  <h3 className="font-bold text-gray-800 dark:text-gray-100">{food.name}</h3>
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <span className="text-2xl shrink-0">{food.emoji || '🍽️'}</span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold text-gray-800 dark:text-gray-100 truncate pr-2">{food.name}</h3>
+                  {isPreviewed && (
+                    <div className="flex items-center gap-2 mt-0.5 animate-fade-in">
+                        <span className="text-[10px] font-black text-cyan-600 dark:text-cyan-400">Kcal {Math.round(food.calories)}</span>
+                        <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">Prot {Math.round(food.protein)}</span>
+                        <span className="text-[10px] font-black text-blue-600 dark:text-blue-400">Carb {Math.round(food.carbs)}</span>
+                        <span className="text-[10px] font-black text-yellow-600 dark:text-yellow-400">Lip {Math.round(food.fat)}</span>
+                    </div>
+                  )}
                   {isSelected && plateItem.quantity && (
-                    <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium mt-0.5">
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium mt-0.5 truncate">
                       {formatFoodQuantity(plateItem.quantity, plateItem.measure, food.name)}
                     </p>
                   )}
                 </div>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 {isInPantry ? (
                   <>
                     <button 
                       onClick={(e) => { e.stopPropagation(); onAddToPlate(food.id); }}
-                      className={`p-2 rounded-lg transition-colors ${isSelected ? 'bg-emerald-500 text-white' : 'bg-emerald-50 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900'}`}
+                      className={`p-2 rounded-lg transition-all duration-300 ${isSelected ? 'bg-emerald-500 text-white shadow-md scale-105' : (isPreviewed ? 'bg-yellow-100 text-yellow-600 ring-2 ring-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)] scale-110' : 'bg-emerald-50 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900')}`}
                       title={isSelected ? "Remover do Prato" : "Adicionar ao Prato"}
                     >
                       <Utensils className="w-4 h-4" />
@@ -372,7 +386,10 @@ const PantryScreen = ({
                 {/* Botão de Lixeira Condicional */}
                 {activeCategory === 'Dispensa' && isInPantry && (
                     <button 
-                    onClick={(e) => { e.stopPropagation(); onRemoveFromPantry(food.id); }}
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      setConfirmDeleteId(food.id); 
+                    }}
                     className="p-2 text-gray-300 hover:text-rose-500 transition-colors"
                     title="Remover da Dispensa"
                     >
@@ -389,6 +406,37 @@ const PantryScreen = ({
                     </button>
                 )}
               </div>
+
+              {/* Modal Discreto de Confirmação de Exclusão */}
+              {isConfirmingDelete && (
+                  <div 
+                    className="absolute inset-y-0 right-0 flex items-center bg-gray-50 dark:bg-gray-800/95 backdrop-blur-sm pl-4 pr-2 gap-3 z-20 animate-fade-in shadow-[-10px_0_20px_rgba(0,0,0,0.05)]"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                      <span className="text-xs font-bold text-gray-600 dark:text-gray-300 whitespace-nowrap">Excluir {food.name}?</span>
+                      <div className="flex gap-1">
+                          <button 
+                              onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  onRemoveFromPantry(food.id); 
+                                  setConfirmDeleteId(null); 
+                              }}
+                              className="px-3 py-1.5 bg-rose-500 text-white rounded-lg text-xs font-bold shadow-sm hover:bg-rose-600 active:scale-95 transition-all"
+                          >
+                              Sim
+                          </button>
+                          <button 
+                              onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  setConfirmDeleteId(null); 
+                              }}
+                              className="px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-lg text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-600 active:scale-95 transition-all"
+                          >
+                              Não
+                          </button>
+                      </div>
+                  </div>
+              )}
             </div>
             </React.Fragment>
           );
