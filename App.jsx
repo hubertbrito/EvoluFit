@@ -24,6 +24,7 @@ import WaterGoalModal from './components/WaterGoalModal';
 import WelcomeScreen from './components/WelcomeScreen';
 import UpgradeModal from './components/UpgradeModal';
 import TechNutriDisplay from './components/TechNutriDisplay';
+import UpdateFeedbackModal from './components/UpdateFeedbackModal';
 
 // Definindo localmente para não depender de arquivo de tipos externo
 const Category = { INDUSTRIALIZADOS: 'Industrializados' };
@@ -1156,6 +1157,12 @@ const App = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [earnedHeartsAmount, setEarnedHeartsAmount] = useState(1);
   const [lastSelectedFood, setLastSelectedFood] = useState(null);
+  const [showUpdateFeedback, setShowUpdateFeedback] = useState(false);
+
+  const {
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW();
 
   // State for educational modal
   const [showEducationalModal, setShowEducationalModal] = useState(false);
@@ -1409,45 +1416,62 @@ const App = () => {
     }
   }, [waterIntake, userProfile.waterGoal, hasCelebratedWaterToday]);
 
-  // --- Lógica de Renovação Semanal Automática ---
+  // --- Lógica de Renovação Semanal Automática (Check Periódico) ---
   useEffect(() => {
-    const today = new Date();
-    const todayDateStr = today.toISOString().split('T')[0];
-    const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
-    const todayName = daysMap[today.getDay()];
+    const checkAndResetMeals = () => {
+      const today = new Date();
+      const todayDateStr = today.toISOString().split('T')[0];
+      const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
+      const todayName = daysMap[today.getDay()];
 
-    setMealSchedule(prevSchedule => {
-      let hasChanges = false;
-      const newSchedule = prevSchedule.map(meal => {
-        if (!meal.isDone) return meal;
+      setMealSchedule(prevSchedule => {
+        let hasChanges = false;
+        const newSchedule = prevSchedule.map(meal => {
+          if (!meal.isDone) return meal;
 
-        let shouldReset = false;
+          let shouldReset = false;
 
-        // Caso 1: Refeição de dia específico (ex: Segunda)
-        // Se hoje é Segunda, mas a refeição foi marcada como feita em uma data diferente de hoje (ex: Segunda passada), reseta.
-        if (meal.dayOfWeek === todayName) {
-           if (meal.lastDoneDate && meal.lastDoneDate !== todayDateStr) {
-             shouldReset = true;
-           }
-        }
-        
-        // Caso 2: Refeição 'Todos' (Diária)
-        // Se foi feita, mas não hoje, reseta para estar disponível hoje.
-        if (meal.dayOfWeek === 'Todos') {
-           if (meal.lastDoneDate && meal.lastDoneDate !== todayDateStr) {
-             shouldReset = true;
-           }
-        }
+          // Caso 1: Refeição de dia específico (ex: Segunda)
+          // Se hoje é Segunda, mas a refeição foi marcada como feita em uma data diferente de hoje (ex: Segunda passada), reseta.
+          if (meal.dayOfWeek === todayName) {
+             if (meal.lastDoneDate && meal.lastDoneDate !== todayDateStr) {
+               shouldReset = true;
+             }
+          }
+          
+          // Caso 2: Refeição 'Todos' (Diária)
+          // Se foi feita, mas não hoje, reseta para estar disponível hoje.
+          if (meal.dayOfWeek === 'Todos') {
+             if (meal.lastDoneDate && meal.lastDoneDate !== todayDateStr) {
+               shouldReset = true;
+             }
+          }
 
-        if (shouldReset) {
-          hasChanges = true;
-          return { ...meal, isDone: false, lastDoneDate: null };
-        }
-        return meal;
+          if (shouldReset) {
+            hasChanges = true;
+            return { ...meal, isDone: false, lastDoneDate: null };
+          }
+          return meal;
+        });
+
+        return hasChanges ? newSchedule : prevSchedule;
       });
+    };
 
-      return hasChanges ? newSchedule : prevSchedule;
-    });
+    // Executa imediatamente ao montar
+    checkAndResetMeals();
+
+    // Executa a cada minuto para garantir que a virada do dia seja capturada se o app estiver aberto
+    const interval = setInterval(checkAndResetMeals, 60000);
+    
+    // Adiciona listener para quando a aba ganha foco (usuário volta ao app)
+    const handleFocus = () => checkAndResetMeals();
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // --- Lógica de Controle de Acesso (Trial e Admin) ---
@@ -1586,6 +1610,22 @@ const App = () => {
     checkAccess();
   }, []);
 
+  // --- Lógica de Atualização Manual via URL ---
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('action') === 'manual_update') {
+      // 1. Limpa a URL para não ficar em loop se o usuário der refresh manual depois
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+      
+      // 2. Exibe o modal de feedback
+      setShowUpdateFeedback(true);
+      
+      // 3. Força a atualização do SW (caso o navegador já não tenha feito isso no reload)
+      updateServiceWorker(true);
+    }
+  }, [updateServiceWorker]);
+
   // Função para alternar modos de visualização (Apenas para Admin Real)
   const handleDebugToggle = () => {
     if (!isRealAdmin) return;
@@ -1612,11 +1652,6 @@ const App = () => {
     // Na inicialização do app, verifica e popula o IndexedDB se necessário.
     populateDB();
   }, []);
-
-  const {
-    needRefresh: [needRefresh, setNeedRefresh],
-    updateServiceWorker,
-  } = useRegisterSW();
 
   const [installPrompt, setInstallPrompt] = useState(null);
 
@@ -1711,6 +1746,11 @@ const AlertAnimationOverlay = () => (
   const handleTabChange = (newTab) => {
     // Se o usuário estava editando uma refeição e saiu da tela de Prato, cancelamos a edição.
     if (activeTab === 'plate' && newTab !== 'plate' && editingMealInfo) {
+      // FIX: Permitir ir para a Dispensa (pantry) sem perder o estado de edição
+      if (newTab === 'pantry') {
+        setActiveTab(newTab);
+        return;
+      }
       setEditingMealInfo(null);
       setCurrentPlate([]); // Limpa o prato para evitar confusão
       setInitialPlateDays([]); // Reseta os dias pré-selecionados
@@ -1961,6 +2001,35 @@ const AlertAnimationOverlay = () => (
     }
 
     // Confete removido daqui pois agora temos HeartExplosion e Clapping específicos
+  };
+
+  const handleMealUndone = (meal) => {
+    const allFoods = [...FOOD_DATABASE, ...customFoods];
+    const healthyCategories = ['Vegetais', 'Frutas', 'Proteínas', 'Leguminosas', 'Gorduras'];
+    const unhealthyCategories = ['Industrializados', 'Doces', 'Carboidratos'];
+    
+    let healthyCount = 0;
+    let unhealthyCount = 0;
+    
+    meal.plate.forEach(item => {
+        const food = allFoods.find(f => f.id === item.foodId);
+        if (food) {
+            if (healthyCategories.includes(food.category)) healthyCount++;
+            if (unhealthyCategories.includes(food.category)) unhealthyCount++;
+        }
+    });
+    
+    let heartsToDeduct = 0;
+
+    if (healthyCount > 0 && unhealthyCount === 0) {
+        heartsToDeduct = 2;
+    } else if (healthyCount > unhealthyCount) {
+        heartsToDeduct = 1;
+    }
+
+    if (heartsToDeduct > 0) {
+        setGamification(prev => ({ ...prev, hearts: Math.max(0, (prev.hearts || 0) - heartsToDeduct) }));
+    }
   };
 
   // Cálculo de Calorias de Hoje
@@ -2757,6 +2826,7 @@ const AlertAnimationOverlay = () => (
         isRealAdmin={isRealAdmin}
         onDebugToggle={handleDebugToggle}
         onOpenUpgrade={() => setShowUpgradeModal(true)}
+        onManualUpdate={() => window.location.href = 'https://evolu-fit.vercel.app/?action=manual_update'}
       >
          {needRefresh[0] && <UpdateToast onUpdate={() => updateServiceWorker(true)} />}
          {showWelcome && <WelcomeScreen onStart={handleWelcomeAccept} />}
@@ -2974,6 +3044,7 @@ const AlertAnimationOverlay = () => (
           profile={userProfile}
           triggerConfetti={triggerConfetti}
           onMealDone={(meal) => handleMealDone(meal, userProfile)}
+          onMealUndone={handleMealUndone}
           onExportSpecificPDF={handleExportSpecificPDF}
           onCloneDay={handleCloneDay}
           gamification={gamification}
@@ -3080,6 +3151,7 @@ const AlertAnimationOverlay = () => (
       {showClapping && <ClappingFeedback message={clappingMessage} />}
       {showWaterGoalModal && <WaterGoalModal onClose={() => setShowWaterGoalModal(false)} />}
       {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} />}
+      {showUpdateFeedback && <UpdateFeedbackModal onClose={() => setShowUpdateFeedback(false)} />}
       {showWaterLostModal && <IncentiveModal onClose={() => setShowWaterLostModal(false)} title="Badge Perdido!" message="Sua barra de hidratação zerou e o emblema 'Hidratado' apagou. Beba água regularmente para recuperá-lo!" />}
     </>
   );

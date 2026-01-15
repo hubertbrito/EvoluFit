@@ -125,6 +125,13 @@ const PantryScreen = ({
     }
   }, [searchTerm, activeCategory, viewMode, activeDiet, allFoods, userPantry]);
 
+  // Garante que o display TechNutri esteja sempre preenchido com o primeiro item da lista
+  useEffect(() => {
+    if (!lastSelectedFood && displayedFoods.length > 0) {
+      onPreview(displayedFoods[0]);
+    }
+  }, [displayedFoods, lastSelectedFood, onPreview]);
+
   const resultCountText = (() => {
     const count = displayedFoods.length;
     const suffix = count === 1 ? 'item encontrado' : 'itens encontrados';
@@ -208,10 +215,10 @@ const PantryScreen = ({
       </div>
 
       {/* Sticky Menu Container */}
-      <div className="sticky top-[110px] z-20 bg-gray-50 dark:bg-gray-900 -mx-4 px-4 py-2 space-y-3 shadow-sm mt-4">
+      <div className="sticky top-[88px] z-20 bg-gray-50 dark:bg-gray-900 -mx-4 px-4 pb-2 pt-2 space-y-2 shadow-sm">
         {/* Header / Search */}
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-gray-600 dark:text-gray-300 block ml-1">
+        <div className="space-y-1">
+          <label className="text-[10px] font-medium text-gray-600 dark:text-gray-300 block ml-1">
             Busque um alimento ou digite para cadastrar um novo:
           </label>
           <div className="flex gap-2" data-tour-id="pantry-search">
@@ -220,34 +227,31 @@ const PantryScreen = ({
               <input 
                 type="text" 
                 placeholder="Digite o nome do alimento..." 
-                className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-emerald-200 dark:border-gray-700 bg-emerald-50/50 dark:bg-gray-800 shadow-sm focus:outline-none focus:border-emerald-500 focus:ring-0 placeholder:text-emerald-600/60 dark:placeholder:text-gray-500 text-emerald-900 dark:text-gray-100 font-medium"
+                className="w-full pl-10 pr-4 py-2 rounded-xl border-2 border-emerald-200 dark:border-gray-700 bg-emerald-50/50 dark:bg-gray-800 shadow-sm focus:outline-none focus:border-emerald-500 focus:ring-0 placeholder:text-emerald-600/60 dark:placeholder:text-gray-500 text-sm text-emerald-900 dark:text-gray-100 font-medium"
                 value={searchTerm}
                 onChange={(e) => onSearchTermChange(e.target.value)}
               />
             </div>
             <button 
               onClick={onVoiceClick}
-              className={`p-3 rounded-xl transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'}`}
+              className={`p-2 rounded-xl transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'}`}
             >
               <Mic className="w-5 h-5" />
             </button>
           </div>
-          <p className="text-center text-rose-500 text-[11px] font-semibold px-2 pt-1">
-            Dica: Em modo offline, o microfone pode falhar. Prefira digitar.
-          </p>
         </div>
 
         {/* Toggle View Mode */}
         <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
           <button 
               onClick={() => setViewMode('categories')}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${viewMode === 'categories' ? 'bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-gray-400 dark:text-gray-500'}`}
+              className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'categories' ? 'bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-gray-400 dark:text-gray-500'}`}
           >
               Por Categorias
           </button>
           <button 
               onClick={() => setViewMode('diets')}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${viewMode === 'diets' ? 'bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-gray-400 dark:text-gray-500'}`}
+              className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${viewMode === 'diets' ? 'bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-gray-400 dark:text-gray-500'}`}
           >
               <Filter className="w-3 h-3" />
               Por Dietas
@@ -268,7 +272,7 @@ const PantryScreen = ({
                   onSearchTermChange(''); // Limpa a busca ao trocar de categoria
                   scrollToTop();
                 }}
-                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors 
+                className={`px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors 
                     ${isActive 
                       ? (isDispensa ? 'bg-blue-600 text-white shadow-md' : 'bg-emerald-500 text-white shadow-md') 
                       : (isDispensa ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700')}`}
@@ -280,7 +284,7 @@ const PantryScreen = ({
         </div>
       </div>
 
-      <div key={resultCountText} className="text-sm font-bold text-emerald-700 dark:text-emerald-400 ml-1 animate-fade-in">
+      <div key={resultCountText} className="text-xs font-bold text-emerald-700 dark:text-emerald-400 ml-1 animate-fade-in">
         {resultCountText}
       </div>
 
@@ -303,7 +307,7 @@ const PantryScreen = ({
       )}
 
       {/* List */}
-      <div ref={listRef} key={`${viewMode}-${viewMode === 'categories' ? activeCategory : activeDiet}`} className="space-y-3 animate-fade-in">
+      <div ref={listRef} key={`${viewMode}-${viewMode === 'categories' ? activeCategory : activeDiet}`} className="space-y-1.5 animate-fade-in">
         {displayedFoods.map((food, index) => {
           const isInPantry = userPantry.includes(food.id);
           const plateItem = currentPlate.find(p => p.foodId === food.id);
@@ -317,7 +321,7 @@ const PantryScreen = ({
           const categoryStyle = categoryColors[food.category] || categoryColors['Outros'];
 
           const itemClasses = [
-            'p-4 rounded-2xl shadow-sm border flex items-center justify-between cursor-pointer transition-all',
+            'p-2.5 rounded-2xl shadow-sm border flex items-center justify-between cursor-pointer transition-all',
             isSelected ? 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 ring-1 ring-emerald-500' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700',
             isVoiceAdded ? 'highlight-voice-add' : ''
           ].filter(Boolean).join(' ');
@@ -325,7 +329,7 @@ const PantryScreen = ({
           return (
             <React.Fragment key={food.id}>
             {showHeader && (
-                <div className={`sticky top-32 z-10 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-sm mb-2 mt-4 first:mt-0 ${categoryStyle}`}>
+                <div className={`sticky top-28 z-10 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border shadow-sm mb-1 mt-2 first:mt-0 ${categoryStyle}`}>
                     {food.category || 'Outros'}
                 </div>
             )}
@@ -342,10 +346,10 @@ const PantryScreen = ({
               }}
               className={`${itemClasses} relative overflow-hidden`}
             >
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <span className="text-2xl shrink-0">{food.emoji || '🍽️'}</span>
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <span className="text-xl shrink-0">{food.emoji || '🍽️'}</span>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-gray-800 dark:text-gray-100 truncate pr-2">{food.name}</h3>
+                  <h3 className="font-bold text-sm text-gray-800 dark:text-gray-100 truncate pr-2">{food.name}</h3>
                   {isPreviewed && (
                     <div className="flex items-center gap-2 mt-0.5 animate-fade-in">
                         <span className="text-[10px] font-black text-cyan-600 dark:text-cyan-400">Kcal {Math.round(food.calories)}</span>
@@ -362,24 +366,24 @@ const PantryScreen = ({
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1.5 shrink-0">
                 {isInPantry ? (
                   <>
                     <button 
                       onClick={(e) => { e.stopPropagation(); onAddToPlate(food.id); }}
-                      className={`p-2 rounded-lg transition-all duration-300 ${isSelected ? 'bg-emerald-500 text-white shadow-md scale-105' : (isPreviewed ? 'bg-yellow-100 text-yellow-600 ring-2 ring-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)] scale-110' : 'bg-emerald-50 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900')}`}
+                      className={`p-1.5 rounded-lg transition-all duration-300 ${isSelected ? 'bg-emerald-500 text-white shadow-md scale-105' : (isPreviewed ? 'bg-yellow-100 text-yellow-600 ring-2 ring-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)] scale-110' : 'bg-emerald-50 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900')}`}
                       title={isSelected ? "Remover do Prato" : "Adicionar ao Prato"}
                     >
-                      <Utensils className="w-4 h-4" />
+                      <Utensils className="w-3.5 h-3.5" />
                     </button>
                   </>
                 ) : (
                   <button 
                     onClick={(e) => { e.stopPropagation(); onToggle(food.id); }}
-                    className="p-2 bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-300 rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                    className="p-1.5 bg-gray-50 dark:bg-gray-700 text-gray-400 dark:text-gray-300 rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
                     title="Adicionar à Dispensa"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3.5 h-3.5" />
                   </button>
                 )}
 
@@ -390,19 +394,19 @@ const PantryScreen = ({
                       e.stopPropagation(); 
                       setConfirmDeleteId(food.id); 
                     }}
-                    className="p-2 text-gray-300 hover:text-rose-500 transition-colors"
+                    className="p-1.5 text-gray-300 hover:text-rose-500 transition-colors"
                     title="Remover da Dispensa"
                     >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                     </button>
                 )}
                 {activeCategory === 'Meus Alimentos' && (
                     <button 
                     onClick={(e) => { e.stopPropagation(); onDeleteCustom(food.id); }}
-                    className="p-2 text-gray-300 hover:text-rose-500 transition-colors"
+                    className="p-1.5 text-gray-300 hover:text-rose-500 transition-colors"
                     title="Excluir Alimento Permanentemente"
                     >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                     </button>
                 )}
               </div>

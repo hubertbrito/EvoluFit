@@ -100,6 +100,44 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
     if (!selectedMealName && !selectedTargetId) return alert('Por favor, selecione uma refeição para classificar o prato.');
     if (selectedDays.length === 0 && !specificDate && !selectedTargetId) return alert('Por favor, selecione um dia da semana ou uma data específica para agendar.');
 
+    // Verificação de Conflito (Sobrescrita Acidental)
+    if (!editingMealInfo && !selectedTargetId) {
+      const daysToCheck = selectedDays.length === 7 ? ['Todos'] : selectedDays;
+      
+      // Verifica conflitos em dias da semana
+      const conflictingMeals = meals.filter(m => {
+        // Ignora refeições vazias
+        if (!m.plate || m.plate.length === 0) return false;
+        
+        // Verifica nome
+        if (m.name !== selectedMealName) return false;
+
+        // Verifica conflito de Data Específica
+        if (specificDate) {
+           return m.dayOfWeek === 'Datas Marcadas' && m.specificDate === specificDate;
+        }
+
+        // Verifica conflito de Dias da Semana
+        if (daysToCheck.includes('Todos')) {
+           return m.dayOfWeek === 'Todos';
+        }
+        return daysToCheck.includes(m.dayOfWeek);
+      });
+
+      if (conflictingMeals.length > 0) {
+        const conflictInfo = specificDate 
+            ? `Data: ${new Date(specificDate + 'T00:00:00').toLocaleDateString('pt-BR')}`
+            : `Dias: ${conflictingMeals.map(m => m.dayOfWeek).join(', ')}`;
+
+        alert(
+            `Atenção: Já existe uma refeição "${selectedMealName}" criada para ${conflictInfo}.\n\n` +
+            `Para adicionar itens, vá até a Agenda e clique em 'Editar' no card existente.\n` +
+            `Criar por aqui substituirá sua refeição atual.`
+        );
+        return;
+      }
+    }
+
     const assignmentData = {
       days: selectedDays.length === 7 ? ['Todos'] : selectedDays,
       date: specificDate,

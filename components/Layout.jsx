@@ -7,7 +7,7 @@ const HeaderButton = ({ onClick, title, children }) => (
   </button>
 );
 
-export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRestartTour, onToggleManual, onInstallClick, showInstallButton, onToggleSummary, onToggleShoppingList, onExportPDF, currentTheme, onThemeChange, gamification, level, allBadges, accessStatus, isRealAdmin, onDebugToggle, onOpenUpgrade }) => {
+export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRestartTour, onToggleManual, onInstallClick, showInstallButton, onToggleSummary, onToggleShoppingList, onExportPDF, currentTheme, onThemeChange, gamification, level, allBadges, accessStatus, isRealAdmin, onDebugToggle, onOpenUpgrade, onManualUpdate }) => {
   const unlockedBadges = useMemo(() => {
     if (!gamification || !allBadges) return [];
     return allBadges.filter(b => (gamification.achievements || []).includes(b.id));
@@ -16,26 +16,29 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-white dark:bg-gray-900 shadow-2xl relative overflow-hidden">
       <header className="bg-emerald-600 text-white p-2 pt-4 flex flex-col items-center shadow-md z-10 gap-2">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-3">
           <span className="font-bold text-sm tracking-tighter opacity-90">EvoluFit v2.0</span>
-          {(accessStatus === 'premium' || accessStatus === 'admin') ? (
-            <div 
-              onClick={isRealAdmin ? onDebugToggle : undefined}
-              className={`flex items-center gap-0.5 bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded-full text-[8px] font-black shadow-sm animate-fade-in ${isRealAdmin ? 'cursor-pointer hover:scale-110 transition-transform' : ''}`}
-              title={isRealAdmin ? "Admin: Clique para alternar visualização (Premium/Trial/Bloqueio)" : ""}
-            >
-              <Crown size={10} fill="currentColor" />
-              <span>PRO</span>
-            </div>
-          ) : (
-            <div 
-              onClick={isRealAdmin ? onDebugToggle : onOpenUpgrade}
-              className={`bg-white/20 text-white px-1.5 py-0.5 rounded-full text-[8px] font-bold border border-white/30 animate-fade-in cursor-pointer hover:scale-110 transition-transform`}
-              title={isRealAdmin ? "Admin: Clique para alternar visualização (Premium/Trial/Bloqueio)" : "Clique para se tornar PRO"}
-            >
-              TRIAL
-            </div>
-          )}
+          <div className="flex flex-col items-center justify-center">
+            <span className="text-[8px] font-bold uppercase text-white/80 leading-none mb-0.5">Status</span>
+            {(accessStatus === 'premium' || accessStatus === 'admin') ? (
+              <div 
+                onClick={isRealAdmin ? onDebugToggle : undefined}
+                className={`flex items-center gap-0.5 bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded-full text-[8px] font-black shadow-sm animate-fade-in ${isRealAdmin ? 'cursor-pointer hover:scale-110 transition-transform' : ''}`}
+                title={isRealAdmin ? "Admin: Clique para alternar visualização (Premium/Trial/Bloqueio)" : ""}
+              >
+                <Crown size={10} fill="currentColor" />
+                <span>PRO</span>
+              </div>
+            ) : (
+              <div 
+                onClick={isRealAdmin ? onDebugToggle : onOpenUpgrade}
+                className={`bg-white/20 text-white px-1.5 py-0.5 rounded-full text-[8px] font-bold border border-white/30 animate-fade-in cursor-pointer hover:scale-110 transition-transform`}
+                title={isRealAdmin ? "Admin: Clique para alternar visualização (Premium/Trial/Bloqueio)" : "Clique para se tornar PRO"}
+              >
+                TRIAL
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex items-center justify-between w-full px-1 gap-1">
           {showInstallButton && (
@@ -44,6 +47,10 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
               <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5 text-center leading-none">Instale<br/>o App</span>
             </HeaderButton>
           )}
+          <HeaderButton onClick={onManualUpdate} title="Atualizar App">
+            <RefreshCw size={20} />
+            <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5">Atualizar</span>
+          </HeaderButton>
           {onExportPDF && (
             <HeaderButton onClick={onExportPDF} title="Exportar para PDF">
               <FileDown size={20} />
@@ -57,10 +64,6 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
           <HeaderButton onClick={onToggleSummary} title="Agendadas">
             <ClipboardList size={20} />
             <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5 text-center leading-none">Agendadas</span>
-          </HeaderButton>
-          <HeaderButton onClick={onRestartTour} title="Reiniciar Tour">
-            <RefreshCw size={20} />
-            <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5">Tour</span>
           </HeaderButton>
           <HeaderButton onClick={() => onThemeChange(currentTheme === 'dark' ? 'light' : 'dark')} title="Alternar Tema">
             {currentTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}

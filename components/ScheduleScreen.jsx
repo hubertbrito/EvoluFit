@@ -164,7 +164,7 @@ const NutritionalSummaryModal = ({ title, meals, allFoods, onClose }) => {
   );
 };
 
-const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal, onClearMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep, waterIntake, onUpdateWater, waterGoal, onUpdateWaterGoal, triggerConfetti, onMealDone, movedMealId, profile, onExportSpecificPDF, onCloneDay, gamification }) => {
+const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal, onClearMeal, onReorderMeal, onDeleteMeal, scheduleWarnings, onClearWarnings, unitWeights = UNIT_WEIGHTS, showTour, tourStep, waterIntake, onUpdateWater, waterGoal, onUpdateWaterGoal, triggerConfetti, onMealDone, onMealUndone, movedMealId, profile, onExportSpecificPDF, onCloneDay, gamification }) => {
   const [now, setNow] = useState(new Date());
   const [activeDays, setActiveDays] = useState(() => {
     const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
@@ -356,6 +356,8 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
 
     if (newStatus && onMealDone) {
       onMealDone(meal);
+    } else if (!newStatus && onMealUndone) {
+      onMealUndone(meal);
     }
 
     // Verifica se completou o dia com essa ação
@@ -793,6 +795,13 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                           onChange={(e) => updateMeal(meal.id, { time: e.target.value })}
                           className="font-black text-xs bg-transparent border-none outline-none focus:ring-0 p-0 text-indigo-950 dark:text-indigo-100 leading-none cursor-pointer appearance-none block"
                       />
+                      {/* Data Atual no Card */}
+                      <span className="text-[8px] font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                        {meal.specificDate 
+                          ? new Date(meal.specificDate + 'T00:00:00').toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})
+                          : new Date().toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})
+                        }
+                      </span>
                     </div>
                 </label>
                 <div className="flex flex-col items-end min-w-0 flex-1">
