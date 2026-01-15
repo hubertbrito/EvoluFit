@@ -13,6 +13,16 @@ const UpdateFeedbackModal = ({ onClose }) => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    if (status === 'success') {
+      // Tenta fechar a janela automaticamente após 4 segundos de sucesso
+      const closeTimer = setTimeout(() => {
+        window.close();
+      }, 4000);
+      return () => clearTimeout(closeTimer);
+    }
+  }, [status]);
+
   return (
     <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce text-center p-8 border border-emerald-500/20">
@@ -35,14 +45,14 @@ const UpdateFeedbackModal = ({ onClose }) => {
               <CheckCircle size={64} className="text-emerald-500 relative z-10" />
             </div>
             <h2 className="text-xl font-black text-gray-800 dark:text-white mb-2">Atualização Concluída!</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-              O EvoluFit está sincronizado e pronto para uso.
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
+              Pode fechar esta página. O seu app EvoluFit foi atualizado.
             </p>
             <button 
-              onClick={onClose}
+              onClick={() => window.close()}
               className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-transform active:scale-95"
             >
-              Acessar App
+              OK
             </button>
           </div>
         )}

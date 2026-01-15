@@ -1158,6 +1158,18 @@ const App = () => {
   const [earnedHeartsAmount, setEarnedHeartsAmount] = useState(1);
   const [lastSelectedFood, setLastSelectedFood] = useState(null);
   const [showUpdateFeedback, setShowUpdateFeedback] = useState(false);
+  const [timeBasedUpdateAvailable, setTimeBasedUpdateAvailable] = useState(false);
+
+  // Lógica do Timer de 72h para o botão Atualizar
+  useEffect(() => {
+    const lastCheck = localStorage.getItem('lastUpdateCheck');
+    const now = Date.now();
+    const threeDays = 72 * 60 * 60 * 1000; // 72 horas em milissegundos
+
+    if (!lastCheck || (now - parseInt(lastCheck)) > threeDays) {
+      setTimeBasedUpdateAvailable(true);
+    }
+  }, []);
 
   const {
     needRefresh: [needRefresh, setNeedRefresh],
@@ -2826,7 +2838,12 @@ const AlertAnimationOverlay = () => (
         isRealAdmin={isRealAdmin}
         onDebugToggle={handleDebugToggle}
         onOpenUpgrade={() => setShowUpgradeModal(true)}
-        onManualUpdate={() => window.location.href = 'https://evolu-fit.vercel.app/?action=manual_update'}
+        onManualUpdate={() => {
+          localStorage.setItem('lastUpdateCheck', Date.now().toString());
+          setTimeBasedUpdateAvailable(false);
+          window.open('https://evolu-fit.vercel.app/?action=manual_update', '_blank');
+        }}
+        showUpdateButton={needRefresh[0] || timeBasedUpdateAvailable}
       >
          {needRefresh[0] && <UpdateToast onUpdate={() => updateServiceWorker(true)} />}
          {showWelcome && <WelcomeScreen onStart={handleWelcomeAccept} />}

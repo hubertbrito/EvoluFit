@@ -7,7 +7,7 @@ const HeaderButton = ({ onClick, title, children }) => (
   </button>
 );
 
-export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRestartTour, onToggleManual, onInstallClick, showInstallButton, onToggleSummary, onToggleShoppingList, onExportPDF, currentTheme, onThemeChange, gamification, level, allBadges, accessStatus, isRealAdmin, onDebugToggle, onOpenUpgrade, onManualUpdate }) => {
+export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRestartTour, onToggleManual, onInstallClick, showInstallButton, onToggleSummary, onToggleShoppingList, onExportPDF, currentTheme, onThemeChange, gamification, level, allBadges, accessStatus, isRealAdmin, onDebugToggle, onOpenUpgrade, onManualUpdate, showUpdateButton }) => {
   const unlockedBadges = useMemo(() => {
     if (!gamification || !allBadges) return [];
     return allBadges.filter(b => (gamification.achievements || []).includes(b.id));
@@ -15,8 +15,17 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
 
   return (
     <div className="flex flex-col h-screen max-w-md mx-auto bg-white dark:bg-gray-900 shadow-2xl relative overflow-hidden">
+      <style>{`
+        @keyframes soft-pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.85; transform: scale(1.05); }
+        }
+        .animate-soft-pulse {
+          animation: soft-pulse 2s infinite ease-in-out;
+        }
+      `}</style>
       <header className="bg-emerald-600 text-white p-2 pt-4 flex flex-col items-center shadow-md z-10 gap-2">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-6">
           <span className="font-bold text-sm tracking-tighter opacity-90">EvoluFit v2.0</span>
           <div className="flex flex-col items-center justify-center">
             <span className="text-[8px] font-bold uppercase text-white/80 leading-none mb-0.5">Status</span>
@@ -32,10 +41,10 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
             ) : (
               <div 
                 onClick={isRealAdmin ? onDebugToggle : onOpenUpgrade}
-                className={`bg-white/20 text-white px-1.5 py-0.5 rounded-full text-[8px] font-bold border border-white/30 animate-fade-in cursor-pointer hover:scale-110 transition-transform`}
+                className={`bg-gradient-to-r from-orange-400 to-pink-600 text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-md border border-white/20 animate-fade-in cursor-pointer hover:scale-105 transition-transform`}
                 title={isRealAdmin ? "Admin: Clique para alternar visualização (Premium/Trial/Bloqueio)" : "Clique para se tornar PRO"}
               >
-                TRIAL
+                Clique Upgrade
               </div>
             )}
           </div>
@@ -47,10 +56,12 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
               <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5 text-center leading-none">Instale<br/>o App</span>
             </HeaderButton>
           )}
-          <HeaderButton onClick={onManualUpdate} title="Atualizar App">
-            <RefreshCw size={20} />
-            <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5">Atualizar</span>
-          </HeaderButton>
+          {showUpdateButton && (
+            <button onClick={onManualUpdate} title="Atualizar App" className="flex flex-col items-center justify-center p-1 rounded-lg flex-1 min-w-0 bg-yellow-100 text-yellow-600 ring-2 ring-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)] animate-soft-pulse hover:bg-yellow-200 transition-all">
+              <RefreshCw size={20} />
+              <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5">Atualizar</span>
+            </button>
+          )}
           {onExportPDF && (
             <HeaderButton onClick={onExportPDF} title="Exportar para PDF">
               <FileDown size={20} />

@@ -26,7 +26,7 @@ const UpgradeModal = ({ onClose }) => {
               
               <p className="text-gray-300 mb-6 leading-relaxed text-xs font-medium">
                 Gostando da experiência? <br/>
-                Garanta acesso vitalício e desbloqueie o potencial máximo da sua nutrição agora mesmo.
+                Garanta acesso completo e desbloqueie o potencial máximo da sua nutrição agora mesmo.
               </p>
 
               <button 
