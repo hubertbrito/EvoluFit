@@ -25,6 +25,7 @@ import WelcomeScreen from './components/WelcomeScreen';
 import UpgradeModal from './components/UpgradeModal';
 import TechNutriDisplay from './components/TechNutriDisplay';
 import UpdateFeedbackModal from './components/UpdateFeedbackModal';
+import DataPortabilityModal from './components/DataPortabilityModal';
 
 // Definindo localmente para não depender de arquivo de tipos externo
 const Category = { INDUSTRIALIZADOS: 'Industrializados' };
@@ -1159,6 +1160,7 @@ const App = () => {
   const [lastSelectedFood, setLastSelectedFood] = useState(null);
   const [showUpdateFeedback, setShowUpdateFeedback] = useState(false);
   const [timeBasedUpdateAvailable, setTimeBasedUpdateAvailable] = useState(false);
+  const [showDataPortability, setShowDataPortability] = useState(false);
 
   // Lógica do Timer de 72h para o botão Atualizar
   useEffect(() => {
@@ -1652,6 +1654,9 @@ const App = () => {
       } else if (prev === 'trial') {
         alert('👁️ Modo Visualização: TELA DE BLOQUEIO (Fim do Trial)');
         return 'trial_ended';
+      } else if (prev === 'trial_ended') {
+        alert('👁️ Modo Visualização: TELA DE BLOQUEIO (Plano Expirado - 35 Dias)');
+        return 'plan_expired';
       } else {
         alert('🛡️ Modo: ADMIN (Restaurado)');
         return 'admin';
@@ -1889,6 +1894,14 @@ const AlertAnimationOverlay = () => (
         mealCalories += (food.calories / 100) * weight;
       }
     });
+
+    // Rastreamento Google Analytics
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'meal_completed', {
+        meal_name: meal.name,
+        calories: Math.round(mealCalories)
+      });
+    }
 
     // Validação do Dia Atual: Se não for hoje, não dispara confetes nem alertas
     const daysMap = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
@@ -2784,6 +2797,41 @@ const AlertAnimationOverlay = () => (
     setUserProfile(prev => ({ ...prev, isSetupDone: true }));
   };
 
+  // --- Lógica de Restauração de Backup (Portabilidade) ---
+  const handleRestoreApplicationState = (payload) => {
+    // 1. Atualiza o LocalStorage (Persistência)
+    Object.keys(payload).forEach(key => {
+      if (typeof payload[key] === 'object') {
+        localStorage.setItem(key, JSON.stringify(payload[key]));
+      } else {
+        localStorage.setItem(key, payload[key]);
+      }
+    });
+
+    // 2. Atualiza o Estado do React (Reatividade Imediata)
+    // Isso evita a necessidade de reload da página, mantendo a experiência fluida
+    if (payload.userProfile) setUserProfile(payload.userProfile);
+    if (payload.mealSchedule) setMealSchedule(payload.mealSchedule);
+    if (payload.pantry) setPantryItems(payload.pantry);
+    if (payload.customFoods) setCustomFoods(payload.customFoods);
+    if (payload.gamification) setGamification(payload.gamification);
+    if (payload.waterHistory) setWaterHistory(payload.waterHistory);
+    
+    // Tratamento especial para Água (Estado numérico vs Objeto no Storage)
+    if (payload.waterIntake) {
+      // Se o backup for do mesmo dia, restaura o valor. Se for antigo, zera.
+      const today = new Date().toLocaleDateString('pt-BR');
+      if (payload.waterIntake.date === today) {
+        setWaterIntake(payload.waterIntake.count);
+      } else {
+        setWaterIntake(0);
+      }
+    }
+
+    // 3. Feedback e Navegação
+    setActiveTab('brain'); // Leva o usuário para o perfil para ver os dados novos
+  };
+
   if (showWelcomePro) {
     return (
       <>
@@ -2793,8 +2841,12 @@ const AlertAnimationOverlay = () => (
     );
   }
 
-  if (isRealAdmin && accessStatus === 'trial_ended') {
-    return <TrialEndScreen />;
+  if (isRealAdmin && (accessStatus === 'trial_ended' || accessStatus === 'plan_expired')) {
+    return <TrialEndScreen 
+      variant={accessStatus === 'plan_expired' ? 'expired' : 'trial'} 
+      isRealAdmin={isRealAdmin}
+      onDebugToggle={handleDebugToggle}
+    />;
   }
 
   if (!isTrialActive && !showWelcome) {
@@ -3079,6 +3131,7 @@ const AlertAnimationOverlay = () => (
           waterHistory={waterHistory}
           onEditProfile={() => setUserProfile(prev => ({ ...prev, isSetupDone: false }))}
           onResetSchedule={handleResetSchedule}
+          onOpenDataPortability={() => setShowDataPortability(true)}
         />
       )}
       </Layout>
@@ -3169,6 +3222,7 @@ const AlertAnimationOverlay = () => (
       {showWaterGoalModal && <WaterGoalModal onClose={() => setShowWaterGoalModal(false)} />}
       {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} />}
       {showUpdateFeedback && <UpdateFeedbackModal onClose={() => setShowUpdateFeedback(false)} />}
+      {showDataPortability && <DataPortabilityModal onClose={() => setShowDataPortability(false)} onRestore={handleRestoreApplicationState} />}
       {showWaterLostModal && <IncentiveModal onClose={() => setShowWaterLostModal(false)} title="Badge Perdido!" message="Sua barra de hidratação zerou e o emblema 'Hidratado' apagou. Beba água regularmente para recuperá-lo!" />}
     </>
   );

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Brain, Activity, Target, Zap, Calendar, AlertTriangle, Edit, CheckCircle, FileText, ArrowRight, RefreshCw, BarChart2, TrendingUp, TrendingDown, Share2, Droplets, Flame, Trophy, Lock, Info, X, Star, Heart, Clock, BookOpen } from 'lucide-react';
+import { Brain, Activity, Target, Zap, Calendar, AlertTriangle, Edit, CheckCircle, FileText, ArrowRight, RefreshCw, BarChart2, TrendingUp, TrendingDown, Share2, Droplets, Flame, Trophy, Lock, Info, X, Star, Heart, Clock, BookOpen, Database } from 'lucide-react';
 import { getFoodUnitWeight } from '../constants';
 
 const PieChart = ({ data, size = 120, strokeWidth = 20 }) => {
@@ -212,7 +212,7 @@ const MetricsExplanation = () => (
   </div>
 );
 
-const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour, onResetSchedule, waterHistory = {}, gamification, badgesData = [] }) => {
+const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour, onResetSchedule, onOpenDataPortability, waterHistory = {}, gamification, badgesData = [] }) => {
   const [filterDay, setFilterDay] = useState('Hoje');
   const days = ['Hoje', 'Semana Toda', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
   const [showBadgesInfo, setShowBadgesInfo] = useState(false);
@@ -811,6 +811,14 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
             >
               <Edit size={14} />
               Atualizar Medidas e Atividade
+            </button>
+
+            <button 
+              onClick={onOpenDataPortability}
+              className="w-full mt-2 py-2.5 bg-white border border-slate-200 text-indigo-600 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+            >
+              <Database size={14} />
+              Backup & Portabilidade de Dados
             </button>
 
             <button 
