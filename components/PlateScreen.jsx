@@ -102,7 +102,7 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
 
     // Verificação de Conflito (Sobrescrita Acidental)
     if (!editingMealInfo && !selectedTargetId) {
-      const daysToCheck = selectedDays.length === 7 ? ['Todos'] : selectedDays;
+      const daysToCheck = selectedDays.length === 7 ? ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'] : selectedDays;
       
       // Verifica conflitos em dias da semana
       const conflictingMeals = meals.filter(m => {
@@ -118,9 +118,6 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
         }
 
         // Verifica conflito de Dias da Semana
-        if (daysToCheck.includes('Todos')) {
-           return m.dayOfWeek === 'Todos';
-        }
         return daysToCheck.includes(m.dayOfWeek);
       });
 
@@ -139,7 +136,7 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
     }
 
     const assignmentData = {
-      days: selectedDays.length === 7 ? ['Todos'] : selectedDays,
+      days: selectedDays.length === 7 ? ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'] : selectedDays,
       date: specificDate,
     };
     onAssignMeal(selectedMealName, assignmentData, selectedTargetId, finalWithWhom, finalEventLocation, description);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Trash2, Copy, AlertTriangle, Eraser, Download, Loader, RefreshCw } from 'lucide-react';
+import { X, Trash2, Copy, AlertTriangle, Eraser, Download, Loader } from 'lucide-react';
 import EducationalModal from './components/EducationalModal';
 import { FOOD_DATABASE, UNIT_WEIGHTS, getFoodUnitWeight, inferFoodMeasures, inferNutrients } from './constants';
 import jsPDF from 'jspdf';
@@ -15,6 +15,7 @@ import FoodAddedModal from './components/FoodAddedModal';
 import ScheduleSummaryModal from './components/ScheduleSummaryModal';
 import ShoppingListModal from './components/ShoppingListModal';
 import SetupScreen from './components/SetupScreen';
+import ManualScreen from './components/ManualScreen';
 import SchedulePdfView from './components/SchedulePdfView';
 import { Layout } from './components/Layout';
 import CalorieAlertModal from './components/CalorieAlertModal';
@@ -26,6 +27,22 @@ import UpgradeModal from './components/UpgradeModal';
 import TechNutriDisplay from './components/TechNutriDisplay';
 import UpdateFeedbackModal from './components/UpdateFeedbackModal';
 import DataPortabilityModal from './components/DataPortabilityModal';
+import UpdateToast from './components/UpdateToast';
+import HeartExplosion from './components/HeartExplosion';
+import ClappingFeedback from './components/ClappingFeedback';
+import { Confetti, GoldConfetti } from './components/Confetti';
+import AchievementModal from './components/AchievementModal';
+import LevelUpModal from './components/LevelUpModal';
+import IncentiveModal from './components/IncentiveModal';
+import WhatsNewModal from './components/WhatsNewModal';
+import WelcomeProModal from './components/WelcomeProModal';
+import ResetScheduleModal from './components/ResetScheduleModal';
+import TourOverlay from './components/TourOverlay';
+import AddMealModal from './components/AddMealModal';
+import DeleteMealModal from './components/DeleteMealModal';
+import ClearMealModal from './components/ClearMealModal';
+import CloneDayModal from './components/CloneDayModal';
+import AlertAnimationOverlay from './components/AlertAnimationOverlay';
 
 // Definindo localmente para não depender de arquivo de tipos externo
 const Category = { INDUSTRIALIZADOS: 'Industrializados' };
@@ -54,1005 +71,26 @@ const LEVELS = [
   { days: 120, title: 'O Iluminado', icon: '✨' }
 ];
 
-const UpdateToast = ({ onUpdate }) => (
-  <div className="fixed bottom-4 right-4 z-[200] bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-2xl border-2 border-emerald-500 flex items-center gap-4 animate-bounce">
-    <div className="flex-shrink-0">
-      <RefreshCw className="w-6 h-6 text-emerald-500 animate-spin" style={{ animationDuration: '2s' }} />
-    </div>
-    <div>
-      <h3 className="text-sm font-black text-gray-800 dark:text-gray-100">Nova versão disponível!</h3>
-      <p className="text-xs text-gray-500 dark:text-gray-300">Clique para atualizar o app.</p>
-    </div>
-    <button onClick={onUpdate} className="ml-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-bold text-xs shadow-md hover:bg-emerald-700 transition-transform active:scale-95">
-      Atualizar
-    </button>
-  </div>
-);
-
-const DEFAULT_MEAL_SCHEDULE = [
-  { id: 'm1', name: 'Café da Manhã', time: '08:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-  { id: 'm2', name: 'Lanche das 10h', time: '10:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-  { id: 'm3', name: 'Almoço', time: '12:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-  { id: 'm4', name: 'Chá das Três', time: '15:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-  { id: 'm5', name: 'Lanche das 17h', time: '17:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-  { id: 'm6', name: 'Jantar das 20h', time: '20:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-  { id: 'm7', name: 'Lanche das 22h', time: '22:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-  { id: 'm8', name: 'Ceia da Meia-noite', time: '00:00', plate: [], isDone: false, dayOfWeek: 'Todos' },
-];
-
-const TourOverlay = ({ step, onNext, onBack, onSkip, highlightedRect }) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [isBouncing, setIsBouncing] = useState(true);
-
-  // Reseta a posição (drag) e ativa o bounce quando o passo muda
-  useEffect(() => {
-    setPosition({ x: 0, y: 0 });
-    setIsBouncing(true);
-    const timer = setTimeout(() => setIsBouncing(false), 400); // Duração da animação
-    return () => clearTimeout(timer);
-  }, [step]);
-
-
-  const steps = [
-    {
-      title: "Bem-vindo ao EvoluFit!",
-      content: "Seu perfil foi configurado com sucesso! Vamos fazer um tour rápido para você dominar o aplicativo e atingir suas metas?",
-      action: "Começar Tour",
-      positionClass: "bottom-24 right-4"
-    },
-    {
-      title: "1. Sua Dispensa",
-      content: "Aqui você encontra todos os alimentos. Use a busca ou o microfone para encontrar o que vai comer. Clique no '+' ou no alimento para adicioná-lo ao seu Prato.",
-      action: "Próximo",
-      positionClass: "bottom-24 right-4"
-    },
-    {
-      title: "2. Montando o Prato",
-      content: "Aqui na aba 'Prato', você definirá a quantidade exata (ex: 2 colheres) de cada alimento selecionado. O app calcula as calorias em tempo real.",
-      action: "Entendi",
-      positionClass: "bottom-24 right-4"
-    },
-    {
-      title: "3. Agendando",
-      content: "Depois de montar o prato, use os botões abaixo para escolher os dias e a refeição (ex: Almoço) onde esse prato será servido.",
-      action: "Próximo",
-      positionClass: "top-24 right-4"
-    },
-    {
-      title: "4. Sua Agenda",
-      content: "Aqui fica seu planejamento completo. Você visualiza todas as refeições do dia e seus horários.",
-      action: "Próximo",
-      positionClass: "bottom-24 right-4"
-    },
-    {
-      title: "5. Criando Refeições",
-      content: "Para criar uma nova refeição (ex: Lanche Extra), a regra é: PRIMEIRO selecione os dias no menu superior, e SÓ DEPOIS clique em 'Adicionar Refeição'.",
-      action: "Importante!",
-      positionClass: "top-24 right-4"
-    },
-    {
-      title: "6. Fluxo Inverso",
-      content: "Você também pode criar uma refeição vazia na Agenda primeiro, e depois ir ao Prato e escolher 'Inserir em...' para preenchê-la.",
-      action: "Finalizar",
-      positionClass: "bottom-24 right-4"
-    }
+// Helper para gerar agenda padrão expandida (Sem 'Todos')
+const generateDefaultSchedule = () => {
+  const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+  const meals = [
+    { name: 'Café da Manhã', time: '08:00' }, { name: 'Lanche das 10h', time: '10:00' },
+    { name: 'Almoço', time: '12:00' }, { name: 'Chá das Três', time: '15:00' },
+    { name: 'Lanche das 17h', time: '17:00' }, { name: 'Jantar das 20h', time: '20:00' },
+    { name: 'Lanche das 22h', time: '22:00' }, { name: 'Ceia da Meia-noite', time: '00:00' },
   ];
 
-  const handleMouseDown = (e) => {
-    // Evita arrastar se clicar em botões
-    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (isDragging) {
-        setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
-      }
-    };
-    const handleMouseUp = (e) => {
-      setIsDragging(false);
-    };
-
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    }
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, dragStart]);
-
-  const current = steps[step];
-
-  // The modal window JSX
-  const Modal = (
-    <div 
-      className={`absolute pointer-events-auto transition-all duration-500 ease-in-out ${!highlightedRect ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : current.positionClass}`}
-      style={highlightedRect ? { transform: `translate(${position.x}px, ${position.y}px)` } : {}}
-    >
-      <div 
-        className={`bg-white rounded-2xl p-4 max-w-xs w-full shadow-xl border-2 border-emerald-500 cursor-move ${isBouncing ? 'animate-scale-bounce' : ''}`}
-        onMouseDown={handleMouseDown}
-      >
-        <button 
-          onClick={onSkip} 
-          className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
-          title="Fechar Tour"
-        >
-          <X size={16} />
-        </button>
-
-        <div className="mb-3">
-            <h3 className="text-sm font-black text-emerald-600 mb-1">{current.title}</h3>
-            <p className="text-gray-600 text-xs leading-relaxed">{current.content}</p>
-        </div>
-        <div className="flex gap-2 mt-2">
-            {step > 0 && <button onClick={onBack} className="flex-1 py-1.5 rounded-lg font-bold text-xs text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors">Voltar</button>}
-            <button onClick={onNext} className="flex-2 w-full py-1.5 bg-emerald-600 text-white rounded-lg font-bold text-xs shadow-md hover:bg-emerald-700 transition-transform transform active:scale-95">{current.action}</button>
-        </div>
-        <div className="flex justify-center gap-1 mt-2">{steps.map((_, i) => <div key={i} className={`w-1.5 h-1.5 rounded-full transition-colors ${i === step ? 'bg-emerald-500' : 'bg-gray-200'}`} />)}</div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="fixed inset-0 z-[100] pointer-events-none animate-fade-in">
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } 
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-        @keyframes scale-bounce {
-          0% { transform: scale(0.95); }
-          50% { transform: scale(1.05); }
-          100% { transform: scale(1); }
-        }
-        .animate-scale-bounce { animation: scale-bounce 0.4s ease-out; }
-      `}</style>
-      {/* Spotlight effect */}
-      {highlightedRect ? (
-        <>
-          <div className="fixed bg-black/70" style={{ top: 0, left: 0, width: '100%', height: highlightedRect.top }} />
-          <div className="fixed bg-black/70" style={{ top: highlightedRect.bottom, left: 0, width: '100%', bottom: 0 }} />
-          <div className="fixed bg-black/70" style={{ top: highlightedRect.top, left: 0, width: highlightedRect.left, height: highlightedRect.height }} />
-          <div className="fixed bg-black/70" style={{ top: highlightedRect.top, left: highlightedRect.right, right: 0, height: highlightedRect.height }} />
-        </>
-      ) : (
-        // Fallback dark background if no element is highlighted
-        <div className="fixed inset-0 bg-black/70" />
-      )}
-      
-      {/* The modal itself */}
-      {Modal}
-    </div>
-  );
-};
-
-const HeartExplosion = ({ count = 1 }) => {
-  return (
-    <div className="fixed inset-0 pointer-events-none z-[210] flex items-center justify-center">
-      <style>{`
-        @keyframes float-up {
-          0% { transform: translateY(0) scale(0.5); opacity: 0; }
-          20% { opacity: 1; transform: translateY(-20px) scale(1.2); }
-          100% { transform: translateY(-200px) scale(1); opacity: 0; }
-        }
-      `}</style>
-      {Array.from({ length: 15 }).map((_, i) => (
-        <div
-          key={i}
-          className="absolute text-4xl drop-shadow-md"
-          style={{
-            left: `${50 + (Math.random() * 60 - 30)}%`,
-            top: `${50 + (Math.random() * 60 - 30)}%`,
-            animation: `float-up ${1 + Math.random()}s ease-out forwards`,
-            animationDelay: `${Math.random() * 0.5}s`
-          }}
-        >
-          ❤️
-        </div>
-      ))}
-      <div className="absolute text-2xl font-black text-rose-500 bg-white/90 px-4 py-2 rounded-full shadow-xl animate-bounce border-2 border-rose-200">
-        +{count} {count > 1 ? 'Corações!' : 'Coração!'}
-      </div>
-    </div>
-  );
-};
-
-const ClappingFeedback = ({ message }) => (
-  <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[200] bg-white/95 backdrop-blur-md px-6 py-4 rounded-2xl shadow-2xl border-2 border-emerald-400 flex items-center gap-4 animate-bounce">
-    <div className="text-4xl">👏</div>
-    <div>
-      <h3 className="text-lg font-black text-emerald-700 leading-none">Mandou Bem!</h3>
-      <p className="text-xs font-bold text-emerald-600/80">{message || "Refeição registrada."}</p>
-    </div>
-  </div>
-);
-
-const ManualScreen = ({ onClose, onReset, onInstallClick, showInstallButton }) => (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-    <style>{`
-      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } 
-      .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-      @keyframes scale-bounce {
-        0% { transform: scale(0.95); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-      }
-      .animate-scale-bounce { animation: scale-bounce 0.4s ease-out; }
-    `}</style>
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden animate-scale-bounce">
-      <div className="p-4 border-b flex justify-between items-center bg-emerald-50">
-        <h2 className="text-lg font-bold text-emerald-800 flex items-center gap-2">
-          📖 Manual de Uso
-        </h2>
-        <button onClick={onClose} className="p-1 hover:bg-emerald-100 rounded-full transition-colors text-emerald-600">
-          <X size={20} />
-        </button>
-      </div>
-      
-      <div className="p-6 overflow-y-auto space-y-6 text-xs text-gray-600 leading-relaxed">
-        <div className="space-y-3 bg-purple-50 p-4 rounded-lg border border-purple-200">
-          <h3 className="font-bold text-purple-800 text-base">Guia da Nova Era Alimentar: O Despertar da Nutrição Naturalista</h3>
-          
-          <div className="space-y-2">
-            <h4 className="font-bold text-purple-900">Introdução: O Fim dos Mitos</h4>
-            <p className="text-purple-800">
-              Bem-vindo a uma nova forma de enxergar o seu corpo. Em janeiro de 2026, as diretrizes alimentares globais (lideradas pelo USDA e FDA) passaram pela maior transformação das últimas décadas. O que antes era considerado o "padrão" foi invertido. O foco saiu da contagem obsessiva de calorias e entrou na Densidade Nutricional e no Conhecimento Naturalista. Este manual explica como o nosso app agora te ajuda a navegar nessa nova realidade.
-            </p>
-          </div>
-          <div className="space-y-2 pt-2 border-t border-purple-200">
-            <h4 className="font-bold text-purple-900">1. A Inversão da Pirâmide: Por que Proteína é a Base?</h4>
-            <p className="text-purple-800">
-              Durante anos, fomos ensinados que a base da alimentação eram os carboidratos (pães, massas, cereais). A ciência de 2026 provou o contrário: a base da saúde humana é a Proteína de alta qualidade (carnes, ovos, peixes e vegetais proteicos) e as Gorduras Naturais.
-            </p>
-            <ul className="list-disc list-inside pl-2 space-y-1 text-purple-800">
-              <li><strong>O Superpoder da Proteína:</strong> Diferente dos carboidratos refinados, a proteína possui um alto Efeito Térmico. Isso significa que seu corpo queima energia apenas para digeri-la.</li>
-              <li><strong>A Saciedade Real:</strong> A proteína regula os hormônios da fome (como a grelina). Quando você prioriza a proteína, você envia uma mensagem de "segurança" ao seu cérebro, permitindo que você coma um volume maior de comida e, ainda assim, perca gordura ou mantenha o peso com facilidade.</li>
-            </ul>
-          </div>
-
-          <div className="space-y-2 pt-2 border-t border-purple-200">
-            <h4 className="font-bold text-purple-900">2. Comida de Verdade vs. Ultraprocessados</h4>
-            <p className="text-purple-800">
-              O conceito naturalista adotado pelo app separa o que é "combustível" do que é "distração".
-            </p>
-            <ul className="list-disc list-inside pl-2 space-y-1 text-purple-800">
-              <li><strong>Alimentos de Verdade:</strong> São aqueles que a natureza entrega prontos (ou quase prontos). Carnes, frutas, vegetais, raízes e sementes. Eles contêm a matriz de informação que suas células reconhecem.</li>
-              <li><strong>O Perigo dos Invisíveis:</strong> Açúcares adicionados e aditivos químicos "sequestram" seu paladar e desligam sua saciedade. As novas diretrizes de 2026 recomendam a redução drástica de itens de pacote (ultraprocessados), que inflamam o corpo e causam neblina mental.</li>
-            </ul>
-          </div>
-
-          <div className="space-y-2 pt-2 border-t border-purple-200">
-            <h4 className="font-bold text-purple-900">3. Volume Inteligente: Coma Mais, Nutra Melhor</h4>
-            <p className="text-purple-800">
-              A grande revelação desta nova era é que comer pouco não é sinônimo de saúde. O segredo está no volume inteligente. Ao preencher seu prato com alimentos densos (proteínas e fibras), você ocupa espaço físico no estômago e nutre suas células profundamente. O resultado? Você se sente satisfeito por muito mais tempo e elimina a necessidade de "beliscar" alimentos processados ao longo do dia.
-            </p>
-          </div>
-
-          <div className="space-y-2 pt-2 border-t border-purple-200">
-            <h4 className="font-bold text-purple-900">4. Como o App te Guia (A Didática Subjetiva)</h4>
-            <p className="text-purple-800">
-              Nossa plataforma não vai apenas registrar o que você come. Ela vai te ensinar enquanto você navega:
-            </p>
-            <ul className="list-disc list-inside pl-2 space-y-1 text-purple-800">
-              <li><strong>Na sua Dispensa:</strong> Identificamos o que é aliado e o que é distração, te ensinando a ler rótulos de forma invisível.</li>
-              <li><strong>No seu Prato:</strong> Celebramos quando você escolhe a proteína primeiro, validando sua inteligência biológica.</li>
-              <li><strong>Na sua Agenda:</strong> Mostramos como a constância na "comida de verdade" transforma seu gráfico de energia e saúde.</li>
-            </ul>
-          </div>
-
-          <div className="space-y-2 pt-2 border-t border-purple-200">
-            <h4 className="font-bold text-purple-900">5. Conclusão: Autonomia e Liberdade</h4>
-            <p className="text-purple-800">
-              O objetivo final não é te prender a uma dieta, mas te dar Conhecimento Naturalista. Quando você entende como a proteína e os alimentos naturais funcionam, você ganha liberdade. Você para de lutar contra a balança e começa a trabalhar a favor da sua biologia.
-            </p>
-            <p className="text-purple-800 font-bold mt-2">
-              Lembre-se: Cada escolha por um alimento real é um voto em uma versão mais forte, lúcida e vibrante de você mesmo. Estamos aqui para garantir que você vença essa jornada através do conhecimento.
-            </p>
-          </div>
-
-          <div className="space-y-2 pt-2 border-t border-purple-200">
-            <h4 className="font-bold text-purple-900">6. O Jogo da Evolução (Gamificação)</h4>
-            <p className="text-purple-800">
-              O EvoluFit reconhece sua dedicação. Transformamos sua constância em um jogo de evolução pessoal.
-            </p>
-            <ul className="list-disc list-inside pl-2 space-y-1 text-purple-800">
-              <li><strong>Níveis de Consciência:</strong> Seu nível é definido pela sua maior sequência de dias (Streak) mantendo o foco.
-                <ul className="list-none pl-4 mt-1 text-[10px] space-y-0.5 opacity-90">
-                  <li>🌱 <strong>Novato (0-29 dias):</strong> O começo da jornada.</li>
-                  <li>🧘 <strong>Iniciado (30 dias):</strong> O hábito está se formando.</li>
-                  <li>🥋 <strong>Mestre (60 dias):</strong> Disciplina e controle.</li>
-                  <li>📿 <strong>Monge (90 dias):</strong> Sua mente comanda o corpo.</li>
-                  <li>✨ <strong>O Iluminado (120+ dias):</strong> Transcendência nutricional.</li>
-                </ul>
-              </li>
-              <li><strong>Como Evoluir:</strong> Basta registrar suas refeições diariamente. Se perder um dia, seu "Fogo" (Streak atual) apaga, mas seu Nível (baseado no recorde) permanece como um marco da sua história.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <h3 className="font-bold text-emerald-700 text-base">Funcionalidades Detalhadas</h3>
-          <ul className="list-disc list-inside space-y-2 pl-1 grid grid-cols-1 gap-1">
-            <li><strong>1. Dispensa e Busca:</strong> Encontre alimentos por nome ou comando de voz 🎤.</li>
-            <li><strong>2. Filtros Inteligentes:</strong> Filtre por categorias ou dietas (Low Carb, Vegana, etc).</li>
-            <li><strong>3. Montagem de Prato:</strong> Adicione itens e ajuste medidas caseiras com cálculo automático.</li>
-            <li><strong>4. Agendamento:</strong> Defina se o prato é para dias específicos ou para a semana toda.</li>
-            <li><strong>5. Agenda Interativa:</strong> Arraste e solte cards para reordenar. Marque como "Feito".</li>
-            <li><strong>6. Edição e Duplicação:</strong> Edite pratos criados ou duplique refeições para outros dias.</li>
-            <li><strong>7. Contexto Social:</strong> Registre onde e com quem você vai comer (ex: "Jantar com amigos").</li>
-            <li><strong>8. Lista de Compras:</strong> Gere uma lista automática baseada no seu planejamento.</li>
-            <li><strong>9. Resumo da Agenda:</strong> Visualize um resumo compacto de todas as refeições.</li>
-            <li><strong>10. Controle de Água:</strong> Registre consumo e acompanhe a meta diária com histórico.</li>
-            <li><strong>11. Cérebro e Metas:</strong> Relatório do seu metabolismo (TMB), gasto calórico e progresso.</li>
-            <li><strong>12. Alertas:</strong> Receba avisos visuais e sonoros na hora de comer (com app aberto).</li>
-            <li><strong>13. Modo Escuro:</strong> Alterne entre tema claro e escuro para conforto visual.</li>
-            <li><strong>14. Exportar PDF:</strong> Salve ou imprima seu planejamento alimentar.</li>
-            <li><strong>15. Offline:</strong> Funciona sem internet após o primeiro acesso (exceto busca por voz).</li>
-            <li><strong>16. Reset e Ajustes:</strong> Redefina sua agenda ou atualize seu perfil a qualquer momento.</li>
-            <li><strong>17. Gamificação:</strong> Suba de nível e desbloqueie conquistas mantendo a constância.</li>
-          </ul>
-        </div>
-
-        <div className="space-y-3 bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <h3 className="font-bold text-blue-800 text-base">Instalação e Atualização</h3>
-          
-          <div className="space-y-2">
-            <p className="font-bold text-blue-900">Como Instalar:</p>
-            <p className="text-blue-700">
-              O EvoluFit funciona como um aplicativo nativo. Não é necessário baixar de uma loja.
-            </p>
-            <ul className="list-disc list-inside pl-2 space-y-1 text-blue-700">
-              <li><strong>Android (Chrome):</strong> Toque nos três pontinhos (⋮) no canto superior direito e selecione "Adicionar à tela inicial" ou "Instalar aplicativo".</li>
-              <li><strong>iOS (Safari):</strong> Toque no ícone de Compartilhamento (quadrado com seta) e selecione "Adicionar à Tela de Início".</li>
-            </ul>
-          </div>
-
-          <div className="space-y-2 pt-2 border-t border-blue-200">
-            <p className="font-bold text-blue-900">Como Atualizar:</p>
-            <p className="text-blue-700">
-              Para receber novas funcionalidades (como a Lista de Compras ou Modo Escuro), você não precisa reinstalar.
-            </p>
-            <p className="text-blue-700">
-              <strong>O segredo é:</strong> Acesse o EvoluFit pelo navegador (site) conectado à internet ocasionalmente. Isso baixa a versão mais recente automaticamente. Na próxima vez que abrir o app instalado, ele já estará atualizado.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="p-4 border-t bg-gray-50 flex justify-between items-center">
-        {showInstallButton && (
-          <button onClick={onInstallClick} className="text-emerald-600 text-xs font-bold hover:text-emerald-800 underline flex items-center gap-1"><Download size={14}/> Instalar App</button>
-        )}
-        <button onClick={onReset} className="text-rose-500 text-xs font-bold hover:text-rose-700 underline">
-          Resetar Agenda
-        </button>
-        <button onClick={onClose} className="px-6 py-2 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 transition-transform active:scale-95 shadow-md">
-          Fechar Manual
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
-const AddMealModal = ({ onClose, onConfirm, title, buttonLabel, mealToEdit, context }) => {
-  const [selectedDays, setSelectedDays] = useState(
-    context && context !== 'Datas Marcadas' && context !== 'Todos' ? [context] : []
-  );
-  const [time, setTime] = useState(mealToEdit ? mealToEdit.time : '14:00');
-  const [specificDate, setSpecificDate] = useState('');
-  const [repeatCount, setRepeatCount] = useState(1);
-  const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-
-  const toggleDay = (day) => {
-    setSelectedDays(prev => 
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
-    );
-  };
-
-  const handleConfirm = () => {
-    if (context === 'Datas Marcadas') {
-        if (!specificDate) return alert('Selecione uma data.');
-        onConfirm(['Datas Marcadas'], time, specificDate, repeatCount);
-    } else {
-        if (selectedDays.length === 0) return alert('Selecione pelo menos um dia.');
-        onConfirm(selectedDays, time);
-    }
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } 
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-        @keyframes scale-bounce {
-          0% { transform: scale(0.95); }
-          50% { transform: scale(1.05); }
-          100% { transform: scale(1); }
-        }
-        .animate-scale-bounce { animation: scale-bounce 0.4s ease-out; }
-      `}</style>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-bounce">
-        <div className="p-4 border-b bg-emerald-50 flex justify-between items-center">
-          <h3 className="font-bold text-emerald-800">{title || "Adicionar Nova Refeição"}</h3>
-          <button onClick={onClose}><X size={20} className="text-emerald-600" /></button>
-        </div>
-        <div className="p-6">
-          {mealToEdit && (
-            <div className="mb-4">
-              <label className="block text-sm font-bold text-gray-700 mb-1">Horário da Refeição</label>
-              <input 
-                  type="time" 
-                  value={time} 
-                  onChange={(e) => setTime(e.target.value)}
-                  className="w-full p-2 border rounded-lg bg-white text-gray-900"
-              />
-            </div>
-          )}
-          
-          {context === 'Datas Marcadas' ? (
-            <>
-              <div className="mb-4">
-                <label className="block text-sm font-bold text-gray-700 mb-1">Data Inicial</label>
-                <input 
-                    type="date" 
-                    value={specificDate} 
-                    onChange={(e) => setSpecificDate(e.target.value)}
-                    className="w-full p-2 border rounded-lg bg-white text-gray-900"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-bold text-gray-700 mb-1">Repetir por (dias)</label>
-                <div className="flex items-center gap-3">
-                    <input 
-                        type="number" 
-                        min="1" 
-                        max="30"
-                        value={repeatCount} 
-                        onChange={(e) => setRepeatCount(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-20 p-2 border rounded-lg bg-white text-center font-bold text-emerald-600"
-                    />
-                    <span className="text-xs text-gray-500">
-                        {repeatCount > 1 ? `Criar refeições até ${(() => {
-                            if (!specificDate) return '...';
-                            const d = new Date(specificDate + 'T00:00:00');
-                            d.setDate(d.getDate() + repeatCount - 1);
-                            return d.toLocaleDateString('pt-BR');
-                        })()}` : 'Apenas nesta data'}
-                    </span>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <p className="text-sm text-gray-600 mb-4">Selecione os dias para esta refeição:</p>
-              <div className="flex gap-2 mb-4">
-                <button onClick={() => setSelectedDays(days)} className="flex-1 p-2 rounded-lg text-xs font-bold border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100">Todos os Dias</button>
-                <button onClick={() => setSelectedDays([])} className="flex-1 p-2 rounded-lg text-xs font-bold border border-gray-200 text-gray-500 hover:bg-gray-50">Limpar</button>
-              </div>
-              <div className="grid grid-cols-4 gap-2">
-                {days.map(day => (
-                  <button key={day} onClick={() => toggleDay(day)} className={`p-2 rounded-lg text-xs font-bold transition-colors ${selectedDays.includes(day) ? 'bg-emerald-600 text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
-                    {day.slice(0, 3)}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-        <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
-          <button onClick={onClose} className="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button>
-          <button onClick={handleConfirm} className="px-6 py-2 bg-emerald-600 text-white rounded-lg font-bold text-sm shadow-md hover:bg-emerald-700">{buttonLabel || "Criar"}</button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const DeleteMealModal = ({ onClose, onConfirm, onDuplicate, meal, contextDay }) => {
-  const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-  const isTodos = meal.dayOfWeek === 'Todos';
-  
-  const [selectedDays, setSelectedDays] = useState(
-    isTodos 
-      ? (contextDay && days.includes(contextDay) ? [contextDay] : days)
-      : [meal.dayOfWeek]
-  );
-
-  const toggleDay = (day) => {
-    if (!isTodos) return;
-    setSelectedDays(prev => 
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
-    );
-  };
-
-  const handleConfirm = () => {
-    if (selectedDays.length === 0) return alert('Selecione pelo menos um dia para excluir.');
-    onConfirm(selectedDays);
-    onClose();
-  };
-
-  return (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-    <style>{`
-      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } 
-      .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-      @keyframes scale-bounce {
-        0% { transform: scale(0.95); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-      }
-      .animate-scale-bounce { animation: scale-bounce 0.4s ease-out; }
-    `}</style>
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-bounce">
-      <div className="p-4 border-b bg-rose-50 flex justify-between items-center">
-        <h3 className="font-bold text-rose-800">Excluir Refeição</h3>
-        <button onClick={onClose}><X size={20} className="text-rose-600" /></button>
-      </div>
-      <div className="p-6">
-        <p className="text-gray-600 mb-4 text-sm">
-          Selecione os dias para excluir a refeição <strong>"{meal.name}"</strong>:
-        </p>
-        
-        {isTodos && (
-          <div className="flex gap-2 mb-4">
-            <button onClick={() => setSelectedDays(days)} className="flex-1 p-2 rounded-lg text-xs font-bold border border-rose-200 text-rose-700 bg-rose-50 hover:bg-rose-100">Todos os Dias</button>
-            <button onClick={() => setSelectedDays([])} className="flex-1 p-2 rounded-lg text-xs font-bold border border-gray-200 text-gray-500 hover:bg-gray-50">Limpar</button>
-          </div>
-        )}
-
-        <div className="grid grid-cols-4 gap-2">
-          {days.map(day => (
-            <button 
-              key={day} 
-              onClick={() => toggleDay(day)} 
-              disabled={!isTodos && day !== meal.dayOfWeek}
-              className={`p-2 rounded-lg text-xs font-bold transition-colors 
-                ${selectedDays.includes(day) 
-                  ? 'bg-rose-600 text-white shadow-md' 
-                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}
-                ${(!isTodos && day !== meal.dayOfWeek) ? 'opacity-30 cursor-not-allowed' : ''}
-              `}
-            >
-              {day.slice(0, 3)}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
-        <button 
-          onClick={onDuplicate} 
-          className="mr-auto px-4 py-2 bg-blue-50 text-blue-600 rounded-lg font-bold text-sm hover:bg-blue-100 flex items-center gap-2"
-        >
-          <Copy size={16} /> Duplicar
-        </button>
-        <button onClick={onClose} className="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button>
-        <button onClick={handleConfirm} className="px-6 py-2 bg-rose-600 text-white rounded-lg font-bold text-sm shadow-md hover:bg-rose-700">Excluir</button>
-      </div>
-    </div>
-  </div>
-  );
-};
-
-const WhatsNewModal = ({ onClose, onOpenManual }) => {
-  const features = [
-    "📅 Arraste e Solte na Agenda: Reorganize suas refeições facilmente.",
-    "📤 Compartilhar Cardápio: Envie seu planejamento do dia pelo WhatsApp.",
-    "💡 Sugestão de Alimentos: Não achou algo? Sugira diretamente pelo app.",
-    "🍎 Categoria 'Meus Alimentos': Seus itens personalizados agora têm casa própria.",
-    "💧 Histórico de Água: Acompanhe sua hidratação nos últimos 7 dias.",
-    "🗑️ Lixeira Inteligente: Exclua itens da dispensa ou alimentos personalizados."
-  ];
-  
-  const newFoods = [
-    "Saputi", "Tamarindo", "Pão de Batata", "Bolo de Milho", "Salgados de Festa", "Pratos Feitos", "E mais 50 itens!"
-  ];
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-bounce">
-        <div className="p-4 border-b bg-emerald-50 flex justify-between items-center">
-          <h3 className="font-bold text-emerald-800 flex items-center gap-2">
-            ✨ Novidades da Atualização
-          </h3>
-          <button onClick={onClose} className="p-1 hover:bg-emerald-100 rounded-full transition-colors text-emerald-600">
-            <X size={20} />
-          </button>
-        </div>
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
-          <div className="mb-4">
-            <h4 className="font-bold text-emerald-700 mb-2 text-sm uppercase">Novas Funcionalidades</h4>
-            <ul className="list-disc list-inside text-xs text-gray-600 space-y-1.5">
-              {features.map((f, i) => <li key={i}>{f}</li>)}
-            </ul>
-          </div>
-
-          <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 text-xs text-blue-800 leading-relaxed">
-            <strong>Dica:</strong> Consulte o <strong>Manual de Uso</strong> para aprender a usar todas essas novidades detalhadamente.
-          </div>
-        </div>
-        <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
-          <button 
-            onClick={() => { onClose(); onOpenManual(); }}
-            className="px-4 py-2 text-emerald-600 font-bold text-xs hover:bg-emerald-50 rounded-lg transition-colors"
-          >
-            Ver Manual
-          </button>
-          <button 
-            onClick={onClose} 
-            className="px-6 py-2 bg-emerald-600 text-white rounded-lg font-bold text-xs hover:bg-emerald-700 transition-transform active:scale-95 shadow-md"
-          >
-            Entendi
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const Confetti = () => {
-  const confettiCount = 100;
-  const colors = ['#fde047', '#f87171', '#4ade80', '#60a5fa', '#a78bfa'];
-
-  return (
-    <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
-      <style>{`
-        @keyframes fall {
-          0% { transform: translateY(-10vh) rotateZ(0deg); opacity: 1; }
-          100% { transform: translateY(110vh) rotateZ(720deg); opacity: 0; }
-        }
-        .confetti-piece {
-          position: absolute;
-          width: 8px;
-          height: 16px;
-          animation: fall 3s linear forwards;
-        }
-      `}</style>
-      {Array.from({ length: confettiCount }).map((_, i) => {
-        const style = {
-          left: `${Math.random() * 100}vw`,
-          backgroundColor: colors[Math.floor(Math.random() * colors.length)],
-          animationDelay: `${Math.random() * 2}s`,
-          transform: `rotate(${Math.random() * 360}deg)`
-        };
-        return <div key={i} className="confetti-piece" style={style}></div>;
-      })}
-    </div>
-  );
-};
-
-const GoldConfetti = () => {
-  const confettiCount = 150;
-  const colors = ['#FFD700', '#FFA500', '#B8860B', '#DAA520', '#F0E68C']; // Tons de dourado
-
-  return (
-    <div className="fixed inset-0 pointer-events-none z-[300] overflow-hidden flex items-center justify-center">
-      <style>{`
-        @keyframes fall-gold {
-          0% { transform: translateY(-10vh) rotateZ(0deg); opacity: 1; }
-          100% { transform: translateY(110vh) rotateZ(720deg); opacity: 0; }
-        }
-        .confetti-gold {
-          position: absolute;
-          width: 10px;
-          height: 20px;
-          animation: fall-gold 4s linear forwards;
-        }
-        @keyframes pop-in {
-            0% { transform: scale(0); opacity: 0; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-      `}</style>
-      {Array.from({ length: confettiCount }).map((_, i) => {
-        const style = {
-          left: `${Math.random() * 100}vw`,
-          top: `-10vh`,
-          backgroundColor: colors[Math.floor(Math.random() * colors.length)],
-          animationDelay: `${Math.random() * 2}s`,
-          transform: `rotate(${Math.random() * 360}deg)`
-        };
-        return <div key={i} className="confetti-gold" style={style}></div>;
-      })}
-      <div className="z-[301] flex flex-col items-center animate-[pop-in_0.5s_ease-out_forwards]">
-        <div className="text-8xl drop-shadow-2xl filter mb-4">👑</div>
-        <div className="text-4xl font-black text-yellow-400 drop-shadow-[0_4px_0_rgba(0,0,0,0.5)] bg-black/60 px-8 py-4 rounded-3xl backdrop-blur-md border-2 border-yellow-500/50">
-            PRO ATIVADO!
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const WelcomeProModal = ({ onClose }) => (
-  <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fade-in">
-    <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce text-center relative border-4 border-white/20">
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
-      <div className="p-8 flex flex-col items-center relative z-10">
-        <div className="text-6xl mb-4 animate-bounce filter drop-shadow-lg">👑</div>
-        <h2 className="text-3xl font-black text-white mb-2 tracking-tight drop-shadow-md">VOCÊ É PRO!</h2>
-        <p className="text-yellow-100 font-bold text-lg mb-4">A saga continua.</p>
-        <p className="text-white text-sm mb-8 leading-relaxed px-2 font-medium">
-          Parabéns pela decisão de investir na sua melhor versão. <br/>
-          Você desbloqueou o poder total do EvoluFit para dominar a alimentação perfeita.
-        </p>
-        <button 
-          onClick={onClose}
-          className="w-full py-4 bg-white text-yellow-600 rounded-xl font-black shadow-lg hover:bg-gray-50 transition-transform active:scale-95 uppercase tracking-wider"
-        >
-          Acessar Meu Plano
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
-const ClearMealModal = ({ onClose, onConfirm, meal, contextDay, groupMembers }) => {
-  const allWeekDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-  
-  const daysForSelection = groupMembers 
-    ? groupMembers.map(m => m.dayOfWeek).sort((a, b) => allWeekDays.indexOf(a) - allWeekDays.indexOf(b))
-    : (meal.dayOfWeek === 'Todos' ? allWeekDays : [meal.dayOfWeek]);
-
-  const isGroupAction = !!groupMembers || meal.dayOfWeek === 'Todos';
-
-  const [selectedDays, setSelectedDays] = useState(
-    contextDay && daysForSelection.includes(contextDay) ? [contextDay] : []
-  );
-
-  const toggleDay = (day) => {
-    if (!isGroupAction) return;
-    setSelectedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
-  };
-
-  const handleConfirm = () => {
-    if (selectedDays.length === 0) return alert('Selecione pelo menos um dia para limpar.');
-    onConfirm(selectedDays);
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-bounce">
-        <div className="p-4 border-b bg-amber-50 flex justify-between items-center">
-          <h3 className="font-bold text-amber-800 flex items-center gap-2">
-            <Eraser size={20} /> Limpar Prato
-          </h3>
-          <button onClick={onClose}><X size={20} className="text-amber-600" /></button>
-        </div>
-        <div className="p-6">
-          <p className="text-gray-600 mb-4 text-sm">
-            Selecione os dias para limpar os alimentos de <strong>"{meal.name}"</strong>:
-          </p>
-          
-          {isGroupAction && (
-            <div className="flex gap-2 mb-4">
-              <button onClick={() => setSelectedDays(daysForSelection)} className="flex-1 p-2 rounded-lg text-xs font-bold border border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100">Limpar Todos</button>
-              <button onClick={() => setSelectedDays([])} className="flex-1 p-2 rounded-lg text-xs font-bold border border-gray-200 text-gray-500 hover:bg-gray-50">Nenhum</button>
-            </div>
-          )}
-
-          <div className="grid grid-cols-4 gap-2">
-            {daysForSelection.map(day => (
-              <button key={day} onClick={() => toggleDay(day)} disabled={!isGroupAction && day !== meal.dayOfWeek} className={`p-2 rounded-lg text-xs font-bold transition-colors ${selectedDays.includes(day) ? 'bg-amber-500 text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'} ${(!isGroupAction && day !== meal.dayOfWeek) ? 'opacity-30 cursor-not-allowed' : ''}`}>
-                {day.slice(0, 3)}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
-          <button onClick={onClose} className="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button>
-          <button onClick={handleConfirm} className="px-6 py-2 bg-amber-500 text-white rounded-lg font-bold text-sm shadow-md hover:bg-amber-600">Limpar</button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const CloneDayModal = ({ sourceDay, onClose, onConfirm, mealSchedule }) => {
-  const [targetType, setTargetType] = useState('weekday'); // 'weekday' | 'date'
-  const [targetDay, setTargetDay] = useState('Segunda');
-  const [targetDate, setTargetDate] = useState('');
-  const [conflictCount, setConflictCount] = useState(null);
-
-  const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-
-  const handleNext = () => {
-    const dayToCheck = targetType === 'weekday' ? targetDay : 'Datas Marcadas';
-    const dateToCheck = targetType === 'date' ? targetDate : null;
-
-    if (targetType === 'date' && !targetDate) return alert('Selecione uma data.');
-    if (targetType === 'weekday' && targetDay === sourceDay) return alert('O dia de destino deve ser diferente da origem.');
-
-    // Verifica se já existem refeições ESPECÍFICAS no destino (ignorando 'Todos')
-    const existing = mealSchedule.filter(m => {
-        if (m.dayOfWeek !== dayToCheck) return false;
-        if (dayToCheck === 'Datas Marcadas') return m.specificDate === dateToCheck;
-        return true;
+  let schedule = [];
+  days.forEach((day, dIndex) => {
+    meals.forEach((meal, mIndex) => {
+      schedule.push({ id: `def-${dIndex}-${mIndex}`, name: meal.name, time: meal.time, plate: [], isDone: false, dayOfWeek: day, groupId: `def-group-${mIndex}` });
     });
-
-    if (existing.length > 0) {
-        setConflictCount(existing.length);
-    } else {
-        onConfirm(dayToCheck, dateToCheck, 'replace');
-        onClose();
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-bounce">
-        <div className="p-4 border-b bg-indigo-50 flex justify-between items-center">
-          <h3 className="font-bold text-indigo-800 flex items-center gap-2">
-            <Copy size={20} /> Clonar Dia: {sourceDay}
-          </h3>
-          <button onClick={onClose}><X size={20} className="text-indigo-600" /></button>
-        </div>
-        
-        <div className="p-6">
-          {!conflictCount ? (
-            <>
-              <p className="text-sm text-gray-600 mb-4">Para onde deseja copiar as refeições de <strong>{sourceDay}</strong>?</p>
-              
-              <div className="flex gap-2 mb-4">
-                <button onClick={() => setTargetType('weekday')} className={`flex-1 py-2 rounded-lg text-xs font-bold border ${targetType === 'weekday' ? 'bg-indigo-500 text-white border-indigo-500' : 'bg-white text-gray-500 border-gray-200'}`}>Dia da Semana</button>
-                <button onClick={() => setTargetType('date')} className={`flex-1 py-2 rounded-lg text-xs font-bold border ${targetType === 'date' ? 'bg-indigo-500 text-white border-indigo-500' : 'bg-white text-gray-500 border-gray-200'}`}>Data Específica</button>
-              </div>
-
-              {targetType === 'weekday' ? (
-                <div className="grid grid-cols-3 gap-2">
-                  {days.map(day => (
-                    <button 
-                      key={day} 
-                      onClick={() => setTargetDay(day)} 
-                      disabled={day === sourceDay}
-                      className={`p-2 rounded-lg text-xs font-bold transition-colors ${targetDay === day ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'} ${day === sourceDay ? 'opacity-30 cursor-not-allowed' : ''}`}
-                    >
-                      {day}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} className="w-full p-3 border rounded-xl bg-gray-50 text-gray-900" />
-              )}
-            </>
-          ) : (
-            <div className="text-center">
-              <div className="bg-amber-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                <AlertTriangle className="text-amber-600" size={24} />
-              </div>
-              <h4 className="font-bold text-gray-800 mb-2">Conflito Encontrado</h4>
-              <p className="text-sm text-gray-600 mb-6">
-                O dia de destino já possui <strong>{conflictCount} refeições</strong> agendadas. O que deseja fazer?
-              </p>
-              <div className="flex flex-col gap-2">
-                <button onClick={() => { onConfirm(targetType === 'weekday' ? targetDay : 'Datas Marcadas', targetDate, 'replace'); onClose(); }} className="w-full py-3 bg-rose-500 text-white rounded-xl font-bold text-sm hover:bg-rose-600">Substituir (Apagar existentes)</button>
-                <button onClick={() => { onConfirm(targetType === 'weekday' ? targetDay : 'Datas Marcadas', targetDate, 'append'); onClose(); }} className="w-full py-3 bg-indigo-500 text-white rounded-xl font-bold text-sm hover:bg-indigo-600">Adicionar (Manter existentes)</button>
-              </div>
-            </div>
-          )}
-        </div>
-        {!conflictCount && <div className="p-4 border-t bg-gray-50 flex justify-end gap-2"><button onClick={onClose} className="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button><button onClick={handleNext} className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm shadow-md hover:bg-indigo-700">Continuar</button></div>}
-      </div>
-    </div>
-  );
+  });
+  return schedule;
 };
 
-const ResetScheduleModal = ({ onClose, onConfirm }) => {
-  const [inputValue, setInputValue] = useState('');
-  const isMatch = inputValue === 'RESETAR';
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-bounce">
-        <div className="p-4 border-b bg-rose-50 flex justify-between items-center">
-          <h3 className="font-bold text-rose-800 flex items-center gap-2">
-            <AlertTriangle size={20} /> Zona de Perigo
-          </h3>
-          <button onClick={onClose}><X size={20} className="text-rose-600" /></button>
-        </div>
-        <div className="p-6">
-          <p className="text-gray-600 mb-4 text-sm font-bold">
-            Você está prestes a apagar TODAS as refeições criadas e limpar o conteúdo das refeições padrão.
-          </p>
-          <p className="text-gray-500 text-xs mb-4">
-            Esta ação não pode ser desfeita. Para confirmar, digite <strong>RESETAR</strong> no campo abaixo:
-          </p>
-          
-          <input 
-            type="text" 
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value.toUpperCase())}
-            placeholder="Digite RESETAR"
-            className="w-full p-3 border-2 border-rose-200 rounded-xl focus:border-rose-500 focus:outline-none font-bold text-rose-600 placeholder:text-rose-200 uppercase"
-          />
-        </div>
-        <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
-          <button onClick={onClose} className="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button>
-          <button 
-            onClick={onConfirm} 
-            disabled={!isMatch}
-            className={`px-6 py-2 rounded-lg font-bold text-sm shadow-md transition-all ${isMatch ? 'bg-rose-600 text-white hover:bg-rose-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
-          >
-            Confirmar Reset
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const AchievementModal = ({ badge, onClose }) => (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce text-center relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-yellow-100/50 to-transparent pointer-events-none"></div>
-      <div className="p-8 flex flex-col items-center">
-        <div className="text-6xl mb-4 animate-bounce">{badge.icon}</div>
-        <h2 className="text-2xl font-black text-gray-800 mb-1">Nova Conquista!</h2>
-        <p className="text-emerald-600 font-bold text-lg mb-2">{badge.name}</p>
-        <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-          {badge.description}
-        </p>
-        <button 
-          onClick={onClose}
-          className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-md hover:bg-emerald-700 transition-transform active:scale-95"
-        >
-          Incrível!
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
-const LevelUpModal = ({ badge, onClose }) => (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-    <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce text-center relative border-4 border-yellow-400">
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
-      <div className="p-8 flex flex-col items-center relative z-10">
-        <h2 className="text-3xl font-black text-yellow-400 mb-2 tracking-widest drop-shadow-md animate-pulse">LEVEL UP!</h2>
-        <div className="text-8xl mb-4 animate-bounce filter drop-shadow-lg">{badge.icon}</div>
-        <p className="text-white font-bold text-xl mb-1">Você agora é um</p>
-        <p className="text-yellow-300 font-black text-2xl mb-4 uppercase tracking-wider">{badge.name}</p>
-        <p className="text-indigo-100 text-sm mb-8 leading-relaxed px-4">
-          {badge.description}
-        </p>
-        <button 
-          onClick={onClose}
-          className="w-full py-3 bg-yellow-400 text-indigo-900 rounded-xl font-black shadow-[0_4px_0_rgb(180,83,9)] hover:shadow-[0_2px_0_rgb(180,83,9)] hover:translate-y-[2px] transition-all active:shadow-none active:translate-y-[4px]"
-        >
-          CONTINUAR JORNADA
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
-const IncentiveModal = ({ onClose, title, message }) => (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce text-center">
-      <div className="bg-amber-400 p-6 flex justify-center">
-        <div className="bg-white p-4 rounded-full shadow-lg">
-          <AlertTriangle size={48} className="text-amber-500" />
-        </div>
-      </div>
-      <div className="p-6">
-        <h2 className="text-2xl font-black text-gray-800 mb-2">{title || "Não Desista!"}</h2>
-        <p className="text-gray-600 text-sm mb-6 leading-relaxed">{message}</p>
-        <button 
-          onClick={onClose}
-          className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold shadow-md hover:bg-amber-600 transition-transform active:scale-95"
-        >
-          Vou recuperar!
-        </button>
-      </div>
-    </div>
-  </div>
-);
+const DEFAULT_MEAL_SCHEDULE = generateDefaultSchedule();
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('pantry');
@@ -1114,6 +152,40 @@ const App = () => {
     if (saved) return JSON.parse(saved);
     return DEFAULT_MEAL_SCHEDULE;
   });
+
+  // --- MIGRATION EFFECT: Converts 'Todos' to explicit days ---
+  useEffect(() => {
+    const migrateSchedule = () => {
+      setMealSchedule(prev => {
+        const hasTodos = prev.some(m => m.dayOfWeek === 'Todos');
+        if (!hasTodos) return prev;
+
+        const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+        let newSchedule = [];
+
+        prev.forEach(meal => {
+          if (meal.dayOfWeek === 'Todos') {
+            // Explode 'Todos' into 7 days
+            const groupId = meal.groupId || `migrated-group-${meal.id}`;
+            days.forEach((day, index) => {
+              newSchedule.push({
+                ...meal,
+                id: `migrated-${meal.id}-${index}`,
+                dayOfWeek: day,
+                groupId: groupId,
+                isDone: false, // Reseta status na migração para evitar confusão
+                lastDoneDate: null
+              });
+            });
+          } else {
+            newSchedule.push(meal);
+          }
+        });
+        return newSchedule;
+      });
+    };
+    migrateSchedule();
+  }, []);
 
   const [isListening, setIsListening] = useState(false);
   const [scheduleWarnings, setScheduleWarnings] = useState([]);
@@ -1443,27 +515,15 @@ const App = () => {
         const newSchedule = prevSchedule.map(meal => {
           if (!meal.isDone) return meal;
 
-          let shouldReset = false;
-
-          // Caso 1: Refeição de dia específico (ex: Segunda)
-          // Se hoje é Segunda, mas a refeição foi marcada como feita em uma data diferente de hoje (ex: Segunda passada), reseta.
+          // Lógica de Reset:
+          // Se a refeição pertence ao dia de HOJE (ex: Segunda), mas a data de conclusão (lastDoneDate)
+          // NÃO é a data de hoje, significa que foi feita na semana passada (ou antes).
+          // Então deve ser resetada para ficar disponível hoje.
           if (meal.dayOfWeek === todayName) {
              if (meal.lastDoneDate && meal.lastDoneDate !== todayDateStr) {
-               shouldReset = true;
+               hasChanges = true;
+               return { ...meal, isDone: false, lastDoneDate: null };
              }
-          }
-          
-          // Caso 2: Refeição 'Todos' (Diária)
-          // Se foi feita, mas não hoje, reseta para estar disponível hoje.
-          if (meal.dayOfWeek === 'Todos') {
-             if (meal.lastDoneDate && meal.lastDoneDate !== todayDateStr) {
-               shouldReset = true;
-             }
-          }
-
-          if (shouldReset) {
-            hasChanges = true;
-            return { ...meal, isDone: false, lastDoneDate: null };
           }
           return meal;
         });
@@ -1715,24 +775,6 @@ const App = () => {
 
   const [isAlerting, setIsAlerting] = useState(false);
 
-const AlertAnimationOverlay = () => (
-  <div className="fixed inset-0 max-w-md mx-auto pointer-events-none z-[200]">
-    <style>{`
-      @keyframes pulse-border-alert {
-        0% { box-shadow: inset 0 0 0 0px rgba(34, 197, 94, 0); }
-        20% { box-shadow: inset 0 0 0 10px rgba(34, 197, 94, 0.8); }
-        100% { box-shadow: inset 0 0 0 0px rgba(34, 197, 94, 0); }
-      }
-      .animate-pulse-visual-alert {
-        /* A animação dura 2s e se repete 2 vezes, totalizando 4s */
-        animation: pulse-border-alert 2s ease-out 2;
-        border-radius: 1.5rem; /* Para combinar com o arredondamento do layout se houver */
-      }
-    `}</style>
-    <div className="w-full h-full animate-pulse-visual-alert"></div>
-  </div>
-);
-
 
   useEffect(() => {
     localStorage.setItem('userProfile', JSON.stringify(userProfile));
@@ -1869,8 +911,8 @@ const AlertAnimationOverlay = () => (
     
     let total = 0;
     mealSchedule.forEach(meal => {
-      // Considera apenas refeições de hoje que estão FEITAS
-      if ((meal.dayOfWeek === today || meal.dayOfWeek === 'Todos') && meal.isDone) {
+      // Considera apenas refeições de hoje que estão FEITAS (Removido 'Todos')
+      if (meal.dayOfWeek === today && meal.isDone) {
         meal.plate.forEach(item => {
           const food = allFoods.find(f => f.id === item.foodId);
           if (food) {
@@ -1908,7 +950,7 @@ const AlertAnimationOverlay = () => (
     const todayName = daysMap[new Date().getDay()];
     const todayDate = new Date().toISOString().split('T')[0];
     
-    const isToday = meal.dayOfWeek === 'Todos' || meal.dayOfWeek === todayName || (meal.dayOfWeek === 'Datas Marcadas' && meal.specificDate === todayDate);
+    const isToday = meal.dayOfWeek === todayName || (meal.dayOfWeek === 'Datas Marcadas' && meal.specificDate === todayDate);
 
     if (!isToday) return;
 
@@ -1945,8 +987,8 @@ const AlertAnimationOverlay = () => (
     const tmb = getTMB();
     const isLosingWeight = userProfile.targetWeight < userProfile.weight;
 
-    const allMealsForToday = mealSchedule.filter(m => (m.dayOfWeek === todayName || m.dayOfWeek === 'Todos') && m.plate.length > 0);
-    const doneMealsCount = mealSchedule.filter(m => m.isDone && (m.dayOfWeek === todayName || m.dayOfWeek === 'Todos')).length;
+    const allMealsForToday = mealSchedule.filter(m => m.dayOfWeek === todayName && m.plate.length > 0);
+    const doneMealsCount = mealSchedule.filter(m => m.isDone && m.dayOfWeek === todayName).length;
     // Adiciona 1 pois a refeição atual está sendo marcada como feita neste momento
     const isLastMeal = doneMealsCount + 1 >= allMealsForToday.length;
 
@@ -2065,7 +1107,7 @@ const AlertAnimationOverlay = () => (
     
     let total = 0;
     mealSchedule.forEach(meal => {
-      if (meal.dayOfWeek === today || meal.dayOfWeek === 'Todos') {
+      if (meal.dayOfWeek === today) {
         meal.plate.forEach(item => {
           const food = allFoods.find(f => f.id === item.foodId);
           if (food) {
@@ -2121,7 +1163,7 @@ const AlertAnimationOverlay = () => (
       }
       
       setMealSchedule(prev => prev.map(meal => {
-        const isToday = meal.dayOfWeek === today || meal.dayOfWeek === 'Todos';
+        const isToday = meal.dayOfWeek === today;
         // Apenas dispara o alerta se a refeição tiver itens no prato
         if (isToday && meal.time === currentHMT && !meal.alertTriggered && meal.plate.length > 0) {
           triggerAlert(meal.name, meal.plate);
@@ -2414,7 +1456,11 @@ const AlertAnimationOverlay = () => (
   };
 
   const handleAddMeal = (daysInput, time, specificDate, repeatCount = 1) => {
-    const days = Array.isArray(daysInput) ? daysInput : [daysInput];
+    // Se daysInput contiver 'Todos', expande para os 7 dias
+    let days = Array.isArray(daysInput) ? daysInput : [daysInput];
+    if (days.includes('Todos')) {
+        days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    }
     const isRepeatingDate = days[0] === 'Datas Marcadas' && repeatCount > 1;
     const groupId = (days.length > 1 || isRepeatingDate) ? `group-${Date.now()}` : null;
 
@@ -2474,9 +1520,7 @@ const AlertAnimationOverlay = () => (
     // Se a refeição pertence a um grupo, pré-seleciona todos os dias do grupo.
     const initialDays = meal.groupId
       ? mealSchedule.filter(m => m.groupId === meal.groupId).map(m => m.dayOfWeek)
-      : (meal.dayOfWeek === 'Todos' 
-          ? ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'] 
-          : [meal.dayOfWeek]);
+      : [meal.dayOfWeek];
 
     setCurrentPlate(meal.plate);
     setInitialPlateDays(initialDays);
@@ -2520,17 +1564,7 @@ const AlertAnimationOverlay = () => (
           }
           return m;
         });
-      });
-    } else if (mealToClear.dayOfWeek === 'Todos') {
-      const newOverrides = daysToClear.map((d, i) => ({
-        ...mealToClear,
-        id: `m-${Date.now()}-${i}-clear`,
-        dayOfWeek: d,
-        plate: [],
-        isDone: false,
-        groupId: null,
-      }));
-      setMealSchedule(prev => [...prev, ...newOverrides]);
+              });
     } else {
       setMealSchedule(prev => prev.map(m => (m.id === mealToClear.id && daysToClear.includes(m.dayOfWeek)) ? { ...m, plate: [] } : m));
     }
@@ -2542,31 +1576,14 @@ const AlertAnimationOverlay = () => (
   const confirmDelete = (daysToDelete) => {
     if (!mealToDelete) return;
 
-    // This handles deleting a specific, non-'Todos' meal, which includes all custom meals.
-    // It correctly removes the meal by its unique ID.
-    if (mealToDelete.dayOfWeek !== 'Todos') {
-        setMealSchedule(prev => prev.filter(m => m.id !== mealToDelete.id));
+    if (mealToDelete.groupId) {
+        // Se faz parte de um grupo, remove apenas os dias selecionados desse grupo
+        setMealSchedule(prev => prev.filter(m => {
+            if (m.groupId === mealToDelete.groupId && daysToDelete.includes(m.dayOfWeek)) return false;
+            return true;
+        }));
     } else {
-        // This handles the more complex case of deleting days from a 'Todos' template.
-        const allWeekDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-        
-        // If all days are selected for deletion, the 'Todos' meal is simply removed.
-        if (daysToDelete.length === allWeekDays.length) {
-            setMealSchedule(prev => prev.filter(m => m.id !== mealToDelete.id));
-        } else {
-            // If only some days are deleted, the 'Todos' meal is replaced by
-            // new individual meals for the days that were NOT selected for deletion.
-            const remainingDays = allWeekDays.filter(d => !daysToDelete.includes(d));
-            
-            const newMeals = remainingDays.map((day, index) => ({
-                ...mealToDelete,
-                id: `m-${Date.now()}-${index}`,
-                dayOfWeek: day,
-                groupId: null // They are now individual meals
-            }));
-
-            setMealSchedule(prev => [...prev.filter(m => m.id !== mealToDelete.id), ...newMeals]);
-        }
+        setMealSchedule(prev => prev.filter(m => m.id !== mealToDelete.id));
     }
 
     setMealToDelete(null);
@@ -2604,15 +1621,7 @@ const AlertAnimationOverlay = () => (
       }
 
       // 2. Encontra refeições da origem (incluindo 'Todos' se for dia da semana)
-      const sourceMeals = prev.filter(m => {
-        if (m.dayOfWeek === cloneSourceDay) return true;
-        if (m.dayOfWeek === 'Todos') {
-           // Verifica se NÃO há override no dia de origem (se houver, o override já foi pego acima)
-           const hasOverride = prev.some(om => om.dayOfWeek === cloneSourceDay && om.name === m.name);
-           return !hasOverride;
-        }
-        return false;
-      });
+      const sourceMeals = prev.filter(m => m.dayOfWeek === cloneSourceDay);
 
       // 3. Cria cópias para o destino
       const clonedMeals = sourceMeals.map((m, i) => ({
@@ -2620,7 +1629,9 @@ const AlertAnimationOverlay = () => (
         id: `m-${Date.now()}-${i}-clone`,
         dayOfWeek: targetDay,
         specificDate: targetDay === 'Datas Marcadas' ? targetDate : null,
-        groupId: null // Quebra vínculo de grupo ao clonar para evitar edições acidentais cruzadas
+        groupId: null, // Quebra vínculo de grupo ao clonar
+        isDone: false,
+        lastDoneDate: null
       }));
 
       return [...newSchedule, ...clonedMeals];
@@ -2634,7 +1645,7 @@ const AlertAnimationOverlay = () => (
 
   const confirmReset = () => {
     // Usa JSON.parse/stringify para garantir uma cópia profunda e limpa, forçando a atualização do estado
-    setMealSchedule(JSON.parse(JSON.stringify(DEFAULT_MEAL_SCHEDULE)));
+    setMealSchedule(JSON.parse(JSON.stringify(generateDefaultSchedule())));
     setShowResetModal(false);
     alert("Sua agenda foi resetada com sucesso!");
   };
@@ -2646,7 +1657,7 @@ const AlertAnimationOverlay = () => (
 
       // Encontrar o índice alvo considerando apenas os itens visíveis no dia atual
       let targetIndex = -1;
-      const isVisible = (m) => m.dayOfWeek === activeDay || m.dayOfWeek === 'Todos';
+      const isVisible = (m) => m.dayOfWeek === activeDay;
       
       if (direction === 'up') {
         for (let i = index - 1; i >= 0; i--) {
@@ -2698,7 +1709,7 @@ const AlertAnimationOverlay = () => (
 
     daysOfWeek.forEach(day => {
       let dayCalories = 0;
-      const mealsForDay = mealSchedule.filter(m => m.dayOfWeek === day || m.dayOfWeek === 'Todos');
+      const mealsForDay = mealSchedule.filter(m => m.dayOfWeek === day);
       
       if (mealsForDay.some(m => m.plate.length > 0)) {
         mealsForDay.forEach(meal => {
@@ -2985,6 +1996,10 @@ const AlertAnimationOverlay = () => (
     const { days: daysInput, date: specificDate } = assignmentData;
     const isDateSpecific = !!specificDate;
 
+    // Explode 'Todos' into explicit days
+    let days = isDateSpecific ? ['Datas Marcadas'] : (Array.isArray(daysInput) ? daysInput : [daysInput]);
+    if (days.includes('Todos')) days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+
     // Case 1: Inserting into an existing custom meal ("Inserir em...")
     if (targetId) {
         setMealSchedule(prev =>
@@ -3015,48 +2030,29 @@ const AlertAnimationOverlay = () => (
                 return false;
             });
 
-            const days = isDateSpecific 
-              ? ['Datas Marcadas'] // Direciona para a aba "Datas Marcadas"
-              : (Array.isArray(daysInput) ? daysInput : [daysInput]);
-
-            // 2. Handle 'Todos' case for fixed meals
-            if (days.length === 1 && days[0] === 'Todos' && editingMealInfo.isFixed) {
-                const mealToUpdateIndex = schedule.findIndex(m => m.name === nameToUpdate && m.dayOfWeek === 'Todos');
-                if (mealToUpdateIndex !== -1) {
-                    schedule[mealToUpdateIndex] = { ...schedule[mealToUpdateIndex], plate: [...currentPlate], withWhom, eventLocation, description };
-                }
-            } else {
-            // 3. Add back the new specific-day instances with the updated plate.
-                days.forEach(day => {
-                    if (day === 'Todos') return;
-                    const templateMeal = mealSchedule.find(m => m.name === nameToUpdate && m.dayOfWeek === 'Todos');
-                    const mealTime = templateMeal ? templateMeal.time : (defaultTimes[nameToUpdate] || '12:00');
-                    schedule.unshift({ id: `m-${Date.now()}-${day}`, name: nameToUpdate, time: mealTime, plate: [...currentPlate], isDone: false, dayOfWeek: day, withWhom, eventLocation, description, specificDate: isDateSpecific ? specificDate : null });
+            // 2. Add back updated instances
+            const newGroupId = groupIdToUpdate || (days.length > 1 ? `group-${Date.now()}` : null);
+            
+            days.forEach((day, index) => {
+                const templateMeal = mealSchedule.find(m => m.name === nameToUpdate && m.dayOfWeek === day);
+                const mealTime = templateMeal ? templateMeal.time : (defaultTimes[nameToUpdate] || '12:00');
+                schedule.push({ 
+                    id: `m-${Date.now()}-${index}`, name: nameToUpdate, time: mealTime, 
+                    plate: [...currentPlate], isDone: false, dayOfWeek: day, 
+                    withWhom, eventLocation, description, 
+                    specificDate: isDateSpecific ? specificDate : null,
+                    groupId: newGroupId
                 });
-            }
+            });
             return schedule;
         });
     }
     // Case 3: Assigning a new plate from scratch
     else {
         setMealSchedule(prev => {
-            const days = isDateSpecific
-              ? ['Datas Marcadas'] // Direciona para a aba "Datas Marcadas"
-              : (Array.isArray(daysInput) ? daysInput.filter(d => d !== 'Todos') : [daysInput]);
             let nextSchedule = [...prev];
-            const isFullWeek = daysInput.length === 7 || (Array.isArray(daysInput) && daysInput[0] === 'Todos');
             const newGroupId = days.length > 1 ? `group-${Date.now()}` : null;
 
-            if (isFullWeek) {
-                const mealToUpdateIndex = nextSchedule.findIndex(m => m.name === mealName && m.dayOfWeek === 'Todos');
-                if (mealToUpdateIndex !== -1) {
-                    nextSchedule[mealToUpdateIndex] = { ...nextSchedule[mealToUpdateIndex], plate: [...currentPlate], withWhom, eventLocation, description };
-                }
-                // Also remove any specific day overrides for this meal name
-                nextSchedule = nextSchedule.filter(m => m.name !== mealName || m.dayOfWeek === 'Todos');
-                return nextSchedule;
-            }
-            
             days.forEach(day => {
                 const existingOverrideIndex = nextSchedule.findIndex(m => m.name === mealName && m.dayOfWeek === day);
                 
@@ -3065,10 +2061,9 @@ const AlertAnimationOverlay = () => (
                     const oldMeal = nextSchedule[existingOverrideIndex];
                     nextSchedule[existingOverrideIndex] = { ...oldMeal, plate: [...currentPlate], groupId: newGroupId, withWhom, eventLocation, description };
                 } else {
-                    const templateMeal = nextSchedule.find(m => m.name === mealName && m.dayOfWeek === 'Todos');
-                    const mealTime = templateMeal ? templateMeal.time : time;
+                    // Cria nova
                     nextSchedule.unshift({ 
-                        id: `m-${Date.now()}-${day}`, name: mealName, time: mealTime, 
+                        id: `m-${Date.now()}-${day}`, name: mealName, time: time, 
                         plate: [...currentPlate], isDone: false, dayOfWeek: day,
                         groupId: newGroupId,
                         withWhom, eventLocation, description,
