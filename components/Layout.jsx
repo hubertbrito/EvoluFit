@@ -1,11 +1,77 @@
 import React, { useMemo } from 'react';
 import { LayoutGrid, ChefHat, BrainCircuit, CalendarClock, RefreshCw, BookOpen, Download, ClipboardList, FileDown, Sun, Moon, ShoppingCart, Trophy, Heart, Crown } from 'lucide-react';
 
-const HeaderButton = ({ onClick, title, children }) => (
-  <button onClick={onClick} className="flex flex-col items-center justify-center p-1 rounded-lg hover:bg-emerald-700 transition-colors flex-1 min-w-0" title={title}>
+const HeaderButton = ({ onClick, title, children, className = "" }) => (
+  <button onClick={onClick} className={`flex flex-col items-center justify-center p-1 rounded-lg hover:bg-emerald-700 transition-colors flex-1 min-w-0 ${className}`} title={title}>
     {children}
   </button>
 );
+
+const Sidebar = ({ activeTab, onTabChange, plateCount, currentTheme, onThemeChange, onToggleManual }) => {
+  const navItems = [
+    { id: 'pantry', label: 'Dispensa', icon: LayoutGrid },
+    { id: 'plate', label: 'Prato', icon: ChefHat, badge: plateCount },
+    { id: 'schedule', label: 'Agenda', icon: CalendarClock },
+    { id: 'brain', label: 'Cérebro', icon: BrainCircuit },
+  ];
+
+  return (
+    <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 h-full shrink-0 z-30 transition-all duration-300">
+      <div className="p-6 flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 h-[72px]">
+        <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-emerald-200 dark:shadow-none">
+          <ChefHat size={20} />
+        </div>
+        <span className="font-black text-xl text-gray-800 dark:text-white tracking-tight">EvoluFit</span>
+      </div>
+
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onTabChange(item.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all group relative ${
+                isActive 
+                  ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-bold shadow-sm' 
+                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              <div className={`relative transition-colors ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`}>
+                <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                {item.badge > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-sm animate-bounce">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
+              <span className="text-sm tracking-wide">{item.label}</span>
+              {isActive && <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-l-full bg-emerald-500" />}
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className="p-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
+        <button 
+          onClick={() => onThemeChange(currentTheme === 'dark' ? 'light' : 'dark')}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm font-medium"
+        >
+          {currentTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          <span>{currentTheme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
+        </button>
+        <button 
+          onClick={onToggleManual}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm font-medium"
+        >
+          <BookOpen size={18} />
+          <span>Manual de Uso</span>
+        </button>
+      </div>
+    </aside>
+  );
+};
 
 export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRestartTour, onToggleManual, onInstallClick, showInstallButton, onToggleSummary, onToggleShoppingList, onExportPDF, currentTheme, onThemeChange, gamification, level, allBadges, accessStatus, isRealAdmin, onDebugToggle, onOpenUpgrade, onManualUpdate, showUpdateButton }) => {
   const unlockedBadges = useMemo(() => {
@@ -14,7 +80,7 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
   }, [gamification, allBadges]);
 
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-white dark:bg-gray-900 shadow-2xl relative overflow-hidden">
+    <div className="flex h-screen w-full bg-gray-100 dark:bg-black overflow-hidden">
       <style>{`
         @keyframes soft-pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
@@ -24,15 +90,31 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
           animation: soft-pulse 2s infinite ease-in-out;
         }
       `}</style>
-      <header className="bg-emerald-600 text-white p-2 pt-4 flex flex-col items-center shadow-md z-10 gap-2">
-        <div className="flex items-center gap-6">
-          <span className="font-bold text-sm tracking-tighter opacity-90">EvoluFit v2.0</span>
-          <div className="flex flex-col items-center justify-center">
-            <span className="text-[8px] font-bold uppercase text-white/80 leading-none mb-0.5">Status</span>
+      
+      {/* Sidebar for Desktop */}
+      <Sidebar 
+        activeTab={activeTab} 
+        onTabChange={onTabChange} 
+        plateCount={plateCount}
+        currentTheme={currentTheme}
+        onThemeChange={onThemeChange}
+        onToggleManual={onToggleManual}
+      />
+
+      {/* Main Content Wrapper */}
+      <div className="flex flex-col flex-1 h-full relative overflow-hidden md:bg-gray-50 md:dark:bg-gray-900">
+        {/* Mobile Container Constraint & Desktop Expansion */}
+        <div className="flex flex-col h-full w-full max-w-md mx-auto md:max-w-7xl md:mx-auto bg-white dark:bg-gray-900 shadow-2xl md:shadow-none relative transition-all duration-300">
+          
+          <header className="bg-emerald-600 text-white p-2 pt-4 flex flex-col items-center shadow-md z-10 gap-2 md:flex-row md:justify-between md:px-6 md:py-3 md:h-[72px] shrink-0">
+            <div className="flex items-center gap-6 md:gap-4">
+              <span className="font-bold text-sm tracking-tighter opacity-90 md:hidden">EvoluFit v2.0</span>
+              <div className="flex flex-col items-center justify-center md:flex-row md:gap-2">
+                <span className="text-[8px] font-bold uppercase text-white/80 leading-none mb-0.5 md:mb-0 md:text-xs">Status</span>
             {(accessStatus === 'premium' || accessStatus === 'admin') ? (
               <div 
                 onClick={isRealAdmin ? onDebugToggle : undefined}
-                className={`flex items-center gap-0.5 bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded-full text-[8px] font-black shadow-sm animate-fade-in ${isRealAdmin ? 'cursor-pointer hover:scale-110 transition-transform' : ''}`}
+                className={`flex items-center gap-0.5 bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded-full text-[8px] font-black shadow-sm animate-fade-in ${isRealAdmin ? 'cursor-pointer hover:scale-110 transition-transform' : ''} md:px-2 md:py-1 md:text-[10px]`}
                 title={isRealAdmin ? "Admin: Clique para alternar visualização (Premium/Trial/Bloqueio)" : ""}
               >
                 <Crown size={10} fill="currentColor" />
@@ -41,7 +123,7 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
             ) : (
               <div 
                 onClick={isRealAdmin ? onDebugToggle : onOpenUpgrade}
-                className={`bg-gradient-to-r from-orange-400 to-pink-600 text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-md border border-white/20 animate-fade-in cursor-pointer hover:scale-105 transition-transform`}
+                className={`bg-gradient-to-r from-orange-400 to-pink-600 text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-md border border-white/20 animate-fade-in cursor-pointer hover:scale-105 transition-transform md:text-xs`}
                 title={isRealAdmin ? "Admin: Clique para alternar visualização (Premium/Trial/Bloqueio)" : "Clique para se tornar PRO"}
               >
                 Clique Upgrade
@@ -49,7 +131,7 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
             )}
           </div>
         </div>
-        <div className="flex items-center justify-between w-full px-1 gap-1">
+        <div className="flex items-center justify-between w-full px-1 gap-1 md:w-auto md:gap-3">
           {showInstallButton && (
             <HeaderButton onClick={onInstallClick} title="Instale o App">
               <Download size={20} />
@@ -57,7 +139,7 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
             </HeaderButton>
           )}
           {showUpdateButton && (
-            <button onClick={onManualUpdate} title="Atualizar App" className="flex flex-col items-center justify-center p-1 rounded-lg flex-1 min-w-0 bg-yellow-100 text-yellow-600 ring-2 ring-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)] animate-soft-pulse hover:bg-yellow-200 transition-all">
+            <button onClick={onManualUpdate} title="Atualizar App" className="flex flex-col items-center justify-center p-1 rounded-lg flex-1 min-w-0 bg-yellow-100 text-yellow-600 ring-2 ring-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)] animate-soft-pulse hover:bg-yellow-200 transition-all md:px-3">
               <RefreshCw size={20} />
               <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5">Atualizar</span>
             </button>
@@ -76,11 +158,13 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
             <ClipboardList size={20} />
             <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5 text-center leading-none">Agendadas</span>
           </HeaderButton>
-          <HeaderButton onClick={() => onThemeChange(currentTheme === 'dark' ? 'light' : 'dark')} title="Alternar Tema">
+          
+          {/* Hide Theme/Manual on Desktop as they are in Sidebar */}
+          <HeaderButton onClick={() => onThemeChange(currentTheme === 'dark' ? 'light' : 'dark')} title="Alternar Tema" className="md:hidden">
             {currentTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5">Tema</span>
           </HeaderButton>
-          <HeaderButton onClick={onToggleManual} title="Manual de Uso">
+          <HeaderButton onClick={onToggleManual} title="Manual de Uso" className="md:hidden">
             <BookOpen size={20} />
             <span className="text-[10px] font-bold uppercase tracking-tighter mt-0.5">Manual</span>
           </HeaderButton>
@@ -89,7 +173,7 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
 
       {/* Barra de Resumo de Gamificação */}
       {gamification && (
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-3 py-2 flex items-center justify-between shadow-sm z-10 shrink-0 gap-2">
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-3 py-2 flex items-center justify-between shadow-sm z-10 shrink-0 gap-2 md:px-6">
            {/* Nível */}
            <div className="flex items-center gap-2 min-w-0">
               <div className="text-xl">{level?.icon || '🌱'}</div>
@@ -106,7 +190,7 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
            </div>
 
            {/* Troféus (Scroll Horizontal) */}
-           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[120px] justify-end">
+           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[120px] justify-end md:max-w-none">
               {unlockedBadges.length > 0 ? (
                 unlockedBadges.map(badge => (
                   <div key={badge.id} className="text-sm shrink-0" title={badge.name}>
@@ -120,22 +204,24 @@ export const Layout = ({ children, activeTab, onTabChange, plateCount = 0, onRes
         </div>
       )}
 
-      <main className="flex-1 overflow-y-auto pb-28 scroll-smooth bg-gray-50/30 dark:bg-gray-900">
-        {children}
-      </main>
+          <main className="flex-1 overflow-y-auto pb-28 md:pb-6 scroll-smooth bg-gray-50/30 dark:bg-gray-900 md:px-6">
+            {children}
+          </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 flex justify-around p-4 z-50">
-        <NavButton active={activeTab === 'pantry'} onClick={() => onTabChange('pantry')} icon={<LayoutGrid size={22}/>} label="Dispensa" />
-        <NavButton 
-          active={activeTab === 'plate'} 
-          onClick={() => onTabChange('plate')} 
-          icon={<ChefHat size={22}/>} 
-          label="Prato" 
-          badge={plateCount > 0 ? plateCount : undefined}
-        />
-        <NavButton active={activeTab === 'schedule'} onClick={() => onTabChange('schedule')} icon={<CalendarClock size={22}/>} label="Agenda" />
-        <NavButton active={activeTab === 'brain'} onClick={() => onTabChange('brain')} icon={<BrainCircuit size={22}/>} label="Cérebro" />
-      </nav>
+          <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 flex justify-around p-4 z-50 md:hidden">
+            <NavButton active={activeTab === 'pantry'} onClick={() => onTabChange('pantry')} icon={<LayoutGrid size={22}/>} label="Dispensa" />
+            <NavButton 
+              active={activeTab === 'plate'} 
+              onClick={() => onTabChange('plate')} 
+              icon={<ChefHat size={22}/>} 
+              label="Prato" 
+              badge={plateCount > 0 ? plateCount : undefined}
+            />
+            <NavButton active={activeTab === 'schedule'} onClick={() => onTabChange('schedule')} icon={<CalendarClock size={22}/>} label="Agenda" />
+            <NavButton active={activeTab === 'brain'} onClick={() => onTabChange('brain')} icon={<BrainCircuit size={22}/>} label="Cérebro" />
+          </nav>
+        </div>
+      </div>
     </div>
   );
 };

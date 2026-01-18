@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Mic, Plus, Trash2, Utensils, Info, Filter, ArrowUp, Loader, MessageCircle, X } from 'lucide-react';
+import { Search, Mic, Plus, Trash2, Utensils, Info, Filter, ArrowUp, Loader, MessageCircle, X, ChefHat, Star } from 'lucide-react';
 import { DIET_TYPES } from '../constants';
 import { searchFoodsDB, getFoodsByCategoryDB } from '../db.js';
+import { DISH_TEMPLATES, DISH_SIZES } from '../dishTemplates';
 
 // Função auxiliar para formatar a quantidade e medida do alimento
 const formatFoodQuantity = (quantity, measure, foodName) => {
@@ -14,6 +15,45 @@ const formatFoodQuantity = (quantity, measure, foodName) => {
     return `${total} ${match[2]} de ${foodName}`;
   }
   return `${qty} ${meas} de ${foodName}`;
+};
+
+const DishSizeModal = ({ dish, onClose, onConfirm }) => {
+  if (!dish) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-bounce">
+        <div className="p-4 border-b dark:border-gray-700 bg-emerald-50 dark:bg-emerald-900/20 flex justify-between items-center">
+          <h3 className="font-bold text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
+            <ChefHat size={20} /> {dish.name}
+          </h3>
+          <button onClick={onClose} className="p-1 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 rounded-full transition-colors text-emerald-600 dark:text-emerald-400">
+            <X size={20} />
+          </button>
+        </div>
+        <div className="p-6">
+          <p className="text-center text-gray-600 dark:text-gray-300 mb-6 text-sm font-medium">
+            Qual o tamanho da sua fome hoje?
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {Object.entries(DISH_SIZES).map(([key, size]) => (
+              <button
+                key={key}
+                onClick={() => onConfirm(dish, size)}
+                className="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all group"
+              >
+                <span className="text-2xl mb-1 group-hover:scale-110 transition-transform">{size.icon}</span>
+                <span className="text-xs font-bold text-gray-700 dark:text-gray-200">{size.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="p-3 bg-gray-50 dark:bg-gray-900 text-center">
+            <p className="text-[10px] text-gray-400">O app calculará as quantidades automaticamente.</p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const PantryScreen = ({ 
@@ -31,25 +71,29 @@ const PantryScreen = ({
   onAddManual,
   searchTerm,
   onSearchTermChange,
+  onAddDishToPlate,
   voiceAddedFoodId,
   showTour,
-  tourStep
+  tourStep,
+  favorites = [],
+  onToggleFavorite
 }) => {
   const [displayedFoods, setDisplayedFoods] = useState([]);
-  const [showInfo, setShowInfo] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   // const [searchTerm, setSearchTerm] = useState(''); // Estado movido para App.jsx
   const [activeCategory, setActiveCategory] = useState('Dispensa');
   const [viewMode, setViewMode] = useState('categories'); // 'categories' | 'diets'
   const [activeDiet, setActiveDiet] = useState('Todas');
+  const [selectedDish, setSelectedDish] = useState(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const listRef = useRef(null);
   
-  const categories = ['Dispensa', 'Meus Alimentos', 'Frutas', 'Vegetais', 'Carboidratos', 'Proteínas', 'Leguminosas', 'Laticínios', 'Gorduras', 'Bebidas', 'Doces', 'Industrializados'];
+  const categories = ['Dispensa', 'Pratos Feitos', 'Favoritos', 'Meus Alimentos', 'Frutas', 'Vegetais', 'Carboidratos', 'Proteínas', 'Leguminosas', 'Laticínios', 'Gorduras', 'Bebidas', 'Doces', 'Industrializados'];
   const diets = ['Todas', ...DIET_TYPES];
 
   const categoryColors = {
+    'Favoritos': 'text-yellow-600 bg-yellow-50 border-yellow-100',
     'Carboidratos': 'text-orange-600 bg-orange-50 border-orange-100',
     'Proteínas': 'text-rose-600 bg-rose-50 border-rose-100',
     'Vegetais': 'text-emerald-600 bg-emerald-50 border-emerald-100',
@@ -63,11 +107,6 @@ const PantryScreen = ({
     'Outros': 'text-slate-600 bg-slate-50 border-slate-100',
     'Meus Alimentos': 'text-purple-600 bg-purple-50 border-purple-100'
   };
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowInfo(false), 30000);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     const fetchAndSetFoods = async () => {
@@ -104,6 +143,11 @@ const PantryScreen = ({
           } else if (activeCategory === 'Meus Alimentos') {
             // Mostra TODOS os alimentos criados pelo usuário, independente da categoria nutricional
             foods = allFoods.filter(f => f.id.toString().startsWith('custom-'));
+          } else if (activeCategory === 'Pratos Feitos') {
+            foods = []; // Pratos Feitos são renderizados separadamente, não misturados com alimentos
+          } else if (activeCategory === 'Favoritos') {
+            foods = allFoods.filter(f => favorites.includes(f.id));
+            foods.sort((a, b) => a.name.localeCompare(b.name));
           } else {
             // Busca no DB e mescla com customizados da mesma categoria
             const dbFoods = await getFoodsByCategoryDB(activeCategory);
@@ -123,7 +167,7 @@ const PantryScreen = ({
     if (allFoods.length > 0) {
       fetchAndSetFoods();
     }
-  }, [searchTerm, activeCategory, viewMode, activeDiet, allFoods, userPantry]);
+  }, [searchTerm, activeCategory, viewMode, activeDiet, allFoods, userPantry, favorites]);
 
   // Garante que o display TechNutri esteja sempre preenchido com o primeiro item da lista
   useEffect(() => {
@@ -139,6 +183,8 @@ const PantryScreen = ({
     if (searchTerm) return `${count} ${suffix}`;
     if (viewMode === 'categories') {
       if (activeCategory === 'Dispensa') return `${count} ${suffix} na Sua Dispensa`;
+      if (activeCategory === 'Pratos Feitos') return `${DISH_TEMPLATES.length} opções de Pratos`;
+      if (activeCategory === 'Favoritos') return `${count} ${suffix} nos Favoritos`;
       return `${count} ${suffix} na categoria ${activeCategory}`;
     }
     return activeDiet === 'Todas' ? `${count} ${suffix} no geral` : `${count} ${suffix} para a dieta ${activeDiet}`;
@@ -177,6 +223,23 @@ const PantryScreen = ({
     }
   }, [voiceAddedFoodId]);
 
+  const handleDishConfirm = (dish, size) => {
+    const items = dish.components.map(comp => {
+      // Se o componente tiver uma quantidade fixa (ex: 2 ovos), usa ela.
+      // Caso contrário, usa o peso definido na matriz de tamanhos para o papel (role) do componente.
+      const quantity = comp.quantityOverride || size[comp.role] || 100;
+      
+      return {
+        foodId: comp.foodId,
+        quantity: quantity,
+        unit: comp.unit || 'Gramas (g)',
+        multiplier: 1.0
+      };
+    });
+    onAddDishToPlate(items);
+    setSelectedDish(null);
+  };
+
   return (
     <div className="p-4 space-y-4 pb-24">
       <style>{`
@@ -196,26 +259,9 @@ const PantryScreen = ({
           animation: pulse-highlight 2s ease-out 5; /* 2s x 5 = 10s de destaque */
         }
       `}</style>
-      
-      <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showInfo ? 'max-h-60 opacity-100' : 'max-h-6 opacity-100 -my-2'}`}>
-        {showInfo ? (
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-100 dark:border-blue-800 flex items-start gap-2 relative">
-            <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-            <p className="text-xs text-blue-700 dark:text-blue-300 pr-6"><strong>Dispensa:</strong> Toque em um card para adicioná-lo à sua dispensa e selecioná-lo para o prato automaticamente. Use a lixeira para remover itens da sua lista pessoal.</p>
-            <button onClick={() => setShowInfo(false)} className="absolute top-2 right-2 text-blue-400 hover:text-blue-600 p-1"><X size={16} /></button>
-          </div>
-        ) : (
-          <div className="flex justify-end">
-              <button onClick={() => setShowInfo(true)} className="flex items-center gap-1 text-blue-500 hover:text-blue-600 transition-colors p-0">
-                  <Info size={16} />
-                  <span className="text-[10px] font-bold">Info</span>
-              </button>
-          </div>
-        )}
-      </div>
 
       {/* Sticky Menu Container */}
-      <div className="sticky top-[88px] z-20 bg-gray-50 dark:bg-gray-900 -mx-4 px-4 pb-2 pt-2 space-y-2 shadow-sm">
+      <div className="sticky top-[60px] z-20 bg-gray-50 dark:bg-gray-900 -mx-4 px-4 pb-2 pt-2 space-y-2 shadow-sm">
         {/* Header / Search */}
         <div className="space-y-1">
           <label className="text-[10px] font-medium text-gray-600 dark:text-gray-300 block ml-1">
@@ -263,6 +309,15 @@ const PantryScreen = ({
           {(viewMode === 'categories' ? categories : diets).map(item => {
             const isDispensa = item === 'Dispensa' && viewMode === 'categories';
             const isActive = (viewMode === 'categories' ? activeCategory : activeDiet) === item;
+            
+            // Lógica para cor do texto quando inativo
+            let inactiveTextColor = 'text-gray-500 dark:text-gray-400';
+            if (!isActive && viewMode === 'categories') {
+                if (item === 'Dispensa') inactiveTextColor = 'text-blue-600 dark:text-blue-400';
+                else if (item === 'Pratos Feitos') inactiveTextColor = 'text-orange-600 dark:text-orange-400';
+                else if (categoryColors[item]) inactiveTextColor = categoryColors[item].split(' ')[0]; // Pega a classe de cor do texto (ex: text-yellow-600)
+            }
+
             return (
               <button
                 key={item}
@@ -274,8 +329,8 @@ const PantryScreen = ({
                 }}
                 className={`px-4 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors 
                     ${isActive 
-                      ? (isDispensa ? 'bg-blue-600 text-white shadow-md' : 'bg-emerald-500 text-white shadow-md') 
-                      : (isDispensa ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700')}`}
+                      ? (isDispensa ? 'bg-blue-600 text-white shadow-md' : (item === 'Pratos Feitos' ? 'bg-orange-500 text-white shadow-md' : (item === 'Favoritos' ? 'bg-yellow-500 text-white shadow-md' : 'bg-emerald-500 text-white shadow-md'))) 
+                      : (isDispensa ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800' : `bg-white dark:bg-gray-800 ${inactiveTextColor} border border-gray-200 dark:border-gray-700`)}`}
               >
                 {isDispensa ? 'Sua Dispensa' : item}
               </button>
@@ -307,12 +362,46 @@ const PantryScreen = ({
       )}
 
       {/* List */}
-      <div ref={listRef} key={`${viewMode}-${viewMode === 'categories' ? activeCategory : activeDiet}`} className="space-y-1.5 animate-fade-in">
+      <div ref={listRef} key={`${viewMode}-${viewMode === 'categories' ? activeCategory : activeDiet}`} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 animate-fade-in">
+        {/* Renderização Especial para Pratos Feitos */}
+        {activeCategory === 'Pratos Feitos' && !searchTerm && viewMode === 'categories' && (
+            DISH_TEMPLATES.map(dish => {
+                const isFavorite = favorites.includes(dish.id);
+                return (
+                <div 
+                    key={dish.id}
+                    onClick={() => setSelectedDish(dish)}
+                    className="p-3 rounded-2xl shadow-sm border border-orange-100 dark:border-orange-900/50 bg-white dark:bg-gray-800 flex items-start justify-between cursor-pointer transition-all hover:shadow-md hover:border-orange-300 dark:hover:border-orange-700 group"
+                >
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <span className="text-2xl shrink-0 bg-orange-50 dark:bg-orange-900/20 p-2 rounded-xl">{dish.emoji}</span>
+                        <div className="min-w-0 flex-1 pt-0.5">
+                            <h3 className="font-bold text-sm text-gray-800 dark:text-gray-100 leading-tight mb-1">{dish.name}</h3>
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed whitespace-pre-line">{dish.description}</p>
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-center gap-1 shrink-0 ml-2">
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onToggleFavorite(dish.id); }}
+                            className={`p-1.5 rounded-lg transition-colors ${isFavorite ? 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20' : 'text-gray-300 hover:text-yellow-400'}`}
+                            title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
+                        >
+                            <Star className="w-4 h-4" fill={isFavorite ? "currentColor" : "none"} />
+                        </button>
+                        <button className="p-2 bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-xl group-hover:bg-orange-500 group-hover:text-white transition-colors">
+                            <Plus size={18} />
+                        </button>
+                    </div>
+                </div>
+            )})
+        )}
+
         {displayedFoods.map((food, index) => {
           const isInPantry = userPantry.includes(food.id);
           const plateItem = currentPlate.find(p => p.foodId === food.id);
           const isSelected = !!plateItem;
           const isVoiceAdded = food.id === voiceAddedFoodId;
+          const isFavorite = favorites.includes(food.id);
           const isPreviewed = lastSelectedFood && lastSelectedFood.id === food.id;
           const isConfirmingDelete = confirmDeleteId === food.id;
 
@@ -321,7 +410,7 @@ const PantryScreen = ({
           const categoryStyle = categoryColors[food.category] || categoryColors['Outros'];
 
           const itemClasses = [
-            'p-2.5 rounded-2xl shadow-sm border flex items-center justify-between cursor-pointer transition-all',
+            'p-2.5 rounded-2xl shadow-sm border flex items-center justify-between cursor-pointer transition-all hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700',
             isSelected ? 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-500 ring-1 ring-emerald-500' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700',
             isVoiceAdded ? 'highlight-voice-add' : ''
           ].filter(Boolean).join(' ');
@@ -329,7 +418,7 @@ const PantryScreen = ({
           return (
             <React.Fragment key={food.id}>
             {showHeader && (
-                <div className={`sticky top-28 z-10 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border shadow-sm mb-1 mt-2 first:mt-0 ${categoryStyle}`}>
+                <div className={`col-span-full sticky top-28 z-10 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border shadow-sm mb-1 mt-2 first:mt-0 ${categoryStyle}`}>
                     {food.category || 'Outros'}
                 </div>
             )}
@@ -367,6 +456,14 @@ const PantryScreen = ({
               </div>
               
               <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onToggleFavorite(food.id); }}
+                  className={`p-1.5 rounded-lg transition-colors ${isFavorite ? 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20' : 'text-gray-300 hover:text-yellow-400'}`}
+                  title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
+                >
+                  <Star className="w-3.5 h-3.5" fill={isFavorite ? "currentColor" : "none"} />
+                </button>
+
                 {isInPantry ? (
                   <>
                     <button 
@@ -447,14 +544,14 @@ const PantryScreen = ({
         })}
 
         {displayedFoods.length === 0 && !searchTerm && viewMode === 'categories' && activeCategory === 'Dispensa' && (
-          <div className="text-center py-10 text-gray-400">
+          <div className="col-span-full text-center py-10 text-gray-400">
             <p>Sua dispensa está vazia.</p>
             <p className="text-sm">Navegue pelas categorias acima para adicionar alimentos.</p>
           </div>
         )}
 
-        {displayedFoods.length === 0 && !searchTerm && (viewMode === 'diets' || activeCategory !== 'Dispensa') && (
-          <div className="text-center py-10 text-gray-400">
+        {displayedFoods.length === 0 && !searchTerm && (viewMode === 'diets' || (activeCategory !== 'Dispensa' && activeCategory !== 'Pratos Feitos')) && (
+          <div className="col-span-full text-center py-10 text-gray-400">
             <p>Nenhum item encontrado nesta categoria.</p>
           </div>
         )}
@@ -486,6 +583,8 @@ const PantryScreen = ({
           <ArrowUp className="w-5 h-5" />
         </button>
       )}
+
+      <DishSizeModal dish={selectedDish} onClose={() => setSelectedDish(null)} onConfirm={handleDishConfirm} />
     </div>
   );
 };

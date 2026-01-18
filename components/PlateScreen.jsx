@@ -192,7 +192,8 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="flex flex-col md:flex-row md:gap-6 md:items-start">
+          <div className="flex-1 space-y-4">
           {/* Item de Exemplo para o Tour (Apenas visualização) */}
           {plate.length === 0 && showTour && (
             <div className="bg-white p-4 rounded-2xl shadow-sm border-2 border-dashed border-emerald-300 relative opacity-90" data-tour-id="plate-item-example">
@@ -303,8 +304,9 @@ const PlateScreen = ({ plate, onRemove, onUpdate, allFoods, onAssignMeal, onAddM
           >
             <Plus className="w-4 h-4" /> Adicionar mais itens
           </button>
+          </div>
 
-          <div className="pt-4" data-tour-id="plate-scheduling">
+          <div className="pt-4 md:pt-0 md:w-96 md:shrink-0 md:sticky md:top-4" data-tour-id="plate-scheduling">
             <div className="bg-emerald-50 p-4 rounded-xl mb-4 border border-emerald-100">
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-2 text-emerald-800 font-bold text-sm">

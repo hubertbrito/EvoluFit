@@ -2,14 +2,14 @@ import React from 'react';
 import { Activity, Zap, Dumbbell, Wheat, Droplet } from 'lucide-react';
 
 const DigitalValue = ({ label, value, unit, colorClass, Icon }) => (
-  <div className="flex flex-col items-center px-1 min-w-[3rem]">
+  <div className="flex flex-col items-center px-1 min-w-[2.5rem]">
     <div className="flex items-center gap-1 mb-0.5">
-      {Icon && <Icon size={10} className={colorClass} />}
-      <span className="text-[10px] font-bold uppercase text-gray-500">{label}</span>
+      {Icon && <Icon size={9} className={colorClass} />}
+      <span className="text-[8px] font-bold uppercase text-gray-500">{label}</span>
     </div>
-    <div className={`font-mono text-lg leading-none font-black ${colorClass} drop-shadow-sm`}>
+    <div className={`font-mono text-base leading-none font-black ${colorClass} drop-shadow-sm`}>
       {Math.round(value)}
-      <span className="text-[10px] ml-0.5 opacity-70">{unit}</span>
+      <span className="text-[8px] ml-0.5 opacity-70">{unit}</span>
     </div>
   </div>
 );
@@ -26,20 +26,20 @@ const TechNutriDisplay = ({ lastFood, totalNutrition, isOverLimit, activeTab }) 
       <div className="w-full">
         {activeTab === 'pantry' && (
           /* Lado Esquerdo: Último Selecionado (Individual 100g) */
-          <div className="py-3 px-4 flex items-center justify-between relative overflow-hidden w-full">
+          <div className="py-2 px-3 flex items-center justify-between relative overflow-hidden w-full">
             <div className="absolute top-0 left-0 w-0.5 h-full bg-cyan-500/20"></div>
             
             <div className="flex flex-col max-w-[45%]">
-                <h3 className="text-[9px] font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                  <Activity size={12} /> Individual (100g)
+                <h3 className="text-[8px] font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-widest mb-0.5 flex items-center gap-1.5">
+                  <Activity size={10} /> Individual (100g)
                 </h3>
-                <p className="text-xs text-gray-800 dark:text-white font-bold truncate leading-tight">
+                <p className="text-[10px] text-gray-800 dark:text-white font-bold truncate leading-tight">
                     {lastFood ? lastFood.name : <span className="text-gray-400 dark:text-gray-500 italic">Selecione...</span>}
                 </p>
             </div>
             
             {lastFood && (
-              <div className="flex items-center justify-between gap-1 bg-gray-100 dark:bg-gray-800/50 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700/50 w-full">
+              <div className="flex items-center justify-between gap-1 bg-gray-100 dark:bg-gray-800/50 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700/50 w-full">
                   <DigitalValue label="Kcal" value={lastFood.calories} unit="" colorClass="text-cyan-600 dark:text-cyan-400" Icon={Zap} />
                   <DigitalValue label="Prot" value={lastFood.protein} unit="g" colorClass="text-rose-600 dark:text-rose-400" Icon={Dumbbell} />
                   <DigitalValue label="Carb" value={lastFood.carbs} unit="g" colorClass="text-blue-600 dark:text-blue-400" Icon={Wheat} />
@@ -51,17 +51,17 @@ const TechNutriDisplay = ({ lastFood, totalNutrition, isOverLimit, activeTab }) 
 
         {activeTab === 'plate' && (
           /* Lado Direito: Total do Prato (Soma) */
-          <div className="py-3 px-4 flex items-center justify-between relative overflow-hidden bg-white dark:bg-gray-900 w-full">
+          <div className="py-2 px-3 flex items-center justify-between relative overflow-hidden bg-white dark:bg-gray-900 w-full">
             <div className="absolute top-0 right-0 w-0.5 h-full bg-emerald-500/20"></div>
             
             <div className="flex flex-col max-w-[45%]">
-                <h3 className={`text-[9px] font-black uppercase tracking-widest mb-1 flex items-center gap-1.5 ${isOverLimit ? 'text-rose-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                  <Zap size={12} /> Total Acumulado
+                <h3 className={`text-[8px] font-black uppercase tracking-widest mb-0.5 flex items-center gap-1.5 ${isOverLimit ? 'text-rose-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                  <Zap size={10} /> Total Acumulado
                 </h3>
-                <p className="text-xs text-gray-800 dark:text-white font-bold truncate leading-tight">Prato Atual</p>
+                <p className="text-[10px] text-gray-800 dark:text-white font-bold truncate leading-tight">Prato Atual</p>
             </div>
             
-            <div className="flex items-center justify-between gap-1 bg-gray-100 dark:bg-gray-800/50 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700/50 w-full">
+            <div className="flex items-center justify-between gap-1 bg-gray-100 dark:bg-gray-800/50 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700/50 w-full">
                 <DigitalValue label="Kcal" value={totalNutrition.calories} unit="" colorClass={totalColorClass} Icon={Zap} />
                 <DigitalValue label="Prot" value={totalNutrition.protein} unit="g" colorClass={isOverLimit ? totalColorClass : "text-rose-600 dark:text-rose-400"} Icon={Dumbbell} />
                 <DigitalValue label="Carb" value={totalNutrition.carbs} unit="g" colorClass={isOverLimit ? totalColorClass : "text-blue-600 dark:text-blue-400"} Icon={Wheat} />

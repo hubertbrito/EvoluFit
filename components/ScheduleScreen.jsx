@@ -456,7 +456,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
   };
 
   return (
-    <div className="p-4 space-y-6 pb-28">
+    <div className="p-4 space-y-6 pb-28 md:pb-10">
       <style>{`
         @keyframes highlight-move {
           0% { box-shadow: 0 0 0 0px rgba(255, 165, 0, 0); }
@@ -730,9 +730,9 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {activeDays.length === 0 && (
-          <div className="text-center py-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+          <div className="col-span-full text-center py-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
             <p className="text-gray-400 font-bold text-sm">Selecione um dia no menu acima para começar</p>
           </div>
         )}
@@ -761,7 +761,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                         new Date(meal.specificDate + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }),
                         filteredMeals.filter(m => m.specificDate === meal.specificDate)
                     )}
-                    className="sticky top-14 z-10 bg-emerald-50/95 dark:bg-emerald-900/90 backdrop-blur-sm p-2 rounded-lg border border-emerald-200 dark:border-emerald-800 shadow-sm mb-4 mt-2 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors flex justify-between items-center group"
+                    className="col-span-full sticky top-14 z-10 bg-emerald-50/95 dark:bg-emerald-900/90 backdrop-blur-sm p-2 rounded-lg border border-emerald-200 dark:border-emerald-800 shadow-sm mb-4 mt-2 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors flex justify-between items-center group"
                 >
                     <span className="font-bold text-emerald-800 dark:text-emerald-300 text-sm flex items-center gap-2 capitalize">
                         <CalendarCheck2 size={16} />
@@ -775,7 +775,7 @@ const ScheduleScreen = ({ meals, onUpdateMeals, allFoods, onAddMeal, onEditMeal,
                 onDragStart={(e) => handleDragStart(e, index)}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, index)}
-                className={`p-4 rounded-[2rem] border-2 transition-all relative overflow-hidden 
+                className={`p-4 rounded-[2rem] border-2 transition-all relative overflow-hidden hover:shadow-lg hover:-translate-y-1 duration-300
                   ${isMoved ? 'highlight-move-animation' : ''} 
                   ${meal.isDone ? 'opacity-75 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700' : (isCurrent ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-400 shadow-xl ring-4 ring-orange-400/10' : 'bg-white dark:bg-gray-800 border-indigo-50 dark:border-gray-700 shadow-sm hover:border-orange-300')}`}
             >

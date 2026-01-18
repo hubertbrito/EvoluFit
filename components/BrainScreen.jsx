@@ -541,7 +541,7 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
                             <h4 className="text-xs font-black uppercase text-indigo-600 dark:text-indigo-400">Nível de Consciência</h4>
                             <p className="text-[9px] text-gray-500 dark:text-gray-400">Evolua mantendo a constância diária (Streaks).</p>
                         </div>
-                        <div className="grid grid-cols-4 gap-2">
+                        <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
                             {badgesData.filter(b => b.category === 'level').map(badge => {
                                 const isUnlocked = (gamification.achievements || []).includes(badge.id);
                                 return (
@@ -568,7 +568,7 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
                                 <strong>Cada badge = +5 dias no Nível de Consciência.</strong>
                             </p>
                         </div>
-                        <div className="grid grid-cols-4 gap-3">
+                        <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
                             {badgesData.filter(b => b.category === 'heart' || b.category === 'water').map(badge => {
                                 const isUnlocked = (gamification.achievements || []).includes(badge.id);
                                 const isWater = badge.category === 'water';
@@ -675,7 +675,7 @@ const BrainScreen = ({ schedule, allFoods, profile, onEditProfile, onRestartTour
             </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mt-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
           <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
             <div className="flex items-center gap-2 mb-2">
               <Activity className="w-4 h-4 text-blue-500" />

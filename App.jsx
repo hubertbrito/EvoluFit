@@ -144,6 +144,15 @@ const App = () => {
     const saved = localStorage.getItem('pantry');
     return saved ? JSON.parse(saved) : ['1', '2', '3', '4', '5'];
   });
+
+  const [favorites, setFavorites] = useState(() => {
+    const saved = localStorage.getItem('favorites');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+  }, [favorites]);
   
   const [currentPlate, setCurrentPlate] = useState([]);
   
@@ -1359,6 +1368,17 @@ const App = () => {
     return newId;
   };
 
+  const handleDishAdded = (items) => {
+    if (currentPlate.length > 0) {
+      if (!window.confirm('Seu prato atual não está vazio. Deseja substituir pelo Prato Feito?')) {
+        return;
+      }
+    }
+    setCurrentPlate(items);
+    setActiveTab('plate');
+    triggerEducationalMessage('interaction_volume');
+  };
+
   // Helper para disparar mensagens educativas (evita repetição de código)
   const triggerEducationalMessage = (key) => {
     // Bloqueio de segurança: Não exibir se o tour estiver rodando ou não finalizado
@@ -1966,9 +1986,12 @@ const App = () => {
             addCustomFood(foodName);
             setSearchTerm(''); // Limpa a busca após adicionar
           }}
+          onAddDishToPlate={handleDishAdded}
           voiceAddedFoodId={voiceAddedFoodId}
           showTour={showTour}
           tourStep={tourStep}
+          favorites={favorites}
+          onToggleFavorite={(id) => setFavorites(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id])}
         />
       )}
       {activeTab === 'plate' && (
